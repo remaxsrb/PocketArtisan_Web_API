@@ -1,0 +1,112 @@
+# ----------------------------------------------------------------------
+# Go build artifacts & caches
+# ----------------------------------------------------------------------
+/bin/
+/obj/
+/out/
+*.exe
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+
+# Compiled object files
+*.o
+*.a
+
+# Go workspace cache (if you ever commit $GOPATH)
+pkg/
+vendor/
+
+# ----------------------------------------------------------------------
+# IDE / editor specific files
+# ----------------------------------------------------------------------
+# VS Code
+.vscode/
+*.code-workspace
+
+# JetBrains (GoLand, IntelliJ, etc.)
+.idea/
+*.iml
+
+# Sublime Text
+*.sublime-project
+*.sublime-workspace
+
+# Vim
+*.swp
+*.swo
+.session
+*~
+
+# Emacs
+*~
+\#*\#
+.#*
+
+# ----------------------------------------------------------------------
+# OS generated files
+# ----------------------------------------------------------------------
+.DS_Store
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+Icon?
+._*
+
+# ----------------------------------------------------------------------
+# Dependency / module files (usually you *do* commit go.mod & go.sum)
+# ----------------------------------------------------------------------
+# go.mod and go.sum are **important** – keep them tracked!
+# If you ever generate vendored copies, ignore the vendor folder:
+# /vendor/
+
+# ----------------------------------------------------------------------
+# Secrets & configuration files (do NOT commit!)
+# ----------------------------------------------------------------------
+# .dot files used for local secrets (e.g., pg_dsn.dot, jwt_private_key.dot)
+*.dot
+
+# Any other config files that contain credentials
+.env
+.env.*
+config.yaml
+config.yml
+secrets/
+*.pem
+*.key
+*.crt
+
+# ----------------------------------------------------------------------
+# Test / coverage reports
+# ----------------------------------------------------------------------
+coverage.out
+*.coverprofile
+*.prof
+
+# ----------------------------------------------------------------------
+# Generated files (protobuf, swagger, etc.)
+# ----------------------------------------------------------------------
+*.gen.go
+*.pb.go
+*.swagger.json
+*.swagger.yaml
+
+# ----------------------------------------------------------------------
+# Miscellaneous
+# ----------------------------------------------------------------------
+# Logs
+*.log
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+
+# Docker / Kubernetes
+docker-compose.override.yml
+.kube/
+.kubeconfig
+
+# End of .gitignore
