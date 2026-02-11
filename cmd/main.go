@@ -3,8 +3,10 @@ package main
 import (
 	"PocketArtisan/config"
 	"PocketArtisan/internal/http"
+	"PocketArtisan/internal/modules/auth"
 	"log"
 	"os"
+	"time"
 
 	"github.com/joho/godotenv"
 )
@@ -16,6 +18,9 @@ func main() {
 
 	config.InitPostgresDB()
 	config.InitRedis()
+	config.InitCrypto()
+
+	auth.InitJWTService(24 * time.Hour)
 
 	r := http.SetupRouter()
 

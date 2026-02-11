@@ -2,15 +2,19 @@ package http
 
 import (
 	"PocketArtisan/config"
+	"PocketArtisan/internal/http/middleware"
+	"PocketArtisan/internal/modules/auth"
 	"PocketArtisan/internal/modules/files/delete"
 	"PocketArtisan/internal/modules/files/serve"
 	"PocketArtisan/internal/modules/files/storage"
 	"PocketArtisan/internal/modules/files/upload"
-	"PocketArtisan/internal/modules/users/change_password"
-	"PocketArtisan/internal/modules/users/delete_account"
-	"PocketArtisan/internal/modules/users/register"
-	"PocketArtisan/internal/modules/users/set_profile_picture"
-	"PocketArtisan/internal/modules/users/set_role"
+	"PocketArtisan/internal/modules/users/admin/set_role"
+	"PocketArtisan/internal/modules/users/common/change_password"
+	"PocketArtisan/internal/modules/users/common/delete_account"
+	"PocketArtisan/internal/modules/users/common/get_all"
+	"PocketArtisan/internal/modules/users/common/login"
+	"PocketArtisan/internal/modules/users/common/register"
+	"PocketArtisan/internal/modules/users/common/set_profile_picture"
 
 	"github.com/gin-gonic/gin"
 )
@@ -18,13 +22,28 @@ import (
 func SetupRouter() *gin.Engine {
 	router := gin.Default()
 
+	jwtService := auth.GetJWTService()
+
 	// User routes
-	userGroup := router.Group("/users")
-	register.RegisterRoutes(userGroup, config.DB, config.RDB)
-	set_role.RegisterRoutes(userGroup, config.DB, config.RDB)
-	change_password.RegisterRoutes(userGroup, config.DB, config.RDB)
-	set_profile_picture.RegisterRoutes(userGroup, config.DB, config.RDB)
-	delete_account.RegisterRoutes(userGroup, config.DB, config.RDB)
+
+	publicUserGroup := router.Group("/users")
+	register.RegisterRoutes(publicUserGroup, config.DB, config.RDB)
+	login.RegisterRoutes(publicUserGroup, config.DB, config.RDB, jwtService)
+
+	protectedUserGroup := router.Group("/users")
+	protectedUserGroup.Use(middleware.JWT())
+
+	change_password.RegisterRoutes(protectedUserGroup, config.DB, config.RDB)
+	set_profile_picture.RegisterRoutes(protectedUserGroup, config.DB, config.RDB)
+	delete_account.RegisterRoutes(protectedUserGroup, config.DB, config.RDB)
+	get_all.RegisterRoutes(protectedUserGroup, config.DB, config.RDB)
+
+	// Admin-only routes
+
+	adminUsers := protectedUserGroup.Group("/admin")
+	adminUsers.Use(middleware.RequireRoles("admin"))
+
+	set_role.RegisterRoutes(adminUsers, config.DB, config.RDB)
 
 	// File routes
 	localStorage := storage.NewLocalStorage("./uploads", "http://localhost:8080/files")

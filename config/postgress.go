@@ -47,4 +47,13 @@ func InitPostgresDB() {
 	} else {
 		log.Println("Database already exists, skipping initialization")
 	}
+	err = DB.Exec(`
+		CREATE INDEX IF NOT EXISTS idx_users_created_at_id
+		ON users (created_at DESC, id DESC)
+	`).Error
+	if err != nil {
+		log.Fatal("Failed to create users pagination index:", err)
+	}
+
+	log.Println("Postgres ready")
 }

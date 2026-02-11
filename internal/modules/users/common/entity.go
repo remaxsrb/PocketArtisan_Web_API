@@ -7,7 +7,7 @@ import (
 )
 
 type User struct {
-	ID             uint      `json:"id" gorm:"primaryKey"`
+	ID             uint64    `json:"id" gorm:"primaryKey"`
 	Username       string    `json:"username" gorm:"unique;not null"`
 	Email          string    `json:"email" gorm:"unique;not null"`
 	Firstname      string    `json:"first_name"`
@@ -17,7 +17,9 @@ type User struct {
 	ProfilePicture string    `json:"profile_picture"`
 	Gender         string    `json:"gender" gorm:"not null"`
 	Role           string    `json:"role" gorm:"not null"`
+	Craft          string    `json:"craft"` // type of products craftsman makes
 	CreatedAt      time.Time `json:"created_at" gorm:"autoCreateTime"`
+	LastLoginAt    time.Time `json:"last_login_at" gorm:"autoUpdateTime"`
 }
 
 func (u *User) SetPassword(password string) error {
