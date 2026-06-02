@@ -1,0 +1,191 @@
+[
+  {
+    "username": "remax",
+    "firstname": "Marko",
+    "lastname": "Jovanovic",
+    "email": "remaxsrb@protonmail.com",
+    "password": "Qcom_RK_t3st",
+    "date_of_birth": "2000-01-01",
+    "gender": "male"
+  },
+  {
+    "username": "marko.petrovic",
+    "firstname": "Marko",
+    "lastname": "Petrović",
+    "email": "marko.petrovic@pocketartisan.rs",
+    "password": "Secure_pass1",
+    "date_of_birth": "1985-03-15",
+    "gender": "male"
+  },
+  {
+    "username": "ana.jovanovic",
+    "firstname": "Ana",
+    "lastname": "Jovanović",
+    "email": "ana.jovanovic@pocketartisan.rs",
+    "password": "Secure_pass1",
+    "date_of_birth": "1990-07-22",
+    "gender": "female"
+  },
+  {
+    "username": "nikola.nikolic",
+    "firstname": "Nikola",
+    "lastname": "Nikolić",
+    "email": "nikola.nikolic@pocketartisan.rs",
+    "password": "Secure_pass1",
+    "date_of_birth": "1978-11-05",
+    "gender": "male"
+  },
+  {
+    "username": "milica.markovic",
+    "firstname": "Milica",
+    "lastname": "Marković",
+    "email": "milica.markovic@pocketartisan.rs",
+    "password": "Secure_pass1",
+    "date_of_birth": "1995-04-18",
+    "gender": "female"
+  },
+  {
+    "username": "stefan.stefanovic",
+    "firstname": "Stefan",
+    "lastname": "Stefanović",
+    "email": "stefan.stefanovic@pocketartisan.rs",
+    "password": "Secure_pass1",
+    "date_of_birth": "1982-09-30",
+    "gender": "male"
+  },
+  {
+    "username": "jelena.jelic",
+    "firstname": "Jelena",
+    "lastname": "Jelić",
+    "email": "jelena.jelic@pocketartisan.rs",
+    "password": "Secure_pass1",
+    "date_of_birth": "1988-12-10",
+    "gender": "female"
+  },
+  {
+    "username": "vladimir.vukovic",
+    "firstname": "Vladimir",
+    "lastname": "Vuković",
+    "email": "vladimir.vukovic@pocketartisan.rs",
+    "password": "Secure_pass1",
+    "date_of_birth": "1975-06-25",
+    "gender": "male"
+  },
+  {
+    "username": "snezana.savic",
+    "firstname": "Snežana",
+    "lastname": "Savić",
+    "email": "snezana.savic@pocketartisan.rs",
+    "password": "Secure_pass1",
+    "date_of_birth": "1992-01-14",
+    "gender": "female"
+  },
+  {
+    "username": "predrag.pavlovic",
+    "firstname": "Predrag",
+    "lastname": "Pavlović",
+    "email": "predrag.pavlovic@pocketartisan.rs",
+    "password": "Secure_pass1",
+    "date_of_birth": "1980-08-08",
+    "gender": "male"
+  },
+  {
+    "username": "dragana.dimitrijevic",
+    "firstname": "Dragana",
+    "lastname": "Dimitrijević",
+    "email": "dragana.dimitrijevic@pocketartisan.rs",
+    "password": "Secure_pass1",
+    "date_of_birth": "1987-05-20",
+    "gender": "female"
+  },
+  {
+    "username": "ivan.ivanovic",
+    "firstname": "Ivan",
+    "lastname": "Ivanović",
+    "email": "ivan.ivanovic@pocketartisan.rs",
+    "password": "Secure_pass1",
+    "date_of_birth": "1993-02-28",
+    "gender": "male"
+  },
+  {
+    "username": "maja.milic",
+    "firstname": "Maja",
+    "lastname": "Milić",
+    "email": "maja.milic@pocketartisan.rs",
+    "password": "Secure_pass1",
+    "date_of_birth": "1998-10-05",
+    "gender": "female"
+  },
+  {
+    "username": "goran.goranovic",
+    "firstname": "Goran",
+    "lastname": "Goranović",
+    "email": "goran.goranovic@pocketartisan.rs",
+    "password": "Secure_pass1",
+    "date_of_birth": "1972-04-12",
+    "gender": "male"
+  },
+  {
+    "username": "vesna.veselinovic",
+    "firstname": "Vesna",
+    "lastname": "Veselinović",
+    "email": "vesna.veselinovic@pocketartisan.rs",
+    "password": "Secure_pass1",
+    "date_of_birth": "1984-07-19",
+    "gender": "female"
+  },
+  {
+    "username": "aleksandar.aleksandrovic",
+    "firstname": "Aleksandar",
+    "lastname": "Aleksandrović",
+    "email": "aleksandar.aleksandrovic@pocketartisan.rs",
+    "password": "Secure_pass1",
+    "date_of_birth": "1989-11-30",
+    "gender": "male"
+  },
+  {
+    "username": "ljubica.ljubic",
+    "firstname": "Ljubića",
+    "lastname": "Ljubić",
+    "email": "ljubica.ljubic@pocketartisan.rs",
+    "password": "Secure_pass1",
+    "date_of_birth": "2007-06-01",
+    "gender": "female"
+  },
+  {
+    "username": "petar.petrovic",
+    "firstname": "Petar",
+    "lastname": "Petrović",
+    "email": "petar.petrovic@pocketartisan.rs",
+    "password": "Secure_pass1",
+    "date_of_birth": "2005-01-15",
+    "gender": "male"
+  },
+  {
+    "username": "sara.savic",
+    "firstname": "Sara",
+    "lastname": "Savić",
+    "email": "sara.savic@pocketartisan.rs",
+    "password": "Secure_pass1",
+    "date_of_birth": "2006-09-20",
+    "gender": "female"
+  },
+  {
+    "username": "dalibor.daliborovic",
+    "firstname": "Dalibor",
+    "lastname": "Daliborović",
+    "email": "dalibor.daliborovic@pocketartisan.rs",
+    "password": "Secure_pass1",
+    "date_of_birth": "1965-03-10",
+    "gender": "male"
+  },
+  {
+    "username": "mirjana.mirkovic",
+    "firstname": "Mirjana",
+    "lastname": "Mirković",
+    "email": "mirjana.mirkovic@pocketartisan.rs",
+    "password": "Secure_pass1",
+    "date_of_birth": "1979-12-05",
+    "gender": "female"
+  }
+]
