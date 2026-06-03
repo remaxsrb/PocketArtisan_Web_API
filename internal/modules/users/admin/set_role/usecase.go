@@ -1,7 +1,7 @@
 package set_role
 
 import (
-	"PocketArtisan/internal/modules/users/common"
+	"PocketArtisan/internal/modules/users"
 	"context"
 	"errors"
 
@@ -19,7 +19,7 @@ func NewUseCase(db *gorm.DB, cache *redis.Client) *UseCase {
 }
 
 func (uc *UseCase) Execute(ctx context.Context, req SetRoleRequest) error {
-	var user common.User
+	var user users.User
 
 	if req.Role != "artisan" {
 		return errors.New("only role which admin can set is artisan")

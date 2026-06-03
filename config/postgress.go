@@ -1,14 +1,15 @@
 package config
 
 import (
+	"PocketArtisan/internal/modules/craftsman_application"
+	"PocketArtisan/internal/modules/product"
+	"PocketArtisan/internal/modules/users"
 	"fmt"
 	"log"
 	"os"
 
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
-
-	"PocketArtisan/internal/modules/users/common"
 )
 
 var DB *gorm.DB
@@ -29,28 +30,57 @@ func InitPostgresDB() {
 		log.Fatal("Failed to connect to database:", err)
 	}
 
-	var tableExists bool
-	err = DB.Raw("SELECT EXISTS (SELECT FROM pg_tables WHERE tablename = 'users')").Scan(&tableExists).Error
+	var userTableExists bool
+	err = DB.Raw("SELECT EXISTS (SELECT FROM pg_tables WHERE tablename = 'users')").Scan(&userTableExists).Error
 	if err != nil {
 		log.Fatal("Failed to check if users table exists:", err)
 	}
 
-	if !tableExists {
+	var craftsmanApplicationTableExists bool
+	err = DB.Raw("SELECT EXISTS (SELECT FROM pg_tables WHERE tablename = 'craftsman_applications')").Scan(&craftsmanApplicationTableExists).Error
+	if err != nil {
+		log.Fatal("Failed to check if users table exists:", err)
+	}
+
+	var productTableExists bool
+	err = DB.Raw("SELECT EXISTS (SELECT FROM pg_tables WHERE tablename = 'products')").Scan(&productTableExists).Error
+	if err != nil {
+		log.Fatal("Failed to check if users table exists:", err)
+	}
+
+	if !userTableExists {
+		log.Println("Performing initial database migration...")
+
 		err = DB.Exec("CREATE TYPE gender AS ENUM ('male', 'female')").Error
 		if err != nil {
 			log.Printf("Warning: failed to create gender enum type: %v", err)
 		}
-		if err := DB.AutoMigrate(&common.User{}); err != nil {
-			log.Fatal("Failed to migrate models:", err)
+
+		if err := DB.AutoMigrate(&users.User{}); err != nil {
+			log.Fatal("Failed to migrate users model:", err)
 		}
-		log.Println("Database initialized successfully")
-	} else {
-		log.Println("Database already exists, skipping initialization")
+
 	}
+
+	if !craftsmanApplicationTableExists {
+		if err := DB.AutoMigrate(&craftsman_application.CraftsmanApplication{}); err != nil {
+			log.Fatal("Failed to migrate craftsman_application model:", err)
+		}
+	}
+
+	if !productTableExists {
+		if err := DB.AutoMigrate(&product.Product{}); err != nil {
+			log.Fatal("Failed to migrate products model:", err)
+		}
+	}
+
+	// Indexes
+
+	// Users Index
 	err = DB.Exec(`
 		CREATE INDEX IF NOT EXISTS idx_users_created_at_id
-		ON users (created_at DESC, id DESC)
-	`).Error
+		ON users (created_at DESC, id DESC)`).Error
+
 	if err != nil {
 		log.Fatal("Failed to create users pagination index:", err)
 	}
