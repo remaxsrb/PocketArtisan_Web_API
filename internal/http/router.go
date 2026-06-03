@@ -6,6 +6,7 @@ import (
 	"PocketArtisan/internal/modules/auth"
 	"PocketArtisan/internal/modules/craftsman_application/approve"
 	"PocketArtisan/internal/modules/craftsman_application/create"
+	ca_get_all "PocketArtisan/internal/modules/craftsman_application/get_all"
 	"PocketArtisan/internal/modules/craftsman_application/reject"
 	"PocketArtisan/internal/modules/files/delete"
 	"PocketArtisan/internal/modules/files/serve"
@@ -14,7 +15,7 @@ import (
 	"PocketArtisan/internal/modules/users/admin/set_role"
 	"PocketArtisan/internal/modules/users/common/change_password"
 	"PocketArtisan/internal/modules/users/common/delete_account"
-	"PocketArtisan/internal/modules/users/common/get_all"
+	user_get_all "PocketArtisan/internal/modules/users/common/get_all"
 	"PocketArtisan/internal/modules/users/common/login"
 	"PocketArtisan/internal/modules/users/common/register"
 	"PocketArtisan/internal/modules/users/common/set_profile_picture"
@@ -51,17 +52,21 @@ func SetupRouter() *gin.Engine {
 
 	set_profile_picture.RegisterRoutes(protectedUserGroup, config.DB, config.RDB)
 	delete_account.RegisterRoutes(protectedUserGroup, config.DB, config.RDB)
-	get_all.RegisterRoutes(protectedUserGroup, config.DB, config.RDB)
 	rate.RegisterRoutes(protectedUserGroup, config.DB, config.RDB)
 
-	// Admin-only routes
+	adminLevelUsers := router.Group("/users")
+	adminLevelUsers.Use(middleware.JWT())
+	adminLevelUsers.Use(middleware.RequireRoles("admin"))
 
-	adminUsers := protectedUserGroup.Group("/admin")
-	adminUsers.Use(middleware.RequireRoles("admin"))
+	user_get_all.RegisterRoutes(adminLevelUsers, config.DB, config.RDB)
+	set_role.RegisterRoutes(adminLevelUsers, config.DB, config.RDB)
 
-	set_role.RegisterRoutes(adminUsers, config.DB, config.RDB)
-	approve.RegisterRoutes(adminUsers, config.DB, config.RDB)
-	reject.RegisterRoutes(adminUsers, config.DB, config.RDB)
+	adminLevelCAs := router.Group("/craftsman-applications")
+	adminLevelCAs.Use(middleware.RequireRoles("admin"))
+
+	approve.RegisterRoutes(adminLevelCAs, config.DB, config.RDB)
+	reject.RegisterRoutes(adminLevelCAs, config.DB, config.RDB)
+	ca_get_all.RegisterRoutes(adminLevelCAs, config.DB, config.RDB)
 
 	// File routes
 	localStorage := storage.NewLocalStorage("./uploads", "http://localhost:8080/files")
