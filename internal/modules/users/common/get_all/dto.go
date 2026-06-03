@@ -2,7 +2,6 @@ package get_all
 
 import (
 	"PocketArtisan/internal/modules/users"
-	"time"
 )
 
 type Direction string
@@ -13,16 +12,12 @@ const (
 )
 
 type GetAllRequest struct {
-	Limit     int        `json:"limit"`
-	CursorAt  *time.Time `json:"cursor"`    // created_at
-	ID        *uint64    `json:"id"`        // tiebreaker
-	Direction Direction  `json:"direction"` // next | prev
+	Limit int `form:"limit" query:"limit"` // or just `form:"limit"`
+	Skip  int `form:"skip" query:"skip"`   // or just `form:"skip"`
 }
-
 type GetAllResponse struct {
-	Users  []*users.User `json:"users"`
-	NextAt *time.Time    `json:"next_at,omitempty"`
-	NextID *uint64       `json:"next_id,omitempty"`
-	PrevAt *time.Time    `json:"prev_at,omitempty"`
-	PrevID *uint64       `json:"prev_id,omitempty"`
+	Users []*users.User `json:"users"`
+	Total int64         `json:"total,omitempty"`
+	Page  int           `json:"page,omitempty"` // Current page number (derived from skip/limit)
+
 }
