@@ -1,6 +1,7 @@
-package craftsman_application
+package create
 
 import (
+	"PocketArtisan/internal/modules/craftsman_application"
 	"context"
 	"errors"
 	"fmt"
@@ -20,7 +21,7 @@ func NewUseCase(db *gorm.DB, cache *redis.Client) *UseCase {
 	return &UseCase{db: db, cache: cache}
 }
 
-func (uc *UseCase) Execute(ctx context.Context, req CraftsmanApplicationDTO) error {
+func (uc *UseCase) Execute(ctx context.Context, req CraftsmanApplicationRequest) error {
 
 	const maxAttemptsPerUser = 3
 	const lockoutDays = 90
@@ -31,24 +32,24 @@ func (uc *UseCase) Execute(ctx context.Context, req CraftsmanApplicationDTO) err
 
 		var attempts int64
 
-		if err := tx.Model(&CraftsmanApplication{}).
-			Where("user_id = ?", req.ID).
+		if err := tx.Model(&craftsman_application.CraftsmanApplication{}).
+			Where("email = ?", req.Email).
 			Count(&attempts).Error; err != nil {
-			return fmt.Errorf("could not get attempts for user %d: %w", req.ID, err)
+			return fmt.Errorf("could not get attempts for user with email %s: %w", req.Email, err)
 		}
 
 		if attempts >= maxAttemptsPerUser {
-			return fmt.Errorf("max attempts of %d exceeded", maxAttemptsPerUser)
+			return fmt.Errorf("max attempts of %s exceeded", maxAttemptsPerUser)
 		}
 
-		var lastRejectedAttempt CraftsmanApplication
+		var lastRejectedAttempt craftsman_application.CraftsmanApplication
 		err := tx.
-			Where("user_id = ? AND status = ?", req.ID, StatusRejected).
+			Where("email = ? AND status = ?", req.Email, craftsman_application.StatusRejected).
 			Order("created_at DESC").
 			First(&lastRejectedAttempt).Error
 
 		if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
-			return fmt.Errorf("could not get last rejected attempt for user %d: %w", req.ID, err)
+			return fmt.Errorf("could not get last rejected attempt for user with email %s: %w", req.Email, err)
 		}
 
 		if err == nil {
@@ -60,9 +61,9 @@ func (uc *UseCase) Execute(ctx context.Context, req CraftsmanApplicationDTO) err
 			}
 		}
 
-		newCA := CraftsmanApplication{
-			ID:     req.ID,
-			Status: StatusPending,
+		newCA := craftsman_application.CraftsmanApplication{
+			Email:  req.Email,
+			Status: craftsman_application.StatusPending,
 		}
 		if err := tx.Create(&newCA).Error; err != nil {
 			return fmt.Errorf("failed to create application: %w", err)

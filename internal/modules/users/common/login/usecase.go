@@ -1,7 +1,7 @@
 package login
 
 import (
-	"PocketArtisan/internal/modules/users/common"
+	"PocketArtisan/internal/modules/users"
 	"context"
 	"errors"
 	"strconv"
@@ -23,7 +23,7 @@ func NewUseCase(db *gorm.DB, cache *redis.Client) *UseCase {
 
 func (uc *UseCase) Execute(ctx context.Context, req LoginRequest) (*LoginResponse, error) {
 
-	var existing common.User
+	var existing users.User
 
 	if err := uc.db.WithContext(ctx).Where("username = ?", req.Username).First(&existing).Error; err != nil {
 		return nil, errors.New("username not found")
@@ -36,7 +36,9 @@ func (uc *UseCase) Execute(ctx context.Context, req LoginRequest) (*LoginRespons
 	existing.LastLoginAt = time.Now()
 	uc.db.WithContext(ctx).Save(&existing)
 
-	r := LoginResponse{ID: strconv.FormatUint(existing.ID, 10), Role: existing.Role}
+	r := LoginResponse{ID: strconv.FormatUint(existing.ID, 10), Username: existing.Username, Role: existing.Role,
+		Firstname: existing.Firstname, Lastname: existing.Lastname, ProfilePicture: existing.ProfilePicture,
+		Craft: existing.Craft, Rating: existing.Rating, NumberOfRatings: existing.NumberOfRatings, Email: existing.Email}
 
 	return &r, nil
 

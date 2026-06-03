@@ -1,5 +1,5 @@
-package craftsman_application
+package create
 
-type CraftsmanApplicationDTO struct {
-	ID uint64 `json:"id"`
+type CraftsmanApplicationRequest struct {
+	Email string `json:"email"`
 }

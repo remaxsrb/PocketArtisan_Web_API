@@ -41,6 +41,6 @@ func RegisterRoutes(router *gin.RouterGroup, db interface{}, rdb interface{}, jw
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
 		}
-		c.JSON(http.StatusOK, gin.H{"access_token": token})
+		c.JSON(http.StatusOK, gin.H{"access_token": token, "user": resp})
 	})
 }

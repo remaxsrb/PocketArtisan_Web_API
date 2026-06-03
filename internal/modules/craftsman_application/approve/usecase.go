@@ -1,7 +1,7 @@
-package approve_craftsman_application
+package approve
 
 import (
-	"PocketArtisan/internal/modules/users"
+	"PocketArtisan/internal/modules/craftsman_application"
 	"context"
 	"errors"
 
@@ -19,15 +19,15 @@ func NewUseCase(db *gorm.DB, cache *redis.Client) *UseCase {
 }
 
 func (uc *UseCase) Execute(ctx context.Context, req Request) error {
-	var ca users.User
+	var ca craftsman_application.CraftsmanApplication
 
-	if err := uc.db.WithContext(ctx).Where("username = ?", req.Username).First(&user).Error; err != nil {
-		return errors.New("user not found")
+	if err := uc.db.WithContext(ctx).Where("id = ?", req.ApplicationID).First(&ca).Error; err != nil {
+		return errors.New("application not found")
 	}
 
-	user.Role = req.Role
+	ca.Status = craftsman_application.StatusAccepted
 
-	if err := uc.db.Save(&user).Error; err != nil {
+	if err := uc.db.Save(&ca).Error; err != nil {
 		return err
 	}
 

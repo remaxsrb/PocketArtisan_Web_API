@@ -1,7 +1,7 @@
 package delete_account
 
 import (
-	"PocketArtisan/internal/modules/users/common"
+	"PocketArtisan/internal/modules/users"
 	"context"
 	"errors"
 
@@ -20,7 +20,7 @@ func NewUseCase(db *gorm.DB, cache *redis.Client) *UseCase {
 
 func (uc *UseCase) Execute(ctx context.Context, req DeleteAccountRequest) error {
 
-	var existing common.User
+	var existing users.User
 
 	if err := uc.db.WithContext(ctx).Where("username = ?", req.Username).First(&existing).Error; err != nil {
 		return errors.New("username not found")

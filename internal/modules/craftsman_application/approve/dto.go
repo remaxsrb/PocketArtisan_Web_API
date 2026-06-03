@@ -1,5 +1,5 @@
-package approve_craftsman_application
+package approve
 
 type Request struct {
-	ApplicationID string `json:"id"`
+	ApplicationID string `json:"application_id"`
 }
