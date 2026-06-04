@@ -21,8 +21,10 @@ func NewUseCase(db *gorm.DB, cache *redis.Client) *UseCase {
 func (uc *UseCase) Execute(ctx context.Context, req SetRoleRequest) error {
 	var user users.User
 
-	if req.Role != "artisan" {
-		return errors.New("only role which admin can set is artisan")
+	var isAllowedRole bool= req.Role == "craftsman" || req.Role == "user" || req.Role == "admin"
+
+	if !isAllowedRole {
+		return errors.New("only roles which admin can set are craftsman, user, or admin")
 	}
 
 	if err := uc.db.WithContext(ctx).Where("username = ?", req.Username).First(&user).Error; err != nil {
