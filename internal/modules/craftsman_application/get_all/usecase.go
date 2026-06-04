@@ -36,6 +36,7 @@ func (uc *UseCase) Execute(ctx context.Context, req GetAllRequest) (GetAllRespon
 	
 	uc.db.WithContext(ctx).
 		Model(&craftsman_application.CraftsmanApplication{}).
+		Where("status = ?", "pending").
 		Offset(req.Skip).
 		Limit(req.Limit).
 		Order("created_at desc, id asc").
