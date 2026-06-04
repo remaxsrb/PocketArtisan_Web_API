@@ -13,5 +13,5 @@ type CraftsmanApplication struct {
 const (
 	StatusPending  string = "pending"
 	StatusRejected string = "rejected"
-	StatusAccepted string = "accepted"
+	StatusAccepted string = "approved"
 )

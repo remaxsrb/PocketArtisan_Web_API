@@ -62,6 +62,7 @@ func SetupRouter() *gin.Engine {
 	set_role.RegisterRoutes(adminLevelUsers, config.DB, config.RDB)
 
 	adminLevelCAs := router.Group("/craftsman-applications")
+	adminLevelCAs.Use(middleware.JWT())
 	adminLevelCAs.Use(middleware.RequireRoles("admin"))
 
 	approve.RegisterRoutes(adminLevelCAs, config.DB, config.RDB)
