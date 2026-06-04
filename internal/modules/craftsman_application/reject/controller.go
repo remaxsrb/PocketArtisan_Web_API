@@ -10,7 +10,7 @@ import (
 
 func RegisterRoutes(router *gin.RouterGroup, db interface{}, rdb interface{}) {
 	r := NewUseCase(db.(*gorm.DB), rdb.(*redis.Client))
-	router.PATCH("/reject-application", func(c *gin.Context) {
+	router.PATCH("/reject", func(c *gin.Context) {
 		var req Request
 		if err := c.ShouldBindJSON(&req); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})

@@ -12,8 +12,8 @@ const (
 )
 
 type GetAllRequest struct {
-	Limit int `form:"limit" query:"limit"` // or just `form:"limit"`
-	Skip  int `form:"skip" query:"skip"`   // or just `form:"skip"`
+	Limit int `form:"limit" query:"limit"` 
+	Skip  int `form:"skip" query:"skip"`  
 }
 type GetAllResponse struct {
 	Users []*users.User `json:"users"`
