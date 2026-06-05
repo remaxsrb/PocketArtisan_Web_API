@@ -19,17 +19,18 @@ func NewUseCase(db *gorm.DB, cache *redis.Client) *UseCase {
 }
 
 func (uc *UseCase) Execute(ctx context.Context, req Request) error {
-	var user users.User
+	var craftsman users.Craftsman
 
-	if err := uc.db.WithContext(ctx).Where("username = ?", req.Username).First(&user).Error; err != nil {
-		return errors.New("user not found")
+	if err := uc.db.WithContext(ctx).Where("user_id = ?", req.UserID).First(&craftsman).Error; err != nil {
+		return errors.New("craftsman not found")
 	}
 
-	new_avg_rating := ((user.Rating * float64(user.NumberOfRatings)) + float64(req.Rating)) / float64(user.NumberOfRatings+1)
+	new_avg_rating := ((craftsman.Rating * float64(craftsman.NumberOfRatings)) + float64(req.Rating)) / float64(craftsman.NumberOfRatings+1)
 
-	user.Rating = new_avg_rating
+	craftsman.Rating = new_avg_rating
+	craftsman.NumberOfRatings++
 
-	if err := uc.db.Save(&user).Error; err != nil {
+	if err := uc.db.Save(&craftsman).Error; err != nil {
 		return err
 	}
 

@@ -16,12 +16,22 @@ type User struct {
 	PasswordHash    string    `json:"-" gorm:"not null"`
 	ProfilePicture  string    `json:"profile_picture"`
 	Gender          string    `json:"gender" gorm:"not null"`
-	Role            string    `json:"role" gorm:"not null"`
-	Craft           string    `json:"craft"` // type of products craftsman makes
+	Role            string    `json:"role" gorm:"not null;default:'user'"`
 	CreatedAt       time.Time `json:"created_at" gorm:"autoCreateTime"`
 	LastLoginAt     time.Time `json:"last_login_at" gorm:"autoUpdateTime"`
-	Rating          float64   `json:"rating" gorm:"not null" default:"0.0"`
-	NumberOfRatings int       `json:"number_of_ratings" gorm:"not null" default:"0"`
+	
+	Craftsman       Craftsman  `json:"craftsman" gorm:"foreignKey:UserID"`
+
+}
+
+type Craftsman struct {
+	ID              uint64    `json:"id" gorm:"primaryKey"`
+    UserID          uint64    `json:"user_id" gorm:"unique;not null"` // <--- The actual DB Foreign Key
+    Craft           string    `json:"craft" gorm:"index;not null"`
+    Rating          float64   `json:"rating" gorm:"not null;default:0.0"`
+    NumberOfRatings int       `json:"number_of_ratings" gorm:"not null;default:0"`
+
+	User            *User     `json:"user,omitempty" gorm:"foreignKey:UserID;constraint:OnDelete:CASCADE;"`
 }
 
 func (u *User) SetPassword(password string) error {

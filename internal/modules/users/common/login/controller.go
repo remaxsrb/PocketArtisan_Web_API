@@ -33,8 +33,8 @@ func RegisterRoutes(router *gin.RouterGroup, db interface{}, rdb interface{}, jw
 		}
 
 		token, err := jwtService.Generate(auth.Identity{
-			resp.ID,
-			resp.Role,
+			ID:   resp.ID,
+			Role: resp.Role,
 		})
 
 		if err != nil {
