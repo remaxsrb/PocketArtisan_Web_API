@@ -51,9 +51,8 @@ func (uc *UseCase) Execute(ctx context.Context, req RegisterRequest) (*users.Use
 		Firstname:   req.Firstname,
 		Lastname:    req.Lastname,
 		DateOfBirth: dob,
-		Role:        "user",
 		Gender:      req.Gender,
-		Craft:       "",
+		Role:        req.Role,
 	}
 
 	if req.Gender == "male" {

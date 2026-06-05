@@ -8,6 +8,7 @@ type RegisterRequest struct {
 	Lastname    string `json:"lastname"`
 	DateOfBirth string `json:"date_of_birth"`
 	Gender      string `json:"gender" binding:"required"`
+	Role        string `json:"role,omitempty"`
 }
 
 type RegisterResponse struct {

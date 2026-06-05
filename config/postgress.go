@@ -36,6 +36,13 @@ func InitPostgresDB() {
 		log.Fatal("Failed to check if users table exists:", err)
 	}
 
+	var craftsmanTableExists bool
+	err = DB.Raw("SELECT EXISTS (SELECT FROM pg_tables WHERE tablename = 'craftsmen')").Scan(&craftsmanTableExists).Error
+	if err != nil {
+		log.Fatal("Failed to check if craftsmen table exists:", err)
+	}
+
+
 	var craftsmanApplicationTableExists bool
 	err = DB.Raw("SELECT EXISTS (SELECT FROM pg_tables WHERE tablename = 'craftsman_applications')").Scan(&craftsmanApplicationTableExists).Error
 	if err != nil {
@@ -48,8 +55,10 @@ func InitPostgresDB() {
 		log.Fatal("Failed to check if users table exists:", err)
 	}
 
+	log.Println("Performing initial database migration...")
+
 	if !userTableExists {
-		log.Println("Performing initial database migration...")
+		
 
 		err = DB.Exec("CREATE TYPE gender AS ENUM ('male', 'female')").Error
 		if err != nil {
@@ -60,6 +69,12 @@ func InitPostgresDB() {
 			log.Fatal("Failed to migrate users model:", err)
 		}
 
+	}
+
+	if !craftsmanTableExists {
+		if err := DB.AutoMigrate(&users.Craftsman{}); err != nil {
+			log.Fatal("Failed to migrate craftsmen model:", err)
+		}
 	}
 
 	if !craftsmanApplicationTableExists {

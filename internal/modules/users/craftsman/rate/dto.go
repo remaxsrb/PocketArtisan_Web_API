@@ -1,6 +1,6 @@
 package rate
 
 type Request struct {
-	Username string `json:"username" binding:"required"`
+	UserID int `json:"user_id" binding:"required"`
 	Rating   int8   `json:"rating" binding:"required"`
 }

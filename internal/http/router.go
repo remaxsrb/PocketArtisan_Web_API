@@ -20,6 +20,7 @@ import (
 	"PocketArtisan/internal/modules/users/common/register"
 	"PocketArtisan/internal/modules/users/common/set_profile_picture"
 	"PocketArtisan/internal/modules/users/craftsman/rate"
+	craftsman_create "PocketArtisan/internal/modules/users/craftsman/create"
 
 	"github.com/gin-contrib/cors"
 
@@ -57,6 +58,11 @@ func SetupRouter() *gin.Engine {
 	adminLevelUsers := router.Group("/users")
 	adminLevelUsers.Use(middleware.JWT())
 	adminLevelUsers.Use(middleware.RequireRoles("admin"))
+
+	adminLevelCraftsmen := router.Group("/craftsman")
+	adminLevelCraftsmen.Use(middleware.JWT())
+	adminLevelCraftsmen.Use(middleware.RequireRoles("admin"))
+	craftsman_create.RegisterRoutes(adminLevelCraftsmen, config.DB, config.RDB)
 
 	user_get_all.RegisterRoutes(adminLevelUsers, config.DB, config.RDB)
 	set_role.RegisterRoutes(adminLevelUsers, config.DB, config.RDB)

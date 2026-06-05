@@ -38,7 +38,7 @@ func (uc *UseCase) Execute(ctx context.Context, req LoginRequest) (*LoginRespons
 
 	r := LoginResponse{ID: strconv.FormatUint(existing.ID, 10), Username: existing.Username, Role: existing.Role,
 		Firstname: existing.Firstname, Lastname: existing.Lastname, ProfilePicture: existing.ProfilePicture,
-		Craft: existing.Craft, Rating: existing.Rating, NumberOfRatings: existing.NumberOfRatings, Email: existing.Email}
+	 Email: existing.Email}
 
 	return &r, nil
 

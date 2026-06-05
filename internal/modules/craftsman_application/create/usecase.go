@@ -39,7 +39,7 @@ func (uc *UseCase) Execute(ctx context.Context, req CraftsmanApplicationRequest)
 		}
 
 		if attempts >= maxAttemptsPerUser {
-			return fmt.Errorf("max attempts of %s exceeded", maxAttemptsPerUser)
+			return fmt.Errorf("max attempts of %d exceeded", maxAttemptsPerUser)
 		}
 
 		var lastRejectedAttempt craftsman_application.CraftsmanApplication
@@ -64,6 +64,7 @@ func (uc *UseCase) Execute(ctx context.Context, req CraftsmanApplicationRequest)
 		newCA := craftsman_application.CraftsmanApplication{
 			Email:  req.Email,
 			Status: craftsman_application.StatusPending,
+			Craft:  req.Craft,
 		}
 		if err := tx.Create(&newCA).Error; err != nil {
 			return fmt.Errorf("failed to create application: %w", err)

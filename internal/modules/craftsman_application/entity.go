@@ -8,6 +8,7 @@ type CraftsmanApplication struct {
 	Status     string    `json:"status" gorm:"not null"`
 	CreatedAt  time.Time `json:"created_at" gorm:"autoCreateTime"`
 	ResolvedAt time.Time `json:"resolved_at"`
+	Craft      string    `json:"craft" gorm:"not null"`
 }
 
 const (
