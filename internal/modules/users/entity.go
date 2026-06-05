@@ -20,7 +20,7 @@ type User struct {
 	CreatedAt       time.Time `json:"created_at" gorm:"autoCreateTime"`
 	LastLoginAt     time.Time `json:"last_login_at" gorm:"autoUpdateTime"`
 	
-	Craftsman       Craftsman  `json:"craftsman" gorm:"foreignKey:UserID"`
+	Craftsman       *Craftsman  `json:"craftsman" gorm:"foreignKey:UserID"`
 
 }
 
