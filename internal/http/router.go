@@ -22,6 +22,8 @@ import (
 	"PocketArtisan/internal/modules/users/craftsman/rate"
 	craftsman_create "PocketArtisan/internal/modules/users/craftsman/create"
 
+	craftsman_all "PocketArtisan/internal/modules/users/craftsman/get_all"
+
 	"github.com/gin-contrib/cors"
 
 	"github.com/gin-gonic/gin"
@@ -47,6 +49,9 @@ func SetupRouter() *gin.Engine {
 	login.RegisterRoutes(publicUserGroup, config.DB, config.RDB, jwtService)
 	change_password.RegisterRoutes(publicUserGroup, config.DB, config.RDB)
 	create.RegisterRoutes(publicUserGroup, config.DB, config.RDB)
+
+	publicCraftsmanGroup := router.Group("/craftsman")
+	craftsman_all.RegisterRoutes(publicCraftsmanGroup, config.DB, config.RDB)
 
 	protectedUserGroup := router.Group("/users")
 	protectedUserGroup.Use(middleware.JWT())
