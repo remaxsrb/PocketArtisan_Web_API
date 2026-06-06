@@ -11,7 +11,7 @@ type LoginResponse struct {
 	Username        string  `json:"username"`
 	Firstname       string  `json:"first_name"`
 	Lastname        string  `json:"last_name"`
-	ProfilePicture  string  `json:"profile_picture"`
+	ProfilePicture  string  `json:"profilePicture"`
 	Craft           string  `json:"craft"`
 	Rating          float64 `json:"rating"`
 	NumberOfRatings int     `json:"number_of_ratings"`
