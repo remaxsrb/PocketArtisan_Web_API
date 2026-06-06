@@ -7,6 +7,7 @@ require (
 	github.com/gin-gonic/gin v1.12.0
 	github.com/go-redis/redis/v8 v8.11.5
 	github.com/golang-jwt/jwt/v5 v5.3.0
+	github.com/h2non/filetype v1.1.3
 	github.com/joho/godotenv v1.5.1
 	golang.org/x/crypto v0.48.0
 	gorm.io/driver/postgres v1.6.0
