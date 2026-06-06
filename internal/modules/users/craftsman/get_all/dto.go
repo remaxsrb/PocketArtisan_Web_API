@@ -1,9 +1,5 @@
 package getall
 
-import (
-	"PocketArtisan/internal/modules/users"
-)
-
 type Direction string
 
 const (
@@ -15,9 +11,19 @@ type GetAllRequest struct {
 	Limit int `form:"limit" query:"limit"`
 	Skip  int `form:"skip" query:"skip"`
 }
-type GetAllResponse struct {
-	Craftsmen []users.User `json:"craftsmen"`
-	Total     int64        `json:"total,omitempty"`
-	Page      int          `json:"page,omitempty"` // Current page number (derived from skip/limit)
 
+type CraftsmanResponse struct {
+	Firstname       string  `json:"firstname"`
+	Lastname        string  `json:"lastname"`
+	Email           string  `json:"email"`
+	ProfilePicture  string  `json:"profile_picture"`
+	Craft           string  `json:"craft"`
+	Rating          float64 `json:"rating"`
+	NumberOfRatings int     `json:"number_of_ratings"`
+}
+
+type GetAllResponse struct {
+	Craftsmen []*CraftsmanResponse `json:"craftsmen"`
+	Total     int64                `json:"total,omitempty"`
+	Page      int                  `json:"page,omitempty"`
 }
