@@ -19,11 +19,6 @@ func NewUseCase(db *gorm.DB, cache *redis.Client) *UseCase {
 }
 
 func (uc *UseCase) Execute(ctx context.Context, req Request) error {
-	var existing_craftsman users.Craftsman
-
-	if err := uc.db.WithContext(ctx).Where("email = ?", req.Email).First(&existing_craftsman).Error; err == nil {
-		return errors.New("craftsman already exists with this email")
-	}
 
 	//find userID based on email
 
