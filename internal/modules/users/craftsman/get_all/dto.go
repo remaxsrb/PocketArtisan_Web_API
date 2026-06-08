@@ -15,11 +15,12 @@ type GetAllRequest struct {
 type CraftsmanResponse struct {
 	Firstname       string  `json:"firstname"`
 	Lastname        string  `json:"lastname"`
+	Username        string  `json:"username" gorm:"column:username"`
 	Email           string  `json:"email"`
-	ProfilePicture  string  `json:"profile_picture"`
+	ProfilePicture  string  `json:"profilePicture"`
 	Craft           string  `json:"craft"`
 	Rating          float64 `json:"rating"`
-	NumberOfRatings int     `json:"number_of_ratings"`
+	NumberOfRatings int     `json:"numberRatings"`
 }
 
 type GetAllResponse struct {

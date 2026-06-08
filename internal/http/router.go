@@ -16,11 +16,12 @@ import (
 	"PocketArtisan/internal/modules/users/common/change_password"
 	"PocketArtisan/internal/modules/users/common/delete_account"
 	user_get_all "PocketArtisan/internal/modules/users/common/get_all"
+	getbyusername "PocketArtisan/internal/modules/users/common/get_by_username"
 	"PocketArtisan/internal/modules/users/common/login"
 	"PocketArtisan/internal/modules/users/common/register"
 	"PocketArtisan/internal/modules/users/common/set_profile_picture"
-	"PocketArtisan/internal/modules/users/craftsman/rate"
 	craftsman_create "PocketArtisan/internal/modules/users/craftsman/create"
+	"PocketArtisan/internal/modules/users/craftsman/rate"
 
 	craftsman_all "PocketArtisan/internal/modules/users/craftsman/get_all"
 
@@ -49,6 +50,7 @@ func SetupRouter() *gin.Engine {
 	login.RegisterRoutes(publicUserGroup, config.DB, config.RDB, jwtService)
 	change_password.RegisterRoutes(publicUserGroup, config.DB, config.RDB)
 	create.RegisterRoutes(publicUserGroup, config.DB, config.RDB)
+	getbyusername.RegisterRoutes(publicUserGroup, config.DB, config.RDB)
 
 	publicCraftsmanGroup := router.Group("/craftsman")
 	craftsman_all.RegisterRoutes(publicCraftsmanGroup, config.DB, config.RDB)

@@ -58,6 +58,7 @@ func (uc *UseCase) Execute(ctx context.Context, req GetAllRequest) (GetAllRespon
 		Select(`
         users.firstname, 
         users.lastname, 
+		users.username,
         users.email, 
         users.profile_picture, 
         craftsmen.craft, 
