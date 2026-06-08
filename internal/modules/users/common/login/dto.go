@@ -9,11 +9,10 @@ type LoginResponse struct {
 	ID              string  `json:"id"`
 	Role            string  `json:"role"`
 	Username        string  `json:"username"`
-	Firstname       string  `json:"first_name"`
-	Lastname        string  `json:"last_name"`
+	Firstname       string  `json:"firstname"`
+	Lastname        string  `json:"lastname"`
 	ProfilePicture  string  `json:"profilePicture"`
 	Craft           string  `json:"craft"`
 	Rating          float64 `json:"rating"`
-	NumberOfRatings int     `json:"number_of_ratings"`
 	Email           string  `json:"email"`
 }
