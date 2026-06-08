@@ -21,6 +21,7 @@ import (
 	"PocketArtisan/internal/modules/users/common/register"
 	"PocketArtisan/internal/modules/users/common/set_profile_picture"
 	craftsman_create "PocketArtisan/internal/modules/users/craftsman/create"
+	craftsman_by_craft "PocketArtisan/internal/modules/users/craftsman/get_by_craft"
 	"PocketArtisan/internal/modules/users/craftsman/rate"
 
 	craftsman_all "PocketArtisan/internal/modules/users/craftsman/get_all"
@@ -54,6 +55,7 @@ func SetupRouter() *gin.Engine {
 
 	publicCraftsmanGroup := router.Group("/craftsman")
 	craftsman_all.RegisterRoutes(publicCraftsmanGroup, config.DB, config.RDB)
+	craftsman_by_craft.RegisterRoutes(publicCraftsmanGroup, config.DB, config.RDB)
 
 	protectedUserGroup := router.Group("/users")
 	protectedUserGroup.Use(middleware.JWT())
