@@ -2,7 +2,9 @@ package login
 
 import (
 	"PocketArtisan/internal/modules/auth"
+	"PocketArtisan/internal/modules/users"
 	"net/http"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 	"github.com/go-redis/redis/v8"
@@ -32,9 +34,23 @@ func RegisterRoutes(router *gin.RouterGroup, db interface{}, rdb interface{}, jw
 
 		}
 
+		var id int64
+		var role string
+
+		switch r := resp.(type) {
+		case *users.RegularUserResponse:
+			id = r.ID
+			role = r.Role
+		case *users.CraftsmanResponse:
+			id = r.ID
+			role = r.Role
+		default:
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "unexpected response type"})
+			return
+		}
 		token, err := jwtService.Generate(auth.Identity{
-			ID:   resp.ID,
-			Role: resp.Role,
+			ID:   strconv.FormatInt(id, 10),
+			Role: role,
 		})
 
 		if err != nil {

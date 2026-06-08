@@ -4,7 +4,6 @@ import (
 	"PocketArtisan/internal/modules/users"
 	"context"
 	"errors"
-	"strconv"
 	"time"
 
 	"github.com/go-redis/redis/v8"
@@ -21,7 +20,7 @@ func NewUseCase(db *gorm.DB, cache *redis.Client) *UseCase {
 	return &UseCase{db: db, cache: cache}
 }
 
-func (uc *UseCase) Execute(ctx context.Context, req LoginRequest) (*LoginResponse, error) {
+func (uc *UseCase) Execute(ctx context.Context, req LoginRequest) (any, error) {
 
 	var existing users.User
 
@@ -36,9 +35,34 @@ func (uc *UseCase) Execute(ctx context.Context, req LoginRequest) (*LoginRespons
 	existing.LastLoginAt = time.Now()
 	uc.db.WithContext(ctx).Save(&existing)
 
-	r := LoginResponse{ID: strconv.FormatUint(existing.ID, 10), Username: existing.Username, Role: existing.Role,
+	isCraftsman := existing.Role == "craftsman"
+
+	if isCraftsman {
+		var r *users.CraftsmanResponse
+		uc.db.WithContext(ctx).
+			Table("users").
+			Select(`
+				users.username,
+				users.firstname,
+				users.lastname,
+				users.email,
+				users.profile_picture,
+				users.gender,
+				users.role,
+				craftsmen.craft,
+				craftsmen.rating,
+				craftsmen.number_of_ratings
+			`).
+			Joins("INNER JOIN craftsmen ON craftsmen.user_id = users.id").
+			Where("users.username = ?", existing.Username).
+			Scan(&r)
+
+		return r, nil
+	}
+
+	r := users.RegularUserResponse{Username: existing.Username, Role: existing.Role,
 		Firstname: existing.Firstname, Lastname: existing.Lastname, ProfilePicture: existing.ProfilePicture,
-	 Email: existing.Email}
+		Email: existing.Email}
 
 	return &r, nil
 
