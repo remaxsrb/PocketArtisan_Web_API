@@ -20,6 +20,7 @@ func RegisterRoutes(router *gin.RouterGroup, s storage.Storage) {
 		}
 		url, err := uc.Execute(file, purpose)
 		if err != nil {
+
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
 		}

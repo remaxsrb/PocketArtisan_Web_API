@@ -1,13 +1,17 @@
 package storage
 
 import (
+	"bytes"
 	"errors"
+	"fmt"
+	"image"
 	"io"
 	"mime/multipart"
 	"os"
 	"path/filepath"
 
 	"github.com/h2non/filetype"
+	_ "golang.org/x/image/webp"
 )
 
 type LocalStorage struct {
@@ -19,10 +23,20 @@ func NewLocalStorage(basePath, baseURL string) *LocalStorage {
 	return &LocalStorage{BasePath: basePath, BaseURL: baseURL}
 }
 
+const maxImageHeight = 300
+const maxImageWidth = 300
+
+var (
+	ErrInvalidDimensions = errors.New("Maksimalne dimenzije za profilnu sliku su 300x300 piksela")
+	ErrUnsupportedFormat = errors.New("nepodržan format fajla ili namena")
+)
+
 func (l *LocalStorage) SaveFile(file *multipart.FileHeader, purpose string) (string, error) {
 
 	fileName := file.Filename
 	subDir := ""
+	imageHeight := 0
+	imageWidth := 0
 
 	src, _ := file.Open()
 	defer src.Close()
@@ -46,6 +60,25 @@ func (l *LocalStorage) SaveFile(file *multipart.FileHeader, purpose string) (str
 
 	if !isAvatar && !isResume && !isProduct {
 		return "", errors.ErrUnsupported
+	}
+
+	if isAvatar {
+		reader := bytes.NewReader(content)
+		config, format, err := image.DecodeConfig(reader)
+		if err != nil {
+			return "", err
+		}
+
+		imageHeight = config.Height
+		imageWidth = config.Width
+
+		fmt.Printf("Image Format: %s\n", format)
+		fmt.Printf("Width: %d pixels\n", imageWidth)
+		fmt.Printf("Height: %d pixels\n", imageHeight)
+
+		if imageHeight > maxImageHeight || imageWidth > maxImageWidth {
+			return "", ErrInvalidDimensions
+		}
 	}
 
 	if isAvatar {
