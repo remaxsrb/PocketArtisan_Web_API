@@ -29,7 +29,7 @@ func (uc *UseCase) Execute(ctx context.Context, req GetAllRequest) (GetAllRespon
 		req.Limit = maxLimit
 	}
 
-	user_list := make([]*users.User, 0, req.Limit)
+	user_list := make([]*users.RegularUserResponse, 0, req.Limit)
 
 	var totalUsers int64
 	uc.db.WithContext(ctx).Model(&users.User{}).Count(&totalUsers)

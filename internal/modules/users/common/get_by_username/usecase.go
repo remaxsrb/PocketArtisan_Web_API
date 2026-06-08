@@ -30,18 +30,17 @@ type cacheEnvelope struct {
 
 func (uc *UseCase) Execute(ctx context.Context, username string) (interface{}, error) {
 	cacheKey := fmt.Sprintf("user:username:%s", username)
+	var resp users.CraftsmanResponse
 
 	cached, err := uc.cache.Get(ctx, cacheKey).Result()
 	if err == nil {
 		var env cacheEnvelope
 		if jsonErr := json.Unmarshal([]byte(cached), &env); jsonErr == nil {
 			if env.Role == "craftsman" {
-				var resp GetCraftsmanByUsernameResponse
 				if jsonErr := json.Unmarshal(env.Data, &resp); jsonErr == nil {
 					return &resp, nil
 				}
 			} else {
-				var resp GetUserByUsernameResponse
 				if jsonErr := json.Unmarshal(env.Data, &resp); jsonErr == nil {
 					return &resp, nil
 				}
@@ -62,7 +61,6 @@ func (uc *UseCase) Execute(ctx context.Context, username string) (interface{}, e
 	var result interface{}
 
 	if user.Role == "craftsman" {
-		var resp GetCraftsmanByUsernameResponse
 		uc.db.WithContext(ctx).
 			Table("users").
 			Select(`
@@ -82,7 +80,7 @@ func (uc *UseCase) Execute(ctx context.Context, username string) (interface{}, e
 			Scan(&resp)
 		result = &resp
 	} else {
-		result = &GetUserByUsernameResponse{
+		result = &users.RegularUserResponse{
 			Username:       user.Username,
 			Firstname:      user.Firstname,
 			Lastname:       user.Lastname,
