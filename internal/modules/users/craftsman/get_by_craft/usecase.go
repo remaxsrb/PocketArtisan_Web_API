@@ -46,7 +46,7 @@ func (uc *UseCase) Execute(ctx context.Context, craft string, req GetByCraftRequ
 		fmt.Printf("Redis error: %v\n", err)
 	}
 
-	craftsman_list := make([]*CraftsmanResponse, 0, req.Limit)
+	craftsman_list := make([]*users.CraftsmanResponse, 0, req.Limit)
 
 	var total int64
 	uc.db.WithContext(ctx).Model(&users.Craftsman{}).Where("craft = ?", craft).Count(&total)
@@ -83,5 +83,3 @@ func (uc *UseCase) Execute(ctx context.Context, craft string, req GetByCraftRequ
 
 	return resp, nil
 }
-
-	

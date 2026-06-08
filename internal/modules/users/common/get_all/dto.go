@@ -12,12 +12,12 @@ const (
 )
 
 type GetAllRequest struct {
-	Limit int `form:"limit" query:"limit"` 
-	Skip  int `form:"skip" query:"skip"`  
+	Limit int `form:"limit" query:"limit"`
+	Skip  int `form:"skip" query:"skip"`
 }
 type GetAllResponse struct {
-	Users []*users.User `json:"users"`
-	Total int64         `json:"total,omitempty"`
-	Page  int           `json:"page,omitempty"` // Current page number (derived from skip/limit)
+	Users []*users.RegularUserResponse `json:"users"`
+	Total int64                        `json:"total,omitempty"`
+	Page  int                          `json:"page,omitempty"` // Current page number (derived from skip/limit)
 
 }
