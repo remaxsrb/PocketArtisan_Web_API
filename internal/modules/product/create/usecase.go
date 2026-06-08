@@ -18,7 +18,7 @@ func NewUseCase(db *gorm.DB, cache *redis.Client) *UseCase {
 	return &UseCase{db: db, cache: cache}
 }
 
-func (uc *UseCase) Execute(ctx context.Context, req CreateProductRequest) (*product.Product, error) {
+func (uc *UseCase) Execute(ctx context.Context, req NewProductRequest) (*product.Product, error) {
 	var existing product.Product
 
 	if err := uc.db.WithContext(ctx).Where("name = ?", req.Name).First(&existing).Error; err == nil {
@@ -26,8 +26,11 @@ func (uc *UseCase) Execute(ctx context.Context, req CreateProductRequest) (*prod
 	}
 
 	new_product := &product.Product{
-		Name:  req.Name,
-		Price: req.Price,
+		Name:          req.Name,
+		MaterialPrice: req.MaterialPrice,
+		LaborPrice:    req.LaborPrice,
+		Picture:       req.Picture,
+		Hidden:        false,
 	}
 
 	if err := uc.db.Create(new_product).Error; err != nil {
