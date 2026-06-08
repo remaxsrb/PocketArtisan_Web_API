@@ -27,6 +27,12 @@ func (uc *UseCase) Execute(ctx context.Context, req Request) error {
 		return errors.New("user not found")
 	}
 
+	user.Role = "craftsman"
+
+	if err := uc.db.Save(&user).Error; err != nil {
+		return err
+	}
+
 	craftsman := users.Craftsman{
 		UserID: user.ID,
 		Craft:  req.Craft,
