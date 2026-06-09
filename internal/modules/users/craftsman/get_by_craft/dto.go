@@ -3,6 +3,7 @@ package getbycraft
 import "PocketArtisan/internal/modules/users"
 
 type GetByCraftRequest struct {
+	
 	Limit int
 	Skip  int
 }

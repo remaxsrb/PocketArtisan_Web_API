@@ -49,14 +49,14 @@ func (uc *UseCase) Execute(ctx context.Context, req LoginRequest) (any, error) {
 				users.profile_picture,
 				users.gender,
 				users.role,
+				craftsmen.id as id,
 				craftsmen.craft,
 				craftsmen.rating,
-				craftsmen.number_of_ratings
+				craftsmen.number_of_ratings as number_of_ratings
 			`).
 			Joins("INNER JOIN craftsmen ON craftsmen.user_id = users.id").
 			Where("users.username = ?", existing.Username).
 			Scan(&r)
-
 		return r, nil
 	}
 

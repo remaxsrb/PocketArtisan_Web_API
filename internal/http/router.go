@@ -23,8 +23,9 @@ import (
 	craftsman_create "PocketArtisan/internal/modules/users/craftsman/create"
 	craftsman_by_craft "PocketArtisan/internal/modules/users/craftsman/get_by_craft"
 	"PocketArtisan/internal/modules/users/craftsman/rate"
-
+	product_create "PocketArtisan/internal/modules/product/create"
 	craftsman_all "PocketArtisan/internal/modules/users/craftsman/get_all"
+	get_all_products "PocketArtisan/internal/modules/product/get_all_by_craftsman"
 
 	"github.com/gin-contrib/cors"
 
@@ -75,6 +76,21 @@ func SetupRouter() *gin.Engine {
 
 	user_get_all.RegisterRoutes(adminLevelUsers, config.DB, config.RDB)
 	set_role.RegisterRoutes(adminLevelUsers, config.DB, config.RDB)
+
+	// product routes would go here
+	//publicProductGroup := router.Group("/products")
+
+
+	craftsmanProductGroup := router.Group("/products")
+	craftsmanProductGroup.Use(middleware.JWT())
+	craftsmanProductGroup.Use(middleware.RequireRoles("craftsman"))
+	product_create.RegisterRoutes(craftsmanProductGroup, config.DB, config.RDB)
+	get_all_products.RegisterRoutes(craftsmanProductGroup, config.DB, config.RDB)
+
+	//order routes would go here
+
+
+	// craftsman application routes
 
 	adminLevelCAs := router.Group("/craftsman-applications")
 	adminLevelCAs.Use(middleware.JWT())
