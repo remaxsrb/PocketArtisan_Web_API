@@ -1,19 +1,26 @@
 package product
 
 type Product struct {
-	Name          string  `json:"name" gorm:"primaryKey;autoIncrement:false;not null"`
-    CraftsmanID   uint64  `json:"craftsman_id" gorm:"primaryKey;autoIncrement:false;not null"`
+	ID            uint64  `json:"id" gorm:"primaryKey;autoIncrement"`
+	CraftsmanID   uint64  `json:"craftsman_id" gorm:"not null;uniqueIndex:idx_craftsman_product"`
+	Name          string  `json:"name" gorm:"not null;uniqueIndex:idx_craftsman_product"`
 	Hidden        bool    `json:"hidden" gorm:"not null"`
-	Picture       string  `json:"picture" gorm:"not null"`
 	MaterialPrice float64 `json:"materialPrice" gorm:"not null"`
 	LaborPrice    float64 `json:"laborPrice" gorm:"not null"`
 	Description   string  `json:"description" gorm:"not null"`
+
+	Images []ProductImage `json:"images" gorm:"foreignKey:ProductID;constraint:OnDelete:CASCADE"`
+	Videos []ProductVideo `json:"videos" gorm:"foreignKey:ProductID;constraint:OnDelete:CASCADE"`
 }
 
-/*
+type ProductImage struct {
+	ID        uint64 `json:"id" gorm:"primaryKey;autoIncrement"`
+	ProductID uint64 `json:"product_id" gorm:"not null;index"`
+	URL       string `json:"url" gorm:"not null"`
+}
 
-
-Idea is to have a composite primary key of (name, craftsman_id) to allow different craftsmen to have products with the same name, 
-while preventing a single craftsman from having multiple products with the same name.
-
-*/
+type ProductVideo struct {
+	ID        uint64 `json:"id" gorm:"primaryKey;autoIncrement"`
+	ProductID uint64 `json:"product_id" gorm:"not null;index"`
+	URL       string `json:"url" gorm:"not null"`
+}
