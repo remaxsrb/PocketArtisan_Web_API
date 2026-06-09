@@ -10,7 +10,7 @@ import (
 
 func RegisterRoutes(router *gin.RouterGroup, db interface{}, rdb interface{}) {
 	r := NewUseCase(db.(*gorm.DB), rdb.(*redis.Client))
-	router.POST("/apply-for-craftsman", func(c *gin.Context) {
+	router.POST("/create", func(c *gin.Context) {
 		var req CraftsmanApplicationRequest
 		if err := c.ShouldBindJSON(&req); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
