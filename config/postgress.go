@@ -14,7 +14,19 @@ import (
 
 var DB *gorm.DB
 
+type migration struct {
+	table   string
+	migrate func() error
+}
+
 func InitPostgresDB() {
+	DB = mustConnectDB()
+	runMigrations()
+	runIndexes()
+	log.Println("Postgres ready")
+}
+
+func mustConnectDB() *gorm.DB {
 	dsn := fmt.Sprintf(
 		"host=%s user=%s password=%s dbname=%s port=%s sslmode=disable TimeZone=Europe/Belgrade",
 		os.Getenv("POSTGRES_HOST"),
@@ -23,82 +35,67 @@ func InitPostgresDB() {
 		os.Getenv("POSTGRES_DB"),
 		os.Getenv("POSTGRES_PORT"),
 	)
-
-	var err error
-	DB, err = gorm.Open(postgres.Open(dsn), &gorm.Config{})
+	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	if err != nil {
 		log.Fatal("Failed to connect to database:", err)
 	}
+	return db
+}
 
-	var userTableExists bool
-	err = DB.Raw("SELECT EXISTS (SELECT FROM pg_tables WHERE tablename = 'users')").Scan(&userTableExists).Error
-	if err != nil {
-		log.Fatal("Failed to check if users table exists:", err)
-	}
-
-	var craftsmanTableExists bool
-	err = DB.Raw("SELECT EXISTS (SELECT FROM pg_tables WHERE tablename = 'craftsmen')").Scan(&craftsmanTableExists).Error
-	if err != nil {
-		log.Fatal("Failed to check if craftsmen table exists:", err)
-	}
-
-
-	var craftsmanApplicationTableExists bool
-	err = DB.Raw("SELECT EXISTS (SELECT FROM pg_tables WHERE tablename = 'craftsman_applications')").Scan(&craftsmanApplicationTableExists).Error
-	if err != nil {
-		log.Fatal("Failed to check if users table exists:", err)
-	}
-
-	var productTableExists bool
-	err = DB.Raw("SELECT EXISTS (SELECT FROM pg_tables WHERE tablename = 'products')").Scan(&productTableExists).Error
-	if err != nil {
-		log.Fatal("Failed to check if users table exists:", err)
-	}
-
+func runMigrations() {
 	log.Println("Performing initial database migration...")
 
-	if !userTableExists {
-		
-
-		err = DB.Exec("CREATE TYPE gender AS ENUM ('male', 'female')").Error
-		if err != nil {
-			log.Printf("Warning: failed to create gender enum type: %v", err)
-		}
-
-		if err := DB.AutoMigrate(&users.User{}); err != nil {
-			log.Fatal("Failed to migrate users model:", err)
-		}
-
+	migrations := []migration{
+		{
+			table: "users",
+			migrate: func() error {
+				if err := DB.Exec("CREATE TYPE IF NOT EXISTS gender AS ENUM ('male', 'female')").Error; err != nil {
+					log.Printf("Warning: failed to create gender enum type: %v", err)
+				}
+				return DB.AutoMigrate(&users.User{})
+			},
+		},
+		{
+			table:   "craftsmen",
+			migrate: func() error { return DB.AutoMigrate(&users.Craftsman{}) },
+		},
+		{
+			table:   "craftsman_applications",
+			migrate: func() error { return DB.AutoMigrate(&craftsman_application.CraftsmanApplication{}) },
+		},
+		{
+			table: "products",
+			migrate: func() error {
+				return DB.AutoMigrate(&product.Product{}, &product.ProductImage{}, &product.ProductVideo{})
+			},
+		},
 	}
 
-	if !craftsmanTableExists {
-		if err := DB.AutoMigrate(&users.Craftsman{}); err != nil {
-			log.Fatal("Failed to migrate craftsmen model:", err)
+	for _, m := range migrations {
+		if !tableExists(m.table) {
+			if err := m.migrate(); err != nil {
+				log.Fatalf("Failed to migrate table %q: %v", m.table, err)
+			}
 		}
 	}
+}
 
-	if !craftsmanApplicationTableExists {
-		if err := DB.AutoMigrate(&craftsman_application.CraftsmanApplication{}); err != nil {
-			log.Fatal("Failed to migrate craftsman_application model:", err)
+func runIndexes() {
+	indexes := []string{
+		`CREATE INDEX IF NOT EXISTS idx_users_created_at_id ON users (created_at DESC, id DESC)`,
+	}
+	for _, idx := range indexes {
+		if err := DB.Exec(idx).Error; err != nil {
+			log.Fatalf("Failed to create index: %v\nQuery: %s", err, idx)
 		}
 	}
+}
 
-	if !productTableExists {
-		if err := DB.AutoMigrate(&product.Product{}); err != nil {
-			log.Fatal("Failed to migrate products model:", err)
-		}
-	}
-
-	// Indexes
-
-	// Users Index
-	err = DB.Exec(`
-		CREATE INDEX IF NOT EXISTS idx_users_created_at_id
-		ON users (created_at DESC, id DESC)`).Error
-
+func tableExists(name string) bool {
+	var exists bool
+	err := DB.Raw("SELECT EXISTS (SELECT FROM pg_tables WHERE tablename = ?)", name).Scan(&exists).Error
 	if err != nil {
-		log.Fatal("Failed to create users pagination index:", err)
+		log.Fatalf("Failed to check if table %q exists: %v", name, err)
 	}
-
-	log.Println("Postgres ready")
+	return exists
 }
