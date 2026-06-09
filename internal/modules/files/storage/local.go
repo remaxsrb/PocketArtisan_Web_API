@@ -53,12 +53,14 @@ func (l *LocalStorage) SaveFile(file *multipart.FileHeader, purpose string) (str
 
 	isImage := fileKind.MIME.Type == "image"
 	isPDF := fileKind.Extension == "pdf"
+	isVideo := fileKind.MIME.Type == "video"
 
 	isAvatar := isImage && purpose == "avatar"
-	isProduct := isImage && purpose == "product"
+	isProductPicture := isImage && purpose == "product_image"
+	isProductVideo := isVideo && purpose == "product_video"
 	isResume := isPDF && purpose == "resume"
 
-	if !isAvatar && !isResume && !isProduct {
+	if !isAvatar && !isResume && !isProductPicture && !isProductVideo {
 		return "", errors.ErrUnsupported
 	}
 
@@ -84,8 +86,11 @@ func (l *LocalStorage) SaveFile(file *multipart.FileHeader, purpose string) (str
 	if isAvatar {
 		subDir = "avatars"
 	}
-	if isProduct {
-		subDir = "products"
+	if isProductPicture {
+		subDir = "products_pictures"
+	}
+	if isProductVideo {
+		subDir = "product_videos"
 	}
 	if isResume {
 		subDir = "resumes"
