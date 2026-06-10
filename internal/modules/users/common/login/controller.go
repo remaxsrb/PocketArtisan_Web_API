@@ -2,7 +2,6 @@ package login
 
 import (
 	"PocketArtisan/internal/modules/auth"
-	"PocketArtisan/internal/modules/users"
 	"net/http"
 	"strconv"
 
@@ -19,44 +18,30 @@ func RegisterRoutes(router *gin.RouterGroup, db interface{}, rdb interface{}, jw
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
-		resp, err := r.Execute(c.Request.Context(), req)
-		if err != nil {
 
+		result, err := r.Execute(c.Request.Context(), req)
+		if err != nil {
 			if err.Error() == "username not found" {
 				c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
 				return
 			}
-
 			if err.Error() == "invalid password" {
 				c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
 				return
 			}
-
-		}
-
-		var id int64
-		var role string
-
-		switch r := resp.(type) {
-		case *users.RegularUserResponse:
-			id = r.ID
-			role = r.Role
-		case *users.CraftsmanResponse:
-			id = r.ID
-			role = r.Role
-		default:
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "unexpected response type"})
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
 		}
-		token, err := jwtService.Generate(auth.Identity{
-			ID:   strconv.FormatInt(id, 10),
-			Role: role,
-		})
 
+		token, err := jwtService.Generate(auth.Identity{
+			ID:   strconv.FormatInt(int64(result.ID), 10),
+			Role: result.Role,
+		})
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
 		}
-		c.JSON(http.StatusOK, gin.H{"access_token": token, "user": resp})
+
+		c.JSON(http.StatusOK, gin.H{"access_token": token, "user": result.Response})
 	})
 }
