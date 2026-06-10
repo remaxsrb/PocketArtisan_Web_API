@@ -2,6 +2,8 @@ package storage
 
 import (
 	"bytes"
+	"crypto/rand"
+	"encoding/hex"
 	"errors"
 	"fmt"
 	"image"
@@ -9,6 +11,8 @@ import (
 	"mime/multipart"
 	"os"
 	"path/filepath"
+	"strings"
+	"time"
 
 	"github.com/h2non/filetype"
 	_ "golang.org/x/image/webp"
@@ -31,9 +35,25 @@ var (
 	ErrUnsupportedFormat = errors.New("nepodržan format fajla ili namena")
 )
 
+func generateFileName(originalName string) string {
+	ext := filepath.Ext(originalName)
+	name := strings.TrimSuffix(originalName, ext)
+
+	random := make([]byte, 4)
+	rand.Read(random)
+
+	return fmt.Sprintf(
+		"%s_%d_%s%s",
+		name,
+		time.Now().UnixMilli(),
+		hex.EncodeToString(random),
+		ext,
+	)
+}
+
 func (l *LocalStorage) SaveFile(file *multipart.FileHeader, purpose string) (string, error) {
 
-	fileName := file.Filename
+	fileName := generateFileName(file.Filename)
 	subDir := ""
 	imageHeight := 0
 	imageWidth := 0
