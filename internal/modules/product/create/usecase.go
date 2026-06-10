@@ -29,12 +29,11 @@ func (uc *UseCase) Execute(ctx context.Context, req NewProductRequest) (*product
 	}
 
 	new_product := &product.Product{
-		Name:          req.Name,
-		CraftsmanID:   req.CraftsmanID,
-		MaterialPrice: req.MaterialPrice,
-		LaborPrice:    req.LaborPrice,
-		Hidden:        false,
-		Description:   req.Description,
+		Name:        req.Name,
+		CraftsmanID: req.CraftsmanID,
+		Price:       req.Price,
+		Hidden:      false,
+		Description: req.Description,
 	}
 
 	for _, url := range req.Images {
@@ -51,15 +50,24 @@ func (uc *UseCase) Execute(ctx context.Context, req NewProductRequest) (*product
 		return nil, err
 	}
 
+	var imageUrls []string
+	for _, img := range new_product.Images {
+		imageUrls = append(imageUrls, img.URL)
+	}
+
+	var videoUrls []string
+	for _, vid := range new_product.Videos {
+		videoUrls = append(videoUrls, vid.URL)
+	}
+
 	response := &product.ProductResponse{
 		ID:          new_product.ID,
 		Name:        new_product.Name,
-		CraftsmanID: new_product.CraftsmanID,
 		Hidden:      new_product.Hidden,
-		TotalPrice:  new_product.MaterialPrice + new_product.LaborPrice,
+		Price:       new_product.Price,
 		Description: new_product.Description,
-		Images:      new_product.Images,
-		Videos:      new_product.Videos,
+		Images:      imageUrls,
+		Videos:      videoUrls,
 	}
 
 	return response, nil
