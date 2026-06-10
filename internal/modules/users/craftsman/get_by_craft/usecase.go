@@ -26,7 +26,6 @@ func NewUseCase(db *gorm.DB, cache *redis.Client) *UseCase {
 func (uc *UseCase) Execute(ctx context.Context, craft string, req GetByCraftRequest) (GetByCraftResponse, error) {
 	const maxLimit = 100
 	const defaultLimit = 20
-
 	if req.Limit <= 0 {
 		req.Limit = defaultLimit
 	}
@@ -35,7 +34,6 @@ func (uc *UseCase) Execute(ctx context.Context, craft string, req GetByCraftRequ
 	}
 
 	cacheKey := fmt.Sprintf("craftsmen:craft:%s:skip:%d:limit:%d", craft, req.Skip, req.Limit)
-
 	cachedData, err := uc.cache.Get(ctx, cacheKey).Result()
 	if err == nil {
 		var cachedResp GetByCraftResponse
@@ -46,38 +44,45 @@ func (uc *UseCase) Execute(ctx context.Context, craft string, req GetByCraftRequ
 		fmt.Printf("Redis error: %v\n", err)
 	}
 
-	craftsman_list := make([]*users.CraftsmanResponse, 0, req.Limit)
-
 	var total int64
-	uc.db.WithContext(ctx).Model(&users.Craftsman{}).Where("craft = ?", craft).Count(&total)
+	if err := uc.db.WithContext(ctx).
+		Table("users").
+		Joins("INNER JOIN craftsmen ON craftsmen.user_id = users.id").
+		Where("users.role = ? AND craftsmen.craft = ?", "craftsman", craft).
+		Count(&total).Error; err != nil {
+		return GetByCraftResponse{}, err
+	}
 
-	uc.db.WithContext(ctx).
+	craftsmanList := make([]*users.CraftsmanResponse, 0, req.Limit)
+	if err := uc.db.WithContext(ctx).
 		Table("users").
 		Select(`
-			users.firstname,
-			users.lastname,
-			users.username,
-			users.email,
-			users.profile_picture,
-			craftsmen.craft,
-			craftsmen.rating,
-			craftsmen.number_of_ratings
-		`).
+            users.firstname,
+            users.lastname,
+            users.username,
+            users.email,
+            users.profile_picture,
+            users.gender,
+            craftsmen.craft,
+            craftsmen.rating,
+            craftsmen.number_of_ratings
+        `).
 		Joins("INNER JOIN craftsmen ON craftsmen.user_id = users.id").
 		Where("users.role = ? AND craftsmen.craft = ?", "craftsman", craft).
 		Offset(req.Skip).
 		Limit(req.Limit).
-		Order("craftsmen.rating desc, users.id asc").
-		Scan(&craftsman_list)
+		Order("craftsmen.rating DESC, users.id ASC").
+		Scan(&craftsmanList).Error; err != nil {
+		return GetByCraftResponse{}, err
+	}
 
 	resp := GetByCraftResponse{
-		Craftsmen: craftsman_list,
+		Craftsmen: craftsmanList,
 		Total:     total,
 		Page:      (req.Skip / req.Limit) + 1,
 	}
 
-	jsonData, err := json.Marshal(resp)
-	if err == nil {
+	if jsonData, err := json.Marshal(resp); err == nil {
 		_ = uc.cache.Set(ctx, cacheKey, jsonData, cacheTTL).Err()
 	}
 
