@@ -1,12 +1,11 @@
 package product
 
 type ProductResponse struct {
-	ID          uint64         `json:"id"`
-	Name        string         `json:"name"`
-	CraftsmanID uint64         `json:"craftsmanId"`
-	Hidden      bool           `json:"hidden"`
-	TotalPrice  float64        `json:"totalPrice"`
-	Description string         `json:"description"`
-	Images      []ProductImage `json:"images"`
-	Videos      []ProductVideo `json:"videos"`
+	ID          uint64   `json:"id"`
+	Name        string   `json:"name"`
+	Hidden      bool     `json:"hidden"`
+	Price       float64  `json:"price"`
+	Description string   `json:"description"`
+	Images      []string `json:"images"`
+	Videos      []string `json:"videos"`
 }
