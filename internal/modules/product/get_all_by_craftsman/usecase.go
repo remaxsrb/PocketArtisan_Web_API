@@ -27,7 +27,7 @@ func (uc *UseCase) Execute(ctx context.Context, req GetAllRequest) (GetAllRespon
 	const maxLimit = 100
 	const defaultLimit = 20
 
-	const cacheTTL =3 * time.Second
+	const cacheTTL = 3 * time.Second
 
 	if req.Limit <= 0 {
 		req.Limit = defaultLimit
@@ -54,8 +54,6 @@ func (uc *UseCase) Execute(ctx context.Context, req GetAllRequest) (GetAllRespon
 		return GetAllResponse{}, err
 	}
 
-	fmt.Println("craftsman_id:", craftsmanID)
-
 	var totalProducts int64
 	uc.db.WithContext(ctx).Model(&product.Product{}).Where("craftsman_id = ?", craftsmanID).Count(&totalProducts)
 
@@ -69,8 +67,6 @@ func (uc *UseCase) Execute(ctx context.Context, req GetAllRequest) (GetAllRespon
 		Order("name asc").
 		Find(&raw)
 
-		fmt.Println("products found:", len(raw))
-
 	product_list := make([]*product.ProductResponse, 0, len(raw))
 	for _, p := range raw {
 		images := make([]string, 0, len(p.Images))
@@ -83,6 +79,7 @@ func (uc *UseCase) Execute(ctx context.Context, req GetAllRequest) (GetAllRespon
 		}
 		product_list = append(product_list, &product.ProductResponse{
 			ID:              p.ID,
+			CraftsmanID:     p.CraftsmanID,
 			Name:            p.Name,
 			Hidden:          p.Hidden,
 			Price:           p.Price,
@@ -94,7 +91,6 @@ func (uc *UseCase) Execute(ctx context.Context, req GetAllRequest) (GetAllRespon
 			Videos:          videos,
 		})
 	}
-
 
 	resp := GetAllResponse{
 		Products: product_list,

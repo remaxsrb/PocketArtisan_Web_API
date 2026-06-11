@@ -33,10 +33,15 @@ func RegisterRoutes(router *gin.RouterGroup, db interface{}, rdb interface{}, jw
 			return
 		}
 
-		token, err := jwtService.Generate(auth.Identity{
+		identity := auth.Identity{
 			ID:   strconv.FormatInt(int64(result.ID), 10),
 			Role: result.Role,
-		})
+		}
+		if result.CraftsmanID != 0 {
+			identity.CraftsmanID = strconv.FormatUint(result.CraftsmanID, 10)
+		}
+
+		token, err := jwtService.Generate(identity)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return

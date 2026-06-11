@@ -53,7 +53,11 @@ func (uc *UseCase) Execute(ctx context.Context, req LoginRequest) (LoginResult, 
 			Joins("INNER JOIN craftsmen ON craftsmen.user_id = users.id").
 			Where("users.username = ?", existing.Username).
 			Scan(&r)
-		return LoginResult{ID: existing.ID, Role: existing.Role, Response: &r}, nil
+
+		var craftsman users.Craftsman
+		uc.db.WithContext(ctx).Where("user_id = ?", existing.ID).First(&craftsman)
+
+		return LoginResult{ID: existing.ID, Role: existing.Role, CraftsmanID: craftsman.ID, Response: &r}, nil
 	}
 
 	r := &users.RegularUserResponse{
