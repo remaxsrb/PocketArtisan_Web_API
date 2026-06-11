@@ -22,7 +22,12 @@ func NewUseCase(db *gorm.DB, cache *redis.Client) *UseCase {
 func (uc *UseCase) Execute(ctx context.Context, req NewProductRequest) (*product.ProductResponse, error) {
 	var existing product.Product
 
-	if err := uc.db.WithContext(ctx).Where("name = ? AND craftsman_id = ?", req.Name, req.CraftsmanID).First(&existing).Error; err == nil {
+	CraftsmanID, err := product.GetCraftsmanIDByUsername(ctx, uc.db, req.Username)
+	if err != nil {
+		return nil, err
+	}
+
+	if err := uc.db.WithContext(ctx).Where("name = ? AND craftsman_id = ?", req.Name, CraftsmanID).First(&existing).Error; err == nil {
 		return nil, errors.New("product already exists")
 	} else if !errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, err
@@ -30,7 +35,7 @@ func (uc *UseCase) Execute(ctx context.Context, req NewProductRequest) (*product
 
 	new_product := &product.Product{
 		Name:        req.Name,
-		CraftsmanID: req.CraftsmanID,
+		CraftsmanID: CraftsmanID,
 		Price:       req.Price,
 		Hidden:      false,
 		Description: req.Description,

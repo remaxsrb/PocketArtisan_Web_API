@@ -11,10 +11,11 @@ import (
 )
 
 func RegisterProductRoutes(router *gin.Engine, jwtService auth.JWTService) {
-	// public := router.Group("/products")  -- when needed
+	public := router.Group("/products")
+	get_all.RegisterRoutes(public, config.DB, config.RDB)
 
 	craftsman := router.Group("/products")
 	craftsman.Use(middleware.JWT(), middleware.RequireRoles("craftsman"))
 	create.RegisterRoutes(craftsman, config.DB, config.RDB)
-	get_all.RegisterRoutes(craftsman, config.DB, config.RDB)
+
 }
