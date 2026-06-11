@@ -1,6 +1,7 @@
 package config
 
 import (
+	"PocketArtisan/internal/modules/cart"
 	"PocketArtisan/internal/modules/craftsman_application"
 	"PocketArtisan/internal/modules/product"
 	"PocketArtisan/internal/modules/users"
@@ -46,6 +47,14 @@ func runMigrations() {
 	log.Println("Performing initial database migration...")
 
 	migrations := []migration{
+		{
+			table:   "carts",
+			migrate: func() error { return DB.AutoMigrate(&cart.Cart{}) },
+		},
+		{
+			table:   "cart_items",
+			migrate: func() error { return DB.AutoMigrate(&cart.CartItem{}) },
+		},
 		{
 			table: "users",
 			migrate: func() error {

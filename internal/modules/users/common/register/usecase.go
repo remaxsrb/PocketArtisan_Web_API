@@ -1,6 +1,7 @@
 package register
 
 import (
+	"PocketArtisan/internal/modules/cart"
 	"PocketArtisan/internal/modules/users"
 	"PocketArtisan/internal/modules/users/validator"
 	"context"
@@ -64,7 +65,15 @@ func (uc *UseCase) Execute(ctx context.Context, req RegisterRequest) (*users.Use
 	if err := user.SetPassword(req.Password); err != nil {
 		return nil, err
 	}
-	if err := uc.db.Create(user).Error; err != nil {
+
+	err = uc.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		if err := tx.Create(user).Error; err != nil {
+			return err
+		}
+		newCart := &cart.Cart{UserID: user.ID}
+		return tx.Create(newCart).Error
+	})
+	if err != nil {
 		return nil, err
 	}
 
