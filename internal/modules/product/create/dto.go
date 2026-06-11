@@ -7,4 +7,5 @@ type NewProductRequest struct {
 	Images      []string `json:"images"`
 	Videos      []string `json:"videos"`
 	Username    string   `json:"username"`
+	Category    string   `json:"category"`
 }

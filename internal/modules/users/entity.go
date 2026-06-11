@@ -2,6 +2,7 @@ package users
 
 import (
 	"PocketArtisan/internal/modules/cart"
+	"PocketArtisan/internal/modules/crafts"
 	"time"
 
 	"golang.org/x/crypto/bcrypt"
@@ -26,13 +27,13 @@ type User struct {
 }
 
 type Craftsman struct {
-	ID              uint64  `json:"id" gorm:"primaryKey"`
-	UserID          uint64  `json:"user_id" gorm:"unique;not null"` 
-	Craft           string  `json:"craft" gorm:"index;not null"`
-	Rating          float64 `json:"rating" gorm:"not null;default:0.0"`
-	NumberOfRatings int     `json:"number_of_ratings" gorm:"not null;default:0"`
-
-	User *User `json:"user,omitempty" gorm:"foreignKey:UserID;constraint:OnDelete:CASCADE;"`
+	ID              uint64        `json:"id" gorm:"primaryKey"`
+	UserID          uint64        `json:"user_id" gorm:"unique;not null"`
+	CraftID         uint64        `json:"craft_id" gorm:"not null"`
+	Rating          float64       `json:"rating" gorm:"not null;default:0.0"`
+	NumberOfRatings int           `json:"number_of_ratings" gorm:"not null;default:0"`
+	User            *User         `json:"user,omitempty" gorm:"foreignKey:UserID;constraint:OnDelete:CASCADE;"`
+	Craft           *crafts.Craft `json:"craft,omitempty" gorm:"foreignKey:CraftID;constraint:OnDelete:RESTRICT;"`
 }
 
 func (u *User) SetPassword(password string) error {

@@ -2,7 +2,7 @@ package product
 
 type ProductResponse struct {
 	ID              uint64   `json:"id"`
-	CraftsmanID uint64  `json:"craftsmanId" gorm:"column:craftsman_id"`
+	CraftsmanID     uint64   `json:"craftsmanId" gorm:"column:craftsman_id"`
 	Name            string   `json:"name"`
 	Hidden          bool     `json:"hidden"`
 	Price           float64  `json:"price"`
@@ -12,4 +12,5 @@ type ProductResponse struct {
 	Available       bool     `json:"available"`
 	Images          []string `json:"images"`
 	Videos          []string `json:"videos"`
+	Category        string   `json:"category"`
 }
