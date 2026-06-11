@@ -44,8 +44,9 @@ func GetJWTService() JWTService {
 }
 
 type claims struct {
-	UserID string `json:"uid"`
-	Role   string `json:"role"`
+	UserID      string `json:"uid"`
+	Role        string `json:"role"`
+	CraftsmanID string `json:"craftsman_id,omitempty"`
 	jwt.RegisteredClaims
 }
 
@@ -53,8 +54,9 @@ func (j *jwtService) Generate(identity Identity) (string, error) {
 	now := time.Now()
 
 	claims := claims{
-		UserID: identity.ID,
-		Role:   identity.Role,
+		UserID:      identity.ID,
+		Role:        identity.Role,
+		CraftsmanID: identity.CraftsmanID,
 		RegisteredClaims: jwt.RegisteredClaims{
 			IssuedAt:  jwt.NewNumericDate(now),
 			ExpiresAt: jwt.NewNumericDate(now.Add(j.ttl)),
@@ -88,7 +90,8 @@ func (j *jwtService) Validate(tokenStr string) (*Identity, error) {
 	}
 
 	return &Identity{
-		ID:   claims.UserID,
-		Role: claims.Role,
+		ID:          claims.UserID,
+		Role:        claims.Role,
+		CraftsmanID: claims.CraftsmanID,
 	}, nil
 }

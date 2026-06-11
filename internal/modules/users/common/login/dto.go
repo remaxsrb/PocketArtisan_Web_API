@@ -6,7 +6,8 @@ type LoginRequest struct {
 }
 
 type LoginResult struct {
-	ID       uint64
-	Role     string
-	Response interface{}
+	ID          uint64
+	Role        string
+	CraftsmanID uint64
+	Response    interface{}
 }
