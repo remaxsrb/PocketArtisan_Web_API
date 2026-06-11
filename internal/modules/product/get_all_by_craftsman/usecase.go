@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+
 	"time"
 
 	"github.com/go-redis/redis/v8"
@@ -26,7 +27,7 @@ func (uc *UseCase) Execute(ctx context.Context, req GetAllRequest) (GetAllRespon
 	const maxLimit = 100
 	const defaultLimit = 20
 
-	const cacheTTL = 5 * time.Minute
+	const cacheTTL =3 * time.Second
 
 	if req.Limit <= 0 {
 		req.Limit = defaultLimit
@@ -35,7 +36,7 @@ func (uc *UseCase) Execute(ctx context.Context, req GetAllRequest) (GetAllRespon
 		req.Limit = maxLimit
 	}
 
-	cacheKey := fmt.Sprintf("craftsmen:all:skip:%d:limit:%d", req.Skip, req.Limit)
+	cacheKey := fmt.Sprintf("products:craftsman:%s:skip:%d:limit:%d", req.Username, req.Skip, req.Limit)
 
 	cachedData, err := uc.cache.Get(ctx, cacheKey).Result()
 	if err == nil {
@@ -48,25 +49,52 @@ func (uc *UseCase) Execute(ctx context.Context, req GetAllRequest) (GetAllRespon
 		fmt.Printf("Redis error: %v\n", err)
 	}
 
-	product_list := make([]*product.ProductResponse, 0, req.Limit)
+	craftsmanID, err := product.GetCraftsmanIDByUsername(ctx, uc.db, req.Username)
+	if err != nil {
+		return GetAllResponse{}, err
+	}
+
+	fmt.Println("craftsman_id:", craftsmanID)
 
 	var totalProducts int64
-	uc.db.WithContext(ctx).Model(&product.Product{}).Count(&totalProducts)
+	uc.db.WithContext(ctx).Model(&product.Product{}).Where("craftsman_id = ?", craftsmanID).Count(&totalProducts)
 
+	raw := make([]*product.Product, 0, req.Limit)
 	uc.db.WithContext(ctx).
-		Table("products").
-		Select(`
-        products.name, 
-        products.craftsman_id, 
-		products.hidden,
-        products.picture, 
-        products.material_price + products.labor_price as totalPrice, 
-        products.description`).
-		Where("products.craftsman_id = ?", req.CraftsmanID).
+		Preload("Images").
+		Preload("Videos").
+		Where("craftsman_id = ?", craftsmanID).
 		Offset(req.Skip).
 		Limit(req.Limit).
-		Order("products.name asc").
-		Scan(&product_list)
+		Order("name asc").
+		Find(&raw)
+
+		fmt.Println("products found:", len(raw))
+
+	product_list := make([]*product.ProductResponse, 0, len(raw))
+	for _, p := range raw {
+		images := make([]string, 0, len(p.Images))
+		for _, img := range p.Images {
+			images = append(images, img.URL)
+		}
+		videos := make([]string, 0, len(p.Videos))
+		for _, vid := range p.Videos {
+			videos = append(videos, vid.URL)
+		}
+		product_list = append(product_list, &product.ProductResponse{
+			ID:              p.ID,
+			Name:            p.Name,
+			Hidden:          p.Hidden,
+			Price:           p.Price,
+			Description:     p.Description,
+			Rating:          p.Rating,
+			NumberOfRatings: p.NumberOfRatings,
+			Available:       p.Available,
+			Images:          images,
+			Videos:          videos,
+		})
+	}
+
 
 	resp := GetAllResponse{
 		Products: product_list,
@@ -82,4 +110,3 @@ func (uc *UseCase) Execute(ctx context.Context, req GetAllRequest) (GetAllRespon
 	return resp, nil
 
 }
-  

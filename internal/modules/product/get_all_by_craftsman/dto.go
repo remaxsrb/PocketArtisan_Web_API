@@ -10,7 +10,7 @@ const (
 )
 
 type GetAllRequest struct {
-	CraftsmanID uint64 `form:"craftsmanId" query:"craftsmanId"`
+	Username string `form:"username" query:"username"`
 	Limit int `form:"limit" query:"limit"`
 	Skip  int `form:"skip" query:"skip"`
 }

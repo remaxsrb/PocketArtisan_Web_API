@@ -12,13 +12,9 @@ import (
 func RegisterRoutes(router *gin.RouterGroup, db interface{}, rdb interface{}) {
 	uc := NewUseCase(db.(*gorm.DB), rdb.(*redis.Client))
 
-	router.GET("/all", func(c *gin.Context) {
+	router.GET("/all/:username", func(c *gin.Context) {
 
-		craftsmanID, err := strconv.ParseUint(c.DefaultQuery("craftsmanId", "0"), 10, 64)
-		if err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "invalid craftsmanId"})
-			return
-		}
+		username := c.Param("username")
 
 		skip, err := strconv.Atoi(c.DefaultQuery("skip", "0"))
 		if err != nil {
@@ -31,7 +27,7 @@ func RegisterRoutes(router *gin.RouterGroup, db interface{}, rdb interface{}) {
 			return
 		}
 
-		req := GetAllRequest{CraftsmanID: craftsmanID, Skip: skip, Limit: limit}
+		req := GetAllRequest{Username: username, Skip: skip, Limit: limit}
 
 		resp, err := uc.Execute(c.Request.Context(), req)
 		if err != nil {
