@@ -22,6 +22,7 @@ type RegularUserResponse struct {
 
 type CraftsmanResponse struct {
 	UserResponse
+	CraftsmanID      uint64  `json:"craftsmanId"`
 	Craft           string  `json:"craft"`
 	Rating          float64 `json:"rating"`
 	NumberOfRatings int     `json:"numberOfRatings"`
