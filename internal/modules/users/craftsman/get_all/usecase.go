@@ -58,9 +58,10 @@ func (uc *UseCase) Execute(ctx context.Context, req GetAllRequest) (GetAllRespon
 		Select(`
         users.firstname, 
         users.lastname, 
-		users.username,
+        users.username,
         users.email, 
         users.profile_picture, 
+        craftsmen.id as craftsman_id,
         craftsmen.craft, 
         craftsmen.rating, 
         craftsmen.number_of_ratings
@@ -71,7 +72,7 @@ func (uc *UseCase) Execute(ctx context.Context, req GetAllRequest) (GetAllRespon
 		Limit(req.Limit).
 		Order("users.created_at desc, users.id asc").
 		Scan(&craftsman_list)
-
+		
 	resp := GetAllResponse{
 		Craftsmen: craftsman_list,
 		Total:     totalCraftsmen,

@@ -16,11 +16,11 @@ func RegisterRoutes(router *gin.RouterGroup, db interface{}, rdb interface{}) {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
-		err := r.Execute(c.Request.Context(), req)
+		resp, err := r.Execute(c.Request.Context(), req)
 		if err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
-		c.JSON(http.StatusOK, nil)
+		c.JSON(http.StatusOK, resp)
 	})
 }

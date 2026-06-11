@@ -57,21 +57,21 @@ func (uc *UseCase) Execute(ctx context.Context, craft string, req GetByCraftRequ
 	if err := uc.db.WithContext(ctx).
 		Table("users").
 		Select(`
-            users.firstname,
-            users.lastname,
-            users.username,
-            users.email,
-            users.profile_picture,
-            users.gender,
-            craftsmen.craft,
-            craftsmen.rating,
-            craftsmen.number_of_ratings
-        `).
+        users.firstname, 
+        users.lastname, 
+        users.username,
+        users.email, 
+        users.profile_picture, 
+        craftsmen.id as craftsman_id,
+        craftsmen.craft, 
+        craftsmen.rating, 
+        craftsmen.number_of_ratings
+    `).
 		Joins("INNER JOIN craftsmen ON craftsmen.user_id = users.id").
 		Where("users.role = ? AND craftsmen.craft = ?", "craftsman", craft).
 		Offset(req.Skip).
 		Limit(req.Limit).
-		Order("craftsmen.rating DESC, users.id ASC").
+		Order("users.created_at desc, users.id asc").
 		Scan(&craftsmanList).Error; err != nil {
 		return GetByCraftResponse{}, err
 	}
