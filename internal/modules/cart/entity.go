@@ -7,6 +7,8 @@ type CartItem struct {
 	ProductID uint64 `json:"product_id" gorm:"not null;uniqueIndex:idx_cart_product"`
 
 	Quantity int `json:"quantity" gorm:"not null;default:1"`
+
+	Cart Cart `json:"-" gorm:"foreignKey:CartID"`
 }
 
 type Cart struct {
