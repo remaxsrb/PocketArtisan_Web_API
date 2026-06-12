@@ -1,5 +1,7 @@
 package users
 
+import "PocketArtisan/internal/modules/cart"
+
 /*
 
  Go does not support inheritance but it does support struct embedding like C.
@@ -18,11 +20,12 @@ type UserResponse struct {
 
 type RegularUserResponse struct {
 	UserResponse
+	Cart *cart.Cart `json:"cart,omitempty"`
 }
 
 type CraftsmanResponse struct {
 	UserResponse
-	CraftsmanID      uint64  `json:"craftsmanId"`
+	CraftsmanID     uint64  `json:"craftsmanId"`
 	Craft           string  `json:"craft"`
 	Rating          float64 `json:"rating"`
 	NumberOfRatings int     `json:"numberOfRatings"`

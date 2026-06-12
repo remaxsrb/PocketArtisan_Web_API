@@ -1,6 +1,7 @@
 package login
 
 import (
+	"PocketArtisan/internal/modules/cart"
 	"PocketArtisan/internal/modules/users"
 	"PocketArtisan/internal/modules/utils"
 	"context"
@@ -73,6 +74,21 @@ func (uc *UseCase) Execute(ctx context.Context, req LoginRequest) (LoginResult, 
 			Gender:         existing.Gender,
 		},
 	}
+
+	var userCart cart.Cart
+	cartErr := uc.db.WithContext(ctx).
+		Preload("Items").
+		Where("user_id = ?", existing.ID).
+		First(&userCart).
+		Error
+	if cartErr != nil && !errors.Is(cartErr, gorm.ErrRecordNotFound) {
+		return LoginResult{}, cartErr
+	}
+
+	if cartErr == nil {
+		r.Cart = &userCart
+	}
+
 	return LoginResult{ID: existing.ID, Role: existing.Role, Response: r}, nil
 
 }
