@@ -1,8 +1,8 @@
 package login
 
 import (
-	"PocketArtisan/internal/modules/utils"
 	"PocketArtisan/internal/modules/users"
+	"PocketArtisan/internal/modules/utils"
 	"context"
 	"errors"
 	"time"
@@ -42,17 +42,18 @@ func (uc *UseCase) Execute(ctx context.Context, req LoginRequest) (LoginResult, 
 		uc.db.WithContext(ctx).
 			Table("users").
 			Select(`
-                users.username,
-                users.firstname,
-                users.lastname,
-                users.email,
-                users.profile_picture,
-                users.gender,
-                craftsmen.craft,
-                craftsmen.rating,
-                craftsmen.number_of_ratings
-            `).
+        users.username,
+        users.firstname,
+        users.lastname,
+        users.email,
+        users.profile_picture,
+        users.gender,
+        crafts.name AS craft,
+        craftsmen.rating,
+        craftsmen.number_of_ratings
+    `).
 			Joins("INNER JOIN craftsmen ON craftsmen.user_id = users.id").
+			Joins("INNER JOIN crafts ON crafts.id = craftsmen.craft_id").
 			Where("users.username = ?", existing.Username).
 			Scan(&r)
 
