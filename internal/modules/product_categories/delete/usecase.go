@@ -1,6 +1,7 @@
 package delete
 
 import (
+	"PocketArtisan/internal/modules/utils"
 	"errors"
 	"context"
 	"github.com/go-redis/redis/v8"
@@ -27,6 +28,8 @@ func (uc *UseCase) Execute(ctx context.Context, req DeleteProductCategoryRequest
 	if err := uc.db.WithContext(ctx).Delete(&pc).Error; err != nil {
 		return err
 	}
+
+	utils.BumpCacheVersion(ctx, uc.cache, "products", "product_categories")
 
 	return nil
 }

@@ -2,6 +2,7 @@ package getbyusername
 
 import (
 	"PocketArtisan/internal/modules/users"
+	"PocketArtisan/internal/modules/utils"
 	"context"
 	"encoding/json"
 	"errors"
@@ -29,7 +30,8 @@ type cacheEnvelope struct {
 }
 
 func (uc *UseCase) Execute(ctx context.Context, username string) (interface{}, error) {
-	cacheKey := fmt.Sprintf("user:username:%s", username)
+	cacheVersion := utils.GetCacheVersion(ctx, uc.cache, "users")
+	cacheKey := fmt.Sprintf("user:username:v:%d:%s", cacheVersion, username)
 
 	// cache hit
 

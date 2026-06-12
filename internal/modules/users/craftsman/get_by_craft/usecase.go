@@ -36,7 +36,8 @@ func (uc *UseCase) Execute(ctx context.Context, craft string, req GetByCraftRequ
 
 	normalizedCraft := utils.NormalizeForSearch(craft)
 
-	cacheKey := fmt.Sprintf("craftsmen:craft:%s:skip:%d:limit:%d", normalizedCraft, req.Skip, req.Limit)
+	cacheVersion := utils.GetCacheVersion(ctx, uc.cache, "craftsmen")
+	cacheKey := fmt.Sprintf("craftsmen:craft:v:%d:%s:skip:%d:limit:%d", cacheVersion, normalizedCraft, req.Skip, req.Limit)
 	cachedData, err := uc.cache.Get(ctx, cacheKey).Result()
 	if err == nil {
 		var cachedResp GetByCraftResponse

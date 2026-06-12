@@ -1,6 +1,7 @@
 package set_profile_picture
 
 import (
+	"PocketArtisan/internal/modules/utils"
 	"PocketArtisan/internal/modules/users"
 	"context"
 	"errors"
@@ -31,6 +32,8 @@ func (uc *UseCase) Execute(ctx context.Context, req SetProfilePictureRequest) er
 	if err := uc.db.WithContext(ctx).Save(&existing).Error; err != nil {
 		return err
 	}
+
+	utils.BumpCacheVersion(ctx, uc.cache, "users")
 
 	return nil
 

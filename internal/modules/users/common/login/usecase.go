@@ -1,6 +1,7 @@
 package login
 
 import (
+	"PocketArtisan/internal/modules/utils"
 	"PocketArtisan/internal/modules/users"
 	"context"
 	"errors"
@@ -34,6 +35,7 @@ func (uc *UseCase) Execute(ctx context.Context, req LoginRequest) (LoginResult, 
 
 	existing.LastLoginAt = time.Now()
 	uc.db.WithContext(ctx).Save(&existing)
+	utils.BumpCacheVersion(ctx, uc.cache, "users")
 
 	if existing.Role == "craftsman" {
 		var r users.CraftsmanResponse

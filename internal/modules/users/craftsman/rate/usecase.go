@@ -2,6 +2,7 @@ package rate
 
 import (
 	"PocketArtisan/internal/modules/users"
+	"PocketArtisan/internal/modules/utils"
 	"context"
 	"errors"
 
@@ -33,6 +34,8 @@ func (uc *UseCase) Execute(ctx context.Context, req Request) (Response, error) {
 	if err := uc.db.Save(&craftsman).Error; err != nil {
 		return Response{}, err
 	}
+
+	utils.BumpCacheVersion(ctx, uc.cache, "users", "craftsmen")
 
 	return Response{
 		AverageRating:   craftsman.Rating,

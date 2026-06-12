@@ -2,6 +2,7 @@ package delete
 
 import (
 	"PocketArtisan/internal/modules/crafts"
+	"PocketArtisan/internal/modules/utils"
 	"context"
 	"errors"
 
@@ -28,6 +29,8 @@ func (uc *UseCase) Execute(ctx context.Context, req DeleteCraftRequest) error {
 	if err := uc.db.WithContext(ctx).Delete(&c).Error; err != nil {
 		return err
 	}
+
+	utils.BumpCacheVersion(ctx, uc.cache, "craftsmen", "crafts")
 
 	return nil
 

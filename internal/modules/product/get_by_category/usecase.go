@@ -35,7 +35,8 @@ func (uc *UseCase) Execute(ctx context.Context, req GetByCategoryRequest) (GetBy
 		req.Limit = maxLimit
 	}
 
-	cacheKey := fmt.Sprintf("products:category:search:%s:skip:%d:limit:%d", req.Search, req.Skip, req.Limit)
+	cacheVersion := utils.GetCacheVersion(ctx, uc.cache, "products")
+	cacheKey := fmt.Sprintf("products:category:search:v:%d:%s:skip:%d:limit:%d", cacheVersion, req.Search, req.Skip, req.Limit)
 
 	cachedData, err := uc.cache.Get(ctx, cacheKey).Result()
 	if err == nil {

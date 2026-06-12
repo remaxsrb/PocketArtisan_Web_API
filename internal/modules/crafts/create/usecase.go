@@ -42,6 +42,8 @@ func (uc *UseCase) Execute(ctx context.Context, req NewCraftRequest) error {
 		return err
 	}
 
+	utils.BumpCacheVersion(ctx, uc.cache, "craftsmen", "crafts")
+
 	return nil
 
 }
