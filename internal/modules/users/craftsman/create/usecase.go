@@ -2,6 +2,7 @@ package create
 
 import (
 	"PocketArtisan/internal/modules/crafts"
+	"PocketArtisan/internal/modules/utils"
 	"PocketArtisan/internal/modules/users"
 	"context"
 	"errors"
@@ -47,6 +48,8 @@ func (uc *UseCase) Execute(ctx context.Context, req Request) error {
 	if err := uc.db.Create(&craftsman).Error; err != nil {
 		return err
 	}
+
+	utils.BumpCacheVersion(ctx, uc.cache, "users", "craftsmen")
 
 	return nil
 

@@ -1,6 +1,7 @@
 package change_password
 
 import (
+	"PocketArtisan/internal/modules/utils"
 	"PocketArtisan/internal/modules/users"
 	"PocketArtisan/internal/modules/users/validator"
 	"context"
@@ -37,6 +38,8 @@ func (uc *UseCase) Execute(ctx context.Context, req ChangePasswordRequest) error
 	if err := uc.db.Save(&user).Error; err != nil {
 		return err
 	}
+
+	utils.BumpCacheVersion(ctx, uc.cache, "users")
 
 	return nil
 }

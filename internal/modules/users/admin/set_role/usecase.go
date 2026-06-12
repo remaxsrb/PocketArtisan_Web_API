@@ -1,6 +1,7 @@
 package set_role
 
 import (
+	"PocketArtisan/internal/modules/utils"
 	"PocketArtisan/internal/modules/users"
 	"context"
 	"errors"
@@ -36,6 +37,8 @@ func (uc *UseCase) Execute(ctx context.Context, req SetRoleRequest) error {
 	if err := uc.db.Save(&user).Error; err != nil {
 		return err
 	}
+
+	utils.BumpCacheVersion(ctx, uc.cache, "users", "craftsmen")
 
 	return nil
 }

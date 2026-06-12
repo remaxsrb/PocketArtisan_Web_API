@@ -3,6 +3,7 @@ package create
 import (
 	"PocketArtisan/internal/modules/product"
 	"PocketArtisan/internal/modules/product_categories"
+	"PocketArtisan/internal/modules/utils"
 	"context"
 	"errors"
 	"strings"
@@ -64,6 +65,8 @@ func (uc *UseCase) Execute(ctx context.Context, req NewProductRequest) (*product
 		}
 		return nil, err
 	}
+
+	utils.BumpCacheVersion(ctx, uc.cache, "products")
 
 	var imageUrls []string
 	for _, img := range new_product.Images {

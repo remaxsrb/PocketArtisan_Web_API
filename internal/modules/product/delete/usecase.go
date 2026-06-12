@@ -2,6 +2,7 @@ package delete
 
 import (
 	"PocketArtisan/internal/modules/product"
+	"PocketArtisan/internal/modules/utils"
 	"context"
 	"errors"
 
@@ -42,6 +43,8 @@ func (uc *UseCase) Execute(ctx context.Context, req DeleteProductRequest) error 
 	if err := uc.db.WithContext(ctx).Delete(&existing).Error; err != nil {
 		return err
 	}
+
+	utils.BumpCacheVersion(ctx, uc.cache, "products")
 
 	return nil
 }

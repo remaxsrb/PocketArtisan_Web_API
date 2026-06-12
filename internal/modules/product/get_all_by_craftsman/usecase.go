@@ -2,6 +2,7 @@ package getallbycraftsman
 
 import (
 	"PocketArtisan/internal/modules/product"
+	"PocketArtisan/internal/modules/utils"
 	"context"
 	"encoding/json"
 	"errors"
@@ -36,7 +37,8 @@ func (uc *UseCase) Execute(ctx context.Context, req GetAllRequest) (GetAllRespon
 		req.Limit = maxLimit
 	}
 
-	cacheKey := fmt.Sprintf("products:craftsman:%s:skip:%d:limit:%d", req.Username, req.Skip, req.Limit)
+	cacheVersion := utils.GetCacheVersion(ctx, uc.cache, "products")
+	cacheKey := fmt.Sprintf("products:craftsman:v:%d:%s:skip:%d:limit:%d", cacheVersion, req.Username, req.Skip, req.Limit)
 	
 	cachedData, err := uc.cache.Get(ctx, cacheKey).Result()
 	if err == nil {

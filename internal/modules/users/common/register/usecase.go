@@ -2,10 +2,12 @@ package register
 
 import (
 	"PocketArtisan/internal/modules/cart"
+	"PocketArtisan/internal/modules/utils"
 	"PocketArtisan/internal/modules/users"
 	"PocketArtisan/internal/modules/users/validator"
 	"context"
 	"errors"
+	"fmt"
 	"time"
 
 	"github.com/go-redis/redis/v8"
@@ -34,6 +36,14 @@ func (uc *UseCase) Execute(ctx context.Context, req RegisterRequest) (*users.Use
 
 	if err := uc.db.WithContext(ctx).Where("email = ?", req.Email).First(&existing).Error; err == nil {
 		return nil, errors.New("email already used")
+	}
+
+	if uc.cache != nil {
+		cacheVersion := utils.GetCacheVersion(ctx, uc.cache, "users")
+		usernameCacheKey := fmt.Sprintf("user:username:v:%d:%s", cacheVersion, req.Username)
+		if _, err := uc.cache.Get(ctx, usernameCacheKey).Result(); err == nil {
+			return nil, errors.New("username already used")
+		}
 	}
 
 	if err := uc.db.WithContext(ctx).Where("username = ?", req.Username).First(&existing).Error; err == nil {
@@ -76,6 +86,8 @@ func (uc *UseCase) Execute(ctx context.Context, req RegisterRequest) (*users.Use
 	if err != nil {
 		return nil, err
 	}
+
+	utils.BumpCacheVersion(ctx, uc.cache, "users")
 
 	return user, nil
 }

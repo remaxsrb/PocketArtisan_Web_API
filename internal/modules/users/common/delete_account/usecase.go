@@ -1,6 +1,7 @@
 package delete_account
 
 import (
+	"PocketArtisan/internal/modules/utils"
 	"PocketArtisan/internal/modules/users"
 	"context"
 	"errors"
@@ -29,6 +30,8 @@ func (uc *UseCase) Execute(ctx context.Context, req DeleteAccountRequest) error 
 	if err := uc.db.Delete(&existing).Error; err != nil {
 		return err
 	}
+
+	utils.BumpCacheVersion(ctx, uc.cache, "users", "craftsmen", "products")
 
 	return nil
 }

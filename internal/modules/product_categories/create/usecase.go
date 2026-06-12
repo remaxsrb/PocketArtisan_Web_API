@@ -42,6 +42,8 @@ func (uc *UseCase) Execute(ctx context.Context, req NewProductCategoryRequest) e
 		return err
 	}
 
+	utils.BumpCacheVersion(ctx, uc.cache, "products", "product_categories")
+
 	return nil
 
 }
