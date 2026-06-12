@@ -16,11 +16,11 @@ func RegisterRoutes(router *gin.RouterGroup, db interface{}, rdb interface{}) {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
-		response, err := r.Execute(c.Request.Context(), req)
+		 err := r.Execute(c.Request.Context(), req)
 		if err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
-		c.JSON(http.StatusCreated, response)
+		c.JSON(http.StatusCreated, gin.H{"message": "product created successfully"})
 	})
 }
