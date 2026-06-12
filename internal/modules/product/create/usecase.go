@@ -2,6 +2,7 @@ package create
 
 import (
 	"PocketArtisan/internal/modules/product"
+	"PocketArtisan/internal/modules/product_categories"
 	"context"
 	"errors"
 	"strings"
@@ -27,6 +28,14 @@ func (uc *UseCase) Execute(ctx context.Context, req NewProductRequest) (*product
 		return nil, err
 	}
 
+	var pc product_categories.ProductCategory
+	if err := uc.db.WithContext(ctx).Where("name = ?", req.Category).First(&pc).Error; err != nil {	
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, errors.New("product category not found")
+		}
+		return nil, err
+	}
+
 	if err := uc.db.WithContext(ctx).Where("name = ? AND craftsman_id = ?", req.Name, CraftsmanID).First(&existing).Error; err == nil {
 		return nil, errors.New("product already exists")
 	} else if !errors.Is(err, gorm.ErrRecordNotFound) {
@@ -36,6 +45,7 @@ func (uc *UseCase) Execute(ctx context.Context, req NewProductRequest) (*product
 	new_product := &product.Product{
 		Name:        req.Name,
 		CraftsmanID: CraftsmanID,
+		CategoryID:  pc.ID,
 		Price:       req.Price,
 		Hidden:      false,
 		Description: req.Description,

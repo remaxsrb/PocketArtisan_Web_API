@@ -62,17 +62,18 @@ func (uc *UseCase) Execute(ctx context.Context, req GetAllRequest) (GetAllRespon
         users.email, 
         users.profile_picture, 
         craftsmen.id as craftsman_id,
-        craftsmen.craft, 
+        crafts.name as craft, 
         craftsmen.rating, 
         craftsmen.number_of_ratings
     `).
 		Joins("INNER JOIN craftsmen ON craftsmen.user_id = users.id").
+		Joins("INNER JOIN crafts ON crafts.id = craftsmen.craft_id").
 		Where("users.role = ?", "craftsman").
 		Offset(req.Skip).
 		Limit(req.Limit).
 		Order("users.created_at desc, users.id asc").
 		Scan(&craftsman_list)
-		
+
 	resp := GetAllResponse{
 		Craftsmen: craftsman_list,
 		Total:     totalCraftsmen,
@@ -81,7 +82,6 @@ func (uc *UseCase) Execute(ctx context.Context, req GetAllRequest) (GetAllRespon
 
 	jsonData, err := json.Marshal(resp)
 	if err == nil {
-		// Set the data with your defined TTL
 		_ = uc.cache.Set(ctx, cacheKey, jsonData, cacheTTL).Err()
 	}
 

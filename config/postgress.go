@@ -2,8 +2,10 @@ package config
 
 import (
 	"PocketArtisan/internal/modules/cart"
+	"PocketArtisan/internal/modules/crafts"
 	"PocketArtisan/internal/modules/craftsman_application"
 	"PocketArtisan/internal/modules/product"
+	"PocketArtisan/internal/modules/product_categories"
 	"PocketArtisan/internal/modules/users"
 	"fmt"
 	"log"
@@ -44,7 +46,7 @@ func mustConnectDB() *gorm.DB {
 }
 
 func runMigrations() {
-	log.Println("Performing initial database migration...")
+	log.Println("Performing database migrations...")
 
 	migrations := []migration{
 		{
@@ -65,12 +67,20 @@ func runMigrations() {
 			},
 		},
 		{
+			table:   "crafts",
+			migrate: func() error { return DB.AutoMigrate(&crafts.Craft{}) },
+		},
+		{
 			table:   "craftsmen",
 			migrate: func() error { return DB.AutoMigrate(&users.Craftsman{}) },
 		},
 		{
 			table:   "craftsman_applications",
 			migrate: func() error { return DB.AutoMigrate(&craftsman_application.CraftsmanApplication{}) },
+		},
+		{
+			table:   "product_categories",
+			migrate: func() error { return DB.AutoMigrate(&product_categories.ProductCategory{}) },
 		},
 		{
 			table: "products",
@@ -81,10 +91,8 @@ func runMigrations() {
 	}
 
 	for _, m := range migrations {
-		if !tableExists(m.table) {
-			if err := m.migrate(); err != nil {
-				log.Fatalf("Failed to migrate table %q: %v", m.table, err)
-			}
+		if err := m.migrate(); err != nil {
+			log.Fatalf("Failed to migrate table %q: %v", m.table, err)
 		}
 	}
 }
@@ -98,13 +106,4 @@ func runIndexes() {
 			log.Fatalf("Failed to create index: %v\nQuery: %s", err, idx)
 		}
 	}
-}
-
-func tableExists(name string) bool {
-	var exists bool
-	err := DB.Raw("SELECT EXISTS (SELECT FROM pg_tables WHERE tablename = ?)", name).Scan(&exists).Error
-	if err != nil {
-		log.Fatalf("Failed to check if table %q exists: %v", name, err)
-	}
-	return exists
 }

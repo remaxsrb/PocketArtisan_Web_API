@@ -2,6 +2,7 @@ package getbycraft
 
 import (
 	"PocketArtisan/internal/modules/users"
+	"PocketArtisan/internal/modules/utils"
 	"context"
 	"encoding/json"
 	"errors"
@@ -33,7 +34,9 @@ func (uc *UseCase) Execute(ctx context.Context, craft string, req GetByCraftRequ
 		req.Limit = maxLimit
 	}
 
-	cacheKey := fmt.Sprintf("craftsmen:craft:%s:skip:%d:limit:%d", craft, req.Skip, req.Limit)
+	normalizedCraft := utils.NormalizeForSearch(craft)
+
+	cacheKey := fmt.Sprintf("craftsmen:craft:%s:skip:%d:limit:%d", normalizedCraft, req.Skip, req.Limit)
 	cachedData, err := uc.cache.Get(ctx, cacheKey).Result()
 	if err == nil {
 		var cachedResp GetByCraftResponse
@@ -44,18 +47,20 @@ func (uc *UseCase) Execute(ctx context.Context, craft string, req GetByCraftRequ
 		fmt.Printf("Redis error: %v\n", err)
 	}
 
-	var total int64
-	if err := uc.db.WithContext(ctx).
+	baseQuery := uc.db.WithContext(ctx).
 		Table("users").
 		Joins("INNER JOIN craftsmen ON craftsmen.user_id = users.id").
-		Where("users.role = ? AND craftsmen.craft = ?", "craftsman", craft).
-		Count(&total).Error; err != nil {
+		Joins("INNER JOIN crafts ON crafts.id = craftsmen.craft_id").
+		Where("users.role = ?", "craftsman").
+		Where("? = ANY(crafts.search_keywords)", normalizedCraft)
+
+	var total int64
+	if err := baseQuery.Session(&gorm.Session{}).Count(&total).Error; err != nil {
 		return GetByCraftResponse{}, err
 	}
 
 	craftsmanList := make([]*users.CraftsmanResponse, 0, req.Limit)
-	if err := uc.db.WithContext(ctx).
-		Table("users").
+	if err := baseQuery.Session(&gorm.Session{}).
 		Select(`
         users.firstname, 
         users.lastname, 
@@ -63,12 +68,10 @@ func (uc *UseCase) Execute(ctx context.Context, craft string, req GetByCraftRequ
         users.email, 
         users.profile_picture, 
         craftsmen.id as craftsman_id,
-        craftsmen.craft, 
+        crafts.name as craft, 
         craftsmen.rating, 
         craftsmen.number_of_ratings
     `).
-		Joins("INNER JOIN craftsmen ON craftsmen.user_id = users.id").
-		Where("users.role = ? AND craftsmen.craft = ?", "craftsman", craft).
 		Offset(req.Skip).
 		Limit(req.Limit).
 		Order("users.created_at desc, users.id asc").

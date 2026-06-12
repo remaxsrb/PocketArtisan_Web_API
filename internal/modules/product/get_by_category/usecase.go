@@ -1,12 +1,12 @@
-package getallbycraftsman
+package getbycategory
 
 import (
 	"PocketArtisan/internal/modules/product"
+	"PocketArtisan/internal/modules/utils"
 	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
-
 	"time"
 
 	"github.com/go-redis/redis/v8"
@@ -22,11 +22,10 @@ func NewUseCase(db *gorm.DB, cache *redis.Client) *UseCase {
 	return &UseCase{db: db, cache: cache}
 }
 
-func (uc *UseCase) Execute(ctx context.Context, req GetAllRequest) (GetAllResponse, error) {
+func (uc *UseCase) Execute(ctx context.Context, req GetByCategoryRequest) (GetByCategoryResponse, error) {
 
 	const maxLimit = 100
 	const defaultLimit = 20
-
 	const cacheTTL = 3 * time.Second
 
 	if req.Limit <= 0 {
@@ -36,12 +35,11 @@ func (uc *UseCase) Execute(ctx context.Context, req GetAllRequest) (GetAllRespon
 		req.Limit = maxLimit
 	}
 
-	cacheKey := fmt.Sprintf("products:craftsman:%s:skip:%d:limit:%d", req.Username, req.Skip, req.Limit)
-	
+	cacheKey := fmt.Sprintf("products:category:search:%s:skip:%d:limit:%d", req.Search, req.Skip, req.Limit)
+
 	cachedData, err := uc.cache.Get(ctx, cacheKey).Result()
 	if err == nil {
-
-		var cachedResp GetAllResponse
+		var cachedResp GetByCategoryResponse
 		if err := json.Unmarshal([]byte(cachedData), &cachedResp); err == nil {
 			return cachedResp, nil
 		}
@@ -49,20 +47,29 @@ func (uc *UseCase) Execute(ctx context.Context, req GetAllRequest) (GetAllRespon
 		fmt.Printf("Redis error: %v\n", err)
 	}
 
-	craftsmanID, err := product.GetCraftsmanIDByUsername(ctx, uc.db, req.Username)
-	if err != nil {
-		return GetAllResponse{}, err
-	}
+	normalizedSearch := utils.NormalizeForSearch(req.Search)
 
 	var totalProducts int64
-	uc.db.WithContext(ctx).Model(&product.Product{}).Where("craftsman_id = ?", craftsmanID).Count(&totalProducts)
+	countQuery := uc.db.WithContext(ctx).Model(&product.Product{})
+	if normalizedSearch != "" {
+		countQuery = countQuery.
+			Joins("JOIN product_categories ON product_categories.id = products.category_id").
+			Where("? = ANY(product_categories.search_keywords)", normalizedSearch)
+	}
+	countQuery.Count(&totalProducts)
 
-	raw := make([]*product.Product, 0, req.Limit)
-	uc.db.WithContext(ctx).
+	listQuery := uc.db.WithContext(ctx).
 		Preload("Images").
 		Preload("Videos").
-		Preload("Category").
-		Where("craftsman_id = ?", craftsmanID).
+		Preload("Category")
+	if normalizedSearch != "" {
+		listQuery = listQuery.
+			Joins("JOIN product_categories ON product_categories.id = products.category_id").
+			Where("? = ANY(product_categories.search_keywords)", normalizedSearch)
+	}
+
+	raw := make([]*product.Product, 0, req.Limit)
+	listQuery.
 		Offset(req.Skip).
 		Limit(req.Limit).
 		Order("name asc").
@@ -98,7 +105,7 @@ func (uc *UseCase) Execute(ctx context.Context, req GetAllRequest) (GetAllRespon
 		})
 	}
 
-	resp := GetAllResponse{
+	resp := GetByCategoryResponse{
 		Products: product_list,
 		Total:    totalProducts,
 		Page:     (req.Skip / req.Limit) + 1,
@@ -110,5 +117,4 @@ func (uc *UseCase) Execute(ctx context.Context, req GetAllRequest) (GetAllRespon
 	}
 
 	return resp, nil
-
 }

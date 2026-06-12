@@ -1,6 +1,10 @@
 package crafts
 
+import "github.com/lib/pq"
+
 type Craft struct {
-	ID   int    `json:"id" gorm:"primaryKey;autoIncrement:false"`
-	Name string `json:"name" gorm:"not null; unique"`
+	ID             uint64         `json:"id" gorm:"primaryKey;autoIncrement:true"`
+	Name           string         `json:"name" gorm:"not null; unique"`
+	Keywords       pq.StringArray `gorm:"type:text[]"`
+	SearchKeywords pq.StringArray `gorm:"type:text[];index:,type:gin"`
 }
