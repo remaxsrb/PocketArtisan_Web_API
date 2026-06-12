@@ -21,26 +21,26 @@ func NewUseCase(db *gorm.DB, cache *redis.Client) *UseCase {
 	return &UseCase{db: db, cache: cache}
 }
 
-func (uc *UseCase) Execute(ctx context.Context, req NewProductRequest) (*product.ProductResponse, error) {
+func (uc *UseCase) Execute(ctx context.Context, req NewProductRequest) error {
 	var existing product.Product
 
 	CraftsmanID, err := product.GetCraftsmanIDByUsername(ctx, uc.db, req.Username)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	var pc product_categories.ProductCategory
 	if err := uc.db.WithContext(ctx).Where("name = ?", req.Category).First(&pc).Error; err != nil {	
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, errors.New("product category not found")
+			return errors.New("product category not found")
 		}
-		return nil, err
+		return  err	
 	}
 
 	if err := uc.db.WithContext(ctx).Where("name = ? AND craftsman_id = ?", req.Name, CraftsmanID).First(&existing).Error; err == nil {
-		return nil, errors.New("product already exists")
+		return errors.New("product already exists")
 	} else if !errors.Is(err, gorm.ErrRecordNotFound) {
-		return nil, err
+		return err
 	}
 
 	new_product := &product.Product{
@@ -61,9 +61,9 @@ func (uc *UseCase) Execute(ctx context.Context, req NewProductRequest) (*product
 
 	if err := uc.db.WithContext(ctx).Create(new_product).Error; err != nil {
 		if strings.Contains(err.Error(), "idx_craftsman_product") || strings.Contains(err.Error(), "duplicate key") {
-			return nil, errors.New("product already exists")
+			return errors.New("product already exists")
 		}
-		return nil, err
+		return err
 	}
 
 	utils.BumpCacheVersion(ctx, uc.cache, "products")
@@ -78,15 +78,5 @@ func (uc *UseCase) Execute(ctx context.Context, req NewProductRequest) (*product
 		videoUrls = append(videoUrls, vid.URL)
 	}
 
-	response := &product.ProductResponse{
-		ID:          new_product.ID,
-		Name:        new_product.Name,
-		Hidden:      new_product.Hidden,
-		Price:       new_product.Price,
-		Description: new_product.Description,
-		Images:      imageUrls,
-		Videos:      videoUrls,
-	}
-
-	return response, nil
+	return nil
 }
