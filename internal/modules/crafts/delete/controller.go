@@ -1,4 +1,4 @@
-package create
+package delete
 
 import (
 	"net/http"
@@ -10,8 +10,8 @@ import (
 
 func RegisterRoutes(router *gin.RouterGroup, db interface{}, rdb interface{}) {
 	r := NewUseCase(db.(*gorm.DB), rdb.(*redis.Client))
-	router.POST("/create", func(c *gin.Context) {
-		var req NewCraftRequest
+	router.DELETE("/delete", func(c *gin.Context) {
+		var req DeleteCraftRequest
 		if err := c.ShouldBindJSON(&req); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
@@ -21,8 +21,8 @@ func RegisterRoutes(router *gin.RouterGroup, db interface{}, rdb interface{}) {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
-		c.JSON(http.StatusCreated, gin.H{
-			"message": "craft created successfully",
+		c.JSON(http.StatusOK, gin.H{
+			"message": "craft deleted successfully",
 		})
 	})
 }

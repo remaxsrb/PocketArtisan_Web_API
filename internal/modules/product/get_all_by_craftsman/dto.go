@@ -11,8 +11,8 @@ const (
 
 type GetAllRequest struct {
 	Username string `form:"username" query:"username"`
-	Limit int `form:"limit" query:"limit"`
-	Skip  int `form:"skip" query:"skip"`
+	Limit    int    `form:"limit" query:"limit"`
+	Skip     int    `form:"skip" query:"skip"`
 }
 
 type GetAllResponse struct {

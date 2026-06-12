@@ -18,6 +18,9 @@ func SetupRouter() *gin.Engine {
 	routes.RegisterProductRoutes(router, jwtService)
 	routes.RegisterCraftsmanApplicationRoutes(router, jwtService)
 	routes.RegisterFileRoutes(router)
+	routes.RegisterCartRoutes(router, jwtService)
+	routes.RegisterProductCategoryRoutes(router, jwtService)
+	routes.RegisterCraftRoutes(router, jwtService)
 
 	return router
 }
