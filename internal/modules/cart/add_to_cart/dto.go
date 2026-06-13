@@ -1,13 +1,13 @@
 package addtocart
 
-import "PocketArtisan/internal/modules/cart"
+import "PocketArtisan/internal/entities"
 
 type AddToCartRequest struct {
-	UserID    uint64 `json:"cartId"`
-	ProductID uint64 `json:"productId"`
+	CartID    uint64 `json:"cart_id"`
+	ProductID uint64 `json:"product_id"`
 	Quantity  int    `json:"quantity"`
 }
 
 type AddToCartResponse struct {
-	CartItems []cart.CartItemResponse `json:"cart_items"`
+	Cart entities.Cart `json:"cart"`
 }
