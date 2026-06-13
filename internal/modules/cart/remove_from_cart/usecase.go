@@ -1,6 +1,7 @@
 package removefromcart
 
 import (
+	"PocketArtisan/internal/entities"
 	"PocketArtisan/internal/modules/cart"
 	"context"
 	"errors"
@@ -19,7 +20,7 @@ func NewUseCase(db *gorm.DB, cache *redis.Client) *UseCase {
 }
 
 func (uc *UseCase) Execute(ctx context.Context, req RemoveFromCartRequest) (*RemoveFromCartResponse, error) {
-	var userCart cart.Cart
+	var userCart entities.Cart
 	err := uc.db.WithContext(ctx).
 		Where("user_id = ?", req.UserID).
 		First(&userCart).
@@ -33,7 +34,7 @@ func (uc *UseCase) Execute(ctx context.Context, req RemoveFromCartRequest) (*Rem
 
 	result := uc.db.WithContext(ctx).
 		Where("cart_id = ? AND product_id = ?", userCart.ID, req.ProductID).
-		Delete(&cart.CartItem{})
+		Delete(&entities.CartItem{})
 	if result.Error != nil {
 		return nil, result.Error
 	}
@@ -41,7 +42,7 @@ func (uc *UseCase) Execute(ctx context.Context, req RemoveFromCartRequest) (*Rem
 		return nil, errors.New("item not found in cart")
 	}
 
-	var items []cart.CartItem
+	var items []entities.CartItem
 	if err := uc.db.WithContext(ctx).Where("cart_id = ?", userCart.ID).Find(&items).Error; err != nil {
 		return nil, err
 	}

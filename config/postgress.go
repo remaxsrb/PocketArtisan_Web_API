@@ -1,12 +1,7 @@
 package config
 
 import (
-	"PocketArtisan/internal/modules/cart"
-	"PocketArtisan/internal/modules/crafts"
-	"PocketArtisan/internal/modules/craftsman_application"
-	"PocketArtisan/internal/modules/product"
-	"PocketArtisan/internal/modules/product_categories"
-	"PocketArtisan/internal/modules/users"
+	"PocketArtisan/internal/entities"
 	"fmt"
 	"log"
 	"os"
@@ -51,11 +46,11 @@ func runMigrations() {
 	migrations := []migration{
 		{
 			table:   "carts",
-			migrate: func() error { return DB.AutoMigrate(&cart.Cart{}) },
+			migrate: func() error { return DB.AutoMigrate(&entities.Cart{}) },
 		},
 		{
 			table:   "cart_items",
-			migrate: func() error { return DB.AutoMigrate(&cart.CartItem{}) },
+			migrate: func() error { return DB.AutoMigrate(&entities.CartItem{}) },
 		},
 		{
 			table: "users",
@@ -63,29 +58,29 @@ func runMigrations() {
 				if err := DB.Exec("CREATE TYPE IF NOT EXISTS gender AS ENUM ('male', 'female')").Error; err != nil {
 					log.Printf("Warning: failed to create gender enum type: %v", err)
 				}
-				return DB.AutoMigrate(&users.User{})
+				return DB.AutoMigrate(&entities.User{})
 			},
 		},
 		{
 			table:   "crafts",
-			migrate: func() error { return DB.AutoMigrate(&crafts.Craft{}) },
+			migrate: func() error { return DB.AutoMigrate(&entities.Craft{}) },
 		},
 		{
 			table:   "craftsmen",
-			migrate: func() error { return DB.AutoMigrate(&users.Craftsman{}) },
+			migrate: func() error { return DB.AutoMigrate(&entities.Craftsman{}) },
 		},
 		{
 			table:   "craftsman_applications",
-			migrate: func() error { return DB.AutoMigrate(&craftsman_application.CraftsmanApplication{}) },
+			migrate: func() error { return DB.AutoMigrate(&entities.CraftsmanApplication{}) },
 		},
 		{
 			table:   "product_categories",
-			migrate: func() error { return DB.AutoMigrate(&product_categories.ProductCategory{}) },
+			migrate: func() error { return DB.AutoMigrate(&entities.ProductCategory{}) },
 		},
 		{
 			table: "products",
 			migrate: func() error {
-				return DB.AutoMigrate(&product.Product{}, &product.ProductImage{}, &product.ProductVideo{})
+				return DB.AutoMigrate(&entities.Product{}, &entities.ProductImage{}, &entities.ProductVideo{})
 			},
 		},
 	}

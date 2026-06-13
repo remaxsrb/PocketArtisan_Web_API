@@ -1,8 +1,8 @@
 package create
 
 import (
+	"PocketArtisan/internal/entities"
 	"PocketArtisan/internal/modules/product"
-	"PocketArtisan/internal/modules/product_categories"
 	"PocketArtisan/internal/modules/utils"
 	"context"
 	"errors"
@@ -22,19 +22,19 @@ func NewUseCase(db *gorm.DB, cache *redis.Client) *UseCase {
 }
 
 func (uc *UseCase) Execute(ctx context.Context, req NewProductRequest) error {
-	var existing product.Product
+	var existing entities.Product
 
 	CraftsmanID, err := product.GetCraftsmanIDByUsername(ctx, uc.db, req.Username)
 	if err != nil {
 		return err
 	}
 
-	var pc product_categories.ProductCategory
-	if err := uc.db.WithContext(ctx).Where("name = ?", req.Category).First(&pc).Error; err != nil {	
+	var pc entities.ProductCategory
+	if err := uc.db.WithContext(ctx).Where("name = ?", req.Category).First(&pc).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return errors.New("product category not found")
 		}
-		return  err	
+		return err
 	}
 
 	if err := uc.db.WithContext(ctx).Where("name = ? AND craftsman_id = ?", req.Name, CraftsmanID).First(&existing).Error; err == nil {
@@ -43,7 +43,7 @@ func (uc *UseCase) Execute(ctx context.Context, req NewProductRequest) error {
 		return err
 	}
 
-	new_product := &product.Product{
+	new_product := &entities.Product{
 		Name:        req.Name,
 		CraftsmanID: CraftsmanID,
 		CategoryID:  pc.ID,
@@ -53,10 +53,10 @@ func (uc *UseCase) Execute(ctx context.Context, req NewProductRequest) error {
 	}
 
 	for _, url := range req.Images {
-		new_product.Images = append(new_product.Images, product.ProductImage{URL: url})
+		new_product.Images = append(new_product.Images, entities.ProductImage{URL: url})
 	}
 	for _, url := range req.Videos {
-		new_product.Videos = append(new_product.Videos, product.ProductVideo{URL: url})
+		new_product.Videos = append(new_product.Videos, entities.ProductVideo{URL: url})
 	}
 
 	if err := uc.db.WithContext(ctx).Create(new_product).Error; err != nil {

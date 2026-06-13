@@ -1,6 +1,7 @@
 package getbycategory
 
 import (
+	"PocketArtisan/internal/entities"
 	"PocketArtisan/internal/modules/product"
 	"PocketArtisan/internal/modules/utils"
 	"context"
@@ -51,7 +52,7 @@ func (uc *UseCase) Execute(ctx context.Context, req GetByCategoryRequest) (GetBy
 	normalizedSearch := utils.NormalizeForSearch(req.Search)
 
 	var totalProducts int64
-	countQuery := uc.db.WithContext(ctx).Model(&product.Product{})
+	countQuery := uc.db.WithContext(ctx).Model(&entities.Product{})
 	if normalizedSearch != "" {
 		countQuery = countQuery.
 			Joins("JOIN product_categories ON product_categories.id = products.category_id").
@@ -69,7 +70,7 @@ func (uc *UseCase) Execute(ctx context.Context, req GetByCategoryRequest) (GetBy
 			Where("? = ANY(product_categories.search_keywords)", normalizedSearch)
 	}
 
-	raw := make([]*product.Product, 0, req.Limit)
+	raw := make([]*entities.Product, 0, req.Limit)
 	listQuery.
 		Offset(req.Skip).
 		Limit(req.Limit).

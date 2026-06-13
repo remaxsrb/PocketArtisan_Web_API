@@ -1,7 +1,7 @@
 package create
 
 import (
-	"PocketArtisan/internal/modules/product_categories"
+	"PocketArtisan/internal/entities"
 	"PocketArtisan/internal/modules/utils"
 	"context"
 	"errors"
@@ -21,7 +21,7 @@ func NewUseCase(db *gorm.DB, cache *redis.Client) *UseCase {
 
 func (uc *UseCase) Execute(ctx context.Context, req NewProductCategoryRequest) error {
 
-	var pc product_categories.ProductCategory
+	var pc entities.ProductCategory
 	if err := uc.db.WithContext(ctx).Where("name = ?", req.Name).First(&pc).Error; err == nil {
 		return errors.New("product category already exists")
 	}
@@ -32,7 +32,7 @@ func (uc *UseCase) Execute(ctx context.Context, req NewProductCategoryRequest) e
 		searchKeywords = append(searchKeywords, utils.NormalizeForSearch(kw))
 	}
 
-	pc = product_categories.ProductCategory{
+	pc = entities.ProductCategory{
 		Name:           req.Name,
 		Keywords:       req.Keywords,
 		SearchKeywords: searchKeywords,

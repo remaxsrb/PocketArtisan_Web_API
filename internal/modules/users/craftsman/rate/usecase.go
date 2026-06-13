@@ -1,7 +1,7 @@
 package rate
 
 import (
-	"PocketArtisan/internal/modules/users"
+	"PocketArtisan/internal/entities"
 	"PocketArtisan/internal/modules/utils"
 	"context"
 	"errors"
@@ -20,7 +20,7 @@ func NewUseCase(db *gorm.DB, cache *redis.Client) *UseCase {
 }
 
 func (uc *UseCase) Execute(ctx context.Context, req Request) (Response, error) {
-	var craftsman users.Craftsman
+	var craftsman entities.Craftsman
 
 	if err := uc.db.WithContext(ctx).Where("user_id = ?", req.UserID).First(&craftsman).Error; err != nil {
 		return Response{}, errors.New("craftsman not found")

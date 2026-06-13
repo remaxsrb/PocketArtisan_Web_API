@@ -1,7 +1,7 @@
 package get_all
 
 import (
-	"PocketArtisan/internal/modules/craftsman_application"
+	"PocketArtisan/internal/entities"
 	"context"
 
 	"github.com/go-redis/redis/v8"
@@ -29,13 +29,13 @@ func (uc *UseCase) Execute(ctx context.Context, req GetAllRequest) (GetAllRespon
 		req.Limit = maxLimit
 	}
 
-	ca_list := make([]*craftsman_application.CraftsmanApplication, 0, req.Limit)
+	ca_list := make([]*entities.CraftsmanApplication, 0, req.Limit)
 
 	var totalCAs int64
-	uc.db.WithContext(ctx).Model(&craftsman_application.CraftsmanApplication{}).Count(&totalCAs)
-	
+	uc.db.WithContext(ctx).Model(&entities.CraftsmanApplication{}).Count(&totalCAs)
+
 	uc.db.WithContext(ctx).
-		Model(&craftsman_application.CraftsmanApplication{}).
+		Model(&entities.CraftsmanApplication{}).
 		Where("status = ?", "pending").
 		Offset(req.Skip).
 		Limit(req.Limit).
@@ -44,8 +44,8 @@ func (uc *UseCase) Execute(ctx context.Context, req GetAllRequest) (GetAllRespon
 
 	resp := GetAllResponse{
 		CraftsmanApplications: ca_list,
-		Total: totalCAs,
-		Page:  (req.Skip / req.Limit) + 1,
+		Total:                 totalCAs,
+		Page:                  (req.Skip / req.Limit) + 1,
 	}
 
 	return resp, nil

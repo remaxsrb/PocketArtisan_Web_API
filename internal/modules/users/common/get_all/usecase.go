@@ -1,6 +1,7 @@
 package get_all
 
 import (
+	"PocketArtisan/internal/entities"
 	"PocketArtisan/internal/modules/users"
 	"context"
 
@@ -32,10 +33,10 @@ func (uc *UseCase) Execute(ctx context.Context, req GetAllRequest) (GetAllRespon
 	user_list := make([]*users.RegularUserResponse, 0, req.Limit)
 
 	var totalUsers int64
-	uc.db.WithContext(ctx).Model(&users.User{}).Count(&totalUsers)
+	uc.db.WithContext(ctx).Model(&entities.User{}).Count(&totalUsers)
 
 	uc.db.WithContext(ctx).
-		Model(&users.User{}).
+		Model(&entities.User{}).
 		Offset(req.Skip).
 		Limit(req.Limit).
 		Order("created_at desc, id asc").

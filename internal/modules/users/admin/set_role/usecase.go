@@ -1,8 +1,8 @@
 package set_role
 
 import (
+	"PocketArtisan/internal/entities"
 	"PocketArtisan/internal/modules/utils"
-	"PocketArtisan/internal/modules/users"
 	"context"
 	"errors"
 
@@ -20,9 +20,9 @@ func NewUseCase(db *gorm.DB, cache *redis.Client) *UseCase {
 }
 
 func (uc *UseCase) Execute(ctx context.Context, req SetRoleRequest) error {
-	var user users.User
+	var user entities.User
 
-	var isAllowedRole bool= req.Role == "craftsman" || req.Role == "user" || req.Role == "admin"
+	var isAllowedRole bool = req.Role == "craftsman" || req.Role == "user" || req.Role == "admin"
 
 	if !isAllowedRole {
 		return errors.New("only roles which admin can set are craftsman, user, or admin")

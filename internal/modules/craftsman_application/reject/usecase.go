@@ -1,7 +1,7 @@
 package reject
 
 import (
-	"PocketArtisan/internal/modules/craftsman_application"
+	"PocketArtisan/internal/entities"
 	"context"
 	"errors"
 
@@ -19,13 +19,13 @@ func NewUseCase(db *gorm.DB, cache *redis.Client) *UseCase {
 }
 
 func (uc *UseCase) Execute(ctx context.Context, req Request) error {
-	var ca craftsman_application.CraftsmanApplication
+	var ca entities.CraftsmanApplication
 
 	if err := uc.db.WithContext(ctx).Where("id = ?", req.ApplicationID).First(&ca).Error; err != nil {
 		return errors.New("application not found")
 	}
 
-	ca.Status = craftsman_application.StatusRejected
+	ca.Status = entities.StatusRejected
 
 	if err := uc.db.Save(&ca).Error; err != nil {
 		return err
