@@ -3,7 +3,7 @@ package addtocart
 import "PocketArtisan/internal/modules/cart"
 
 type AddToCartRequest struct {
-	UserID    uint64 `json:"user_id"`
+	UserID    uint64 `json:"cartId"`
 	ProductID uint64 `json:"productId"`
 	Quantity  int    `json:"quantity"`
 }

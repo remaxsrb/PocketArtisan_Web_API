@@ -27,7 +27,7 @@ func (uc *UseCase) Execute(ctx context.Context, req AddToCartRequest) (*AddToCar
 	err := uc.db.WithContext(ctx).
 		Preload("Items").
 		Where("user_id = ?", req.UserID).
-		FirstOrCreate(&userCart, cart.Cart{UserID: req.UserID}).
+		First(&userCart, cart.Cart{UserID: req.UserID}).
 		Error
 	if err != nil {
 		return nil, err
