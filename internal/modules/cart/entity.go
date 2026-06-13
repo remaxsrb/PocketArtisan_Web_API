@@ -8,11 +8,11 @@ type CartItem struct {
 
 	Quantity int `json:"quantity" gorm:"not null;default:1"`
 
-	Cart Cart `json:"-" gorm:"foreignKey:CartID"`
+	Cart *Cart `json:"-" gorm:"foreignKey:CartID"`
 }
 
 type Cart struct {
 	ID     uint64     `json:"id" gorm:"primaryKey;autoIncrement"`
 	UserID uint64     `json:"user_id" gorm:"uniqueIndex;not null"`
-	Items  []CartItem `json:"items,omitempty" gorm:"foreignKey:CartID;constraint:OnDelete:CASCADE"`
+	Items  []CartItem `json:"items,omitempty" gorm:"foreignKey:CartID;references:ID;constraint:OnDelete:CASCADE"`
 }
