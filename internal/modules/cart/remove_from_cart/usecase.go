@@ -19,21 +19,10 @@ func NewUseCase(db *gorm.DB, cache *redis.Client) *UseCase {
 	return &UseCase{db: db, cache: cache}
 }
 
-func (uc *UseCase) Execute(ctx context.Context, req RemoveFromCartRequest) (*RemoveFromCartResponse, error) {
-	var userCart entities.Cart
-	err := uc.db.WithContext(ctx).
-		Where("user_id = ?", req.UserID).
-		First(&userCart).
-		Error
-	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, errors.New("cart not found")
-		}
-		return nil, err
-	}
-
+func (uc *UseCase) Execute(ctx context.Context, req RemoveFromCartRequest) (*cart.CartItemResponse, error) {
+	
 	result := uc.db.WithContext(ctx).
-		Where("cart_id = ? AND product_id = ?", userCart.ID, req.ProductID).
+		Where("cart_id = ? AND product_id = ?", req.CartID, req.ProductID).
 		Delete(&entities.CartItem{})
 	if result.Error != nil {
 		return nil, result.Error
@@ -42,19 +31,14 @@ func (uc *UseCase) Execute(ctx context.Context, req RemoveFromCartRequest) (*Rem
 		return nil, errors.New("item not found in cart")
 	}
 
-	var items []entities.CartItem
-	if err := uc.db.WithContext(ctx).Where("cart_id = ?", userCart.ID).Find(&items).Error; err != nil {
+	var item entities.CartItem
+	if err := uc.db.WithContext(ctx).Where("cart_id = ? AND product_id = ?", req.CartID, req.ProductID).Find(&item).Error; err != nil {
 		return nil, err
 	}
 
-	var response RemoveFromCartResponse
-	for _, item := range items {
-		response.CartItems = append(response.CartItems, cart.CartItemResponse{
-			ID:        item.ID,
-			ProductID: item.ProductID,
-			Quantity:  item.Quantity,
-		})
-	}
+	var response cart.CartItemResponse
+	response.ProductID = item.ProductID
+	response.Quantity = item.Quantity
 
 	return &response, nil
 }

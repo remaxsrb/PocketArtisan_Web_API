@@ -2,7 +2,6 @@ package addtocart
 
 import (
 	"PocketArtisan/internal/entities"
-	"PocketArtisan/internal/modules/cart"
 	"context"
 	"errors"
 
@@ -24,19 +23,9 @@ func (uc *UseCase) Execute(ctx context.Context, req AddToCartRequest) (*AddToCar
 		return nil, errors.New("quantity must be greater than zero")
 	}
 
-	var userCart entities.Cart
-	err := uc.db.WithContext(ctx).
-		Preload("Items").
-		Where("user_id = ?", req.UserID).
-		First(&userCart, entities.Cart{UserID: req.UserID}).
-		Error
-	if err != nil {
-		return nil, err
-	}
-
 	var existingItem entities.CartItem
-	err = uc.db.WithContext(ctx).
-		Where("cart_id = ? AND product_id = ?", userCart.ID, req.ProductID).
+	err := uc.db.WithContext(ctx).
+		Where("cart_id = ? AND product_id = ?", req.CartID, req.ProductID).
 		First(&existingItem).
 		Error
 
@@ -47,7 +36,7 @@ func (uc *UseCase) Execute(ctx context.Context, req AddToCartRequest) (*AddToCar
 		}
 	} else if errors.Is(err, gorm.ErrRecordNotFound) {
 		newItem := entities.CartItem{
-			CartID:    userCart.ID,
+			CartID:    req.CartID,
 			ProductID: req.ProductID,
 			Quantity:  req.Quantity,
 		}
@@ -59,18 +48,25 @@ func (uc *UseCase) Execute(ctx context.Context, req AddToCartRequest) (*AddToCar
 	}
 
 	var items []entities.CartItem
-	if err := uc.db.WithContext(ctx).Where("cart_id = ?", userCart.ID).Find(&items).Error; err != nil {
+	if err := uc.db.WithContext(ctx).Where("cart_id = ?", req.CartID).Find(&items).Error; err != nil {
 		return nil, err
 	}
 
 	var response AddToCartResponse
-	for _, item := range items {
-		response.CartItems = append(response.CartItems, cart.CartItemResponse{
-			ID:        item.ID,
-			ProductID: item.ProductID,
-			Quantity:  item.Quantity,
-		})
+	var userCart entities.Cart
+	cartErr := uc.db.WithContext(ctx).
+		Preload("Items").
+		Preload("Items.Product").
+		Preload("Items.Product.Images").
+		Where("user_id = ?", req.CartID).
+		First(&userCart).
+		Error
+
+	if cartErr != nil && !errors.Is(cartErr, gorm.ErrRecordNotFound) {
+		return nil, cartErr
 	}
+
+	response.Cart = userCart
 
 	return &response, nil
 }

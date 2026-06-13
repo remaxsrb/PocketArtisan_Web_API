@@ -78,6 +78,8 @@ func (uc *UseCase) Execute(ctx context.Context, req LoginRequest) (LoginResult, 
 	var userCart entities.Cart
 	cartErr := uc.db.WithContext(ctx).
 		Preload("Items").
+		Preload("Items.Product").
+		Preload("Items.Product.Images").
 		Where("user_id = ?", existing.ID).
 		First(&userCart).
 		Error
@@ -85,9 +87,7 @@ func (uc *UseCase) Execute(ctx context.Context, req LoginRequest) (LoginResult, 
 		return LoginResult{}, cartErr
 	}
 
-	if cartErr == nil {
-		r.Cart = &userCart
-	}
+	r.Cart = &userCart
 
 	return LoginResult{ID: existing.ID, Role: existing.Role, Response: r}, nil
 
