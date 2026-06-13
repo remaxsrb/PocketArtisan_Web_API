@@ -1,6 +1,7 @@
 package getallbycraftsman
 
 import (
+	"PocketArtisan/internal/entities"
 	"PocketArtisan/internal/modules/product"
 	"PocketArtisan/internal/modules/utils"
 	"context"
@@ -39,7 +40,7 @@ func (uc *UseCase) Execute(ctx context.Context, req GetAllRequest) (GetAllRespon
 
 	cacheVersion := utils.GetCacheVersion(ctx, uc.cache, "products")
 	cacheKey := fmt.Sprintf("products:craftsman:v:%d:%s:skip:%d:limit:%d", cacheVersion, req.Username, req.Skip, req.Limit)
-	
+
 	cachedData, err := uc.cache.Get(ctx, cacheKey).Result()
 	if err == nil {
 
@@ -57,9 +58,9 @@ func (uc *UseCase) Execute(ctx context.Context, req GetAllRequest) (GetAllRespon
 	}
 
 	var totalProducts int64
-	uc.db.WithContext(ctx).Model(&product.Product{}).Where("craftsman_id = ?", craftsmanID).Count(&totalProducts)
+	uc.db.WithContext(ctx).Model(&entities.Product{}).Where("craftsman_id = ?", craftsmanID).Count(&totalProducts)
 
-	raw := make([]*product.Product, 0, req.Limit)
+	raw := make([]*entities.Product, 0, req.Limit)
 	uc.db.WithContext(ctx).
 		Preload("Images").
 		Preload("Videos").

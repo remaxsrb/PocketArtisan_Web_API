@@ -1,4 +1,4 @@
-package cart
+package entities
 
 type CartItem struct {
 	ID uint64 `json:"id" gorm:"primaryKey;autoIncrement"`

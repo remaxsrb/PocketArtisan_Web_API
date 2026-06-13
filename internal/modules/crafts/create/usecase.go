@@ -1,7 +1,7 @@
 package create
 
 import (
-	"PocketArtisan/internal/modules/crafts"
+	"PocketArtisan/internal/entities"
 	"PocketArtisan/internal/modules/utils"
 	"context"
 	"errors"
@@ -21,7 +21,7 @@ func NewUseCase(db *gorm.DB, cache *redis.Client) *UseCase {
 
 func (uc *UseCase) Execute(ctx context.Context, req NewCraftRequest) error {
 
-	var c crafts.Craft
+	var c entities.Craft
 	if err := uc.db.WithContext(ctx).Where("name = ?", req.Name).First(&c).Error; err == nil {
 		return errors.New("craft already exists")
 	}
@@ -32,7 +32,7 @@ func (uc *UseCase) Execute(ctx context.Context, req NewCraftRequest) error {
 		searchKeywords = append(searchKeywords, utils.NormalizeForSearch(kw))
 	}
 
-	c = crafts.Craft{
+	c = entities.Craft{
 		Name:           req.Name,
 		Keywords:       req.Keywords,
 		SearchKeywords: searchKeywords,

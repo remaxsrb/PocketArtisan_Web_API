@@ -1,7 +1,7 @@
 package login
 
 import (
-	"PocketArtisan/internal/modules/cart"
+	"PocketArtisan/internal/entities"
 	"PocketArtisan/internal/modules/users"
 	"PocketArtisan/internal/modules/utils"
 	"context"
@@ -24,7 +24,7 @@ func NewUseCase(db *gorm.DB, cache *redis.Client) *UseCase {
 
 func (uc *UseCase) Execute(ctx context.Context, req LoginRequest) (LoginResult, error) {
 
-	var existing users.User
+	var existing entities.User
 
 	if err := uc.db.WithContext(ctx).Where("username = ?", req.Username).First(&existing).Error; err != nil {
 		return LoginResult{}, errors.New("username not found")
@@ -58,7 +58,7 @@ func (uc *UseCase) Execute(ctx context.Context, req LoginRequest) (LoginResult, 
 			Where("users.username = ?", existing.Username).
 			Scan(&r)
 
-		var craftsman users.Craftsman
+		var craftsman entities.Craftsman
 		uc.db.WithContext(ctx).Where("user_id = ?", existing.ID).First(&craftsman)
 
 		return LoginResult{ID: existing.ID, Role: existing.Role, CraftsmanID: craftsman.ID, Response: &r}, nil
@@ -75,7 +75,7 @@ func (uc *UseCase) Execute(ctx context.Context, req LoginRequest) (LoginResult, 
 		},
 	}
 
-	var userCart cart.Cart
+	var userCart entities.Cart
 	cartErr := uc.db.WithContext(ctx).
 		Preload("Items").
 		Where("user_id = ?", existing.ID).

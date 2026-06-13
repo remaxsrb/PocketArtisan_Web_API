@@ -1,6 +1,8 @@
 package users
 
-import "PocketArtisan/internal/modules/cart"
+import (
+	"PocketArtisan/internal/entities"
+)
 
 /*
 
@@ -20,7 +22,7 @@ type UserResponse struct {
 
 type RegularUserResponse struct {
 	UserResponse
-	Cart *cart.Cart `json:"cart,omitempty"`
+	Cart *entities.Cart `json:"cart,omitempty"`
 }
 
 type CraftsmanResponse struct {

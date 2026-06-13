@@ -1,10 +1,9 @@
 package register
 
 import (
-	"PocketArtisan/internal/modules/cart"
-	"PocketArtisan/internal/modules/utils"
-	"PocketArtisan/internal/modules/users"
+	"PocketArtisan/internal/entities"
 	"PocketArtisan/internal/modules/users/validator"
+	"PocketArtisan/internal/modules/utils"
 	"context"
 	"errors"
 	"fmt"
@@ -23,8 +22,8 @@ func NewUseCase(db *gorm.DB, cache *redis.Client) *UseCase {
 	return &UseCase{db: db, cache: cache}
 }
 
-func (uc *UseCase) Execute(ctx context.Context, req RegisterRequest) (*users.User, error) {
-	var existing users.User
+func (uc *UseCase) Execute(ctx context.Context, req RegisterRequest) (*entities.User, error) {
+	var existing entities.User
 
 	if !validator.IsValidEmail(req.Email) {
 		return nil, errors.New("invalid email")
@@ -56,7 +55,7 @@ func (uc *UseCase) Execute(ctx context.Context, req RegisterRequest) (*users.Use
 		return nil, errors.New("invalid date of birth string")
 	}
 
-	user := &users.User{
+	user := &entities.User{
 		Username:    req.Username,
 		Email:       req.Email,
 		Firstname:   req.Firstname,
@@ -80,7 +79,7 @@ func (uc *UseCase) Execute(ctx context.Context, req RegisterRequest) (*users.Use
 		if err := tx.Create(user).Error; err != nil {
 			return err
 		}
-		newCart := &cart.Cart{UserID: user.ID}
+		newCart := &entities.Cart{UserID: user.ID}
 		return tx.Create(newCart).Error
 	})
 	if err != nil {

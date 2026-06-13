@@ -1,9 +1,8 @@
 package create
 
 import (
-	"PocketArtisan/internal/modules/crafts"
+	"PocketArtisan/internal/entities"
 	"PocketArtisan/internal/modules/utils"
-	"PocketArtisan/internal/modules/users"
 	"context"
 	"errors"
 
@@ -24,12 +23,12 @@ func (uc *UseCase) Execute(ctx context.Context, req Request) error {
 
 	//find userID based on email
 
-	var user users.User
+	var user entities.User
 	if err := uc.db.WithContext(ctx).Where("email = ?", req.Email).First(&user).Error; err != nil {
 		return errors.New("user not found")
 	}
 
-	var craft crafts.Craft
+	var craft entities.Craft
 	if err := uc.db.WithContext(ctx).Where("name = ?", req.Craft).First(&craft).Error; err != nil {
 		return errors.New("craft not found")
 	}
@@ -40,9 +39,9 @@ func (uc *UseCase) Execute(ctx context.Context, req Request) error {
 		return err
 	}
 
-	craftsman := users.Craftsman{
-		UserID: user.ID,
-		CraftID:  craft.ID,
+	craftsman := entities.Craftsman{
+		UserID:  user.ID,
+		CraftID: craft.ID,
 	}
 
 	if err := uc.db.Create(&craftsman).Error; err != nil {

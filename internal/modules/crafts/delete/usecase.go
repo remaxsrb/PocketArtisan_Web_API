@@ -1,7 +1,7 @@
 package delete
 
 import (
-	"PocketArtisan/internal/modules/crafts"
+	"PocketArtisan/internal/entities"
 	"PocketArtisan/internal/modules/utils"
 	"context"
 	"errors"
@@ -21,7 +21,7 @@ func NewUseCase(db *gorm.DB, cache *redis.Client) *UseCase {
 
 func (uc *UseCase) Execute(ctx context.Context, req DeleteCraftRequest) error {
 
-	var c crafts.Craft
+	var c entities.Craft
 	if err := uc.db.WithContext(ctx).Where("name = ?", req.Name).First(&c).Error; err != nil {
 		return errors.New("craft does not exist")
 	}

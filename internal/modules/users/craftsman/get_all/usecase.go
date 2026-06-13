@@ -1,6 +1,7 @@
 package getall
 
 import (
+	"PocketArtisan/internal/entities"
 	"PocketArtisan/internal/modules/users"
 	"PocketArtisan/internal/modules/utils"
 	"context"
@@ -53,7 +54,7 @@ func (uc *UseCase) Execute(ctx context.Context, req GetAllRequest) (GetAllRespon
 	craftsman_list := make([]*users.CraftsmanResponse, 0, req.Limit)
 
 	var totalCraftsmen int64
-	uc.db.WithContext(ctx).Model(&users.Craftsman{}).Count(&totalCraftsmen)
+	uc.db.WithContext(ctx).Model(&entities.Craftsman{}).Count(&totalCraftsmen)
 
 	uc.db.WithContext(ctx).
 		Table("users").

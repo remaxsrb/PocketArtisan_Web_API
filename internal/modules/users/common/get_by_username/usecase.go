@@ -1,6 +1,7 @@
 package getbyusername
 
 import (
+	"PocketArtisan/internal/entities"
 	"PocketArtisan/internal/modules/users"
 	"PocketArtisan/internal/modules/utils"
 	"context"
@@ -57,7 +58,7 @@ func (uc *UseCase) Execute(ctx context.Context, username string) (interface{}, e
 
 	// cache miss
 
-	var user users.User
+	var user entities.User
 	if err := uc.db.WithContext(ctx).Where("username = ?", username).First(&user).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, errors.New("user not found")

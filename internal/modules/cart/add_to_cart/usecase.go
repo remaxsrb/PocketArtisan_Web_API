@@ -1,6 +1,7 @@
 package addtocart
 
 import (
+	"PocketArtisan/internal/entities"
 	"PocketArtisan/internal/modules/cart"
 	"context"
 	"errors"
@@ -23,17 +24,17 @@ func (uc *UseCase) Execute(ctx context.Context, req AddToCartRequest) (*AddToCar
 		return nil, errors.New("quantity must be greater than zero")
 	}
 
-	var userCart cart.Cart
+	var userCart entities.Cart
 	err := uc.db.WithContext(ctx).
 		Preload("Items").
 		Where("user_id = ?", req.UserID).
-		First(&userCart, cart.Cart{UserID: req.UserID}).
+		First(&userCart, entities.Cart{UserID: req.UserID}).
 		Error
 	if err != nil {
 		return nil, err
 	}
 
-	var existingItem cart.CartItem
+	var existingItem entities.CartItem
 	err = uc.db.WithContext(ctx).
 		Where("cart_id = ? AND product_id = ?", userCart.ID, req.ProductID).
 		First(&existingItem).
@@ -45,7 +46,7 @@ func (uc *UseCase) Execute(ctx context.Context, req AddToCartRequest) (*AddToCar
 			return nil, err
 		}
 	} else if errors.Is(err, gorm.ErrRecordNotFound) {
-		newItem := cart.CartItem{
+		newItem := entities.CartItem{
 			CartID:    userCart.ID,
 			ProductID: req.ProductID,
 			Quantity:  req.Quantity,
@@ -57,7 +58,7 @@ func (uc *UseCase) Execute(ctx context.Context, req AddToCartRequest) (*AddToCar
 		return nil, err
 	}
 
-	var items []cart.CartItem
+	var items []entities.CartItem
 	if err := uc.db.WithContext(ctx).Where("cart_id = ?", userCart.ID).Find(&items).Error; err != nil {
 		return nil, err
 	}

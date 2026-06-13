@@ -1,7 +1,7 @@
 package create
 
 import (
-	"PocketArtisan/internal/modules/craftsman_application"
+	"PocketArtisan/internal/entities"
 	"context"
 	"errors"
 	"fmt"
@@ -32,7 +32,7 @@ func (uc *UseCase) Execute(ctx context.Context, req CraftsmanApplicationRequest)
 
 		var attempts int64
 
-		if err := tx.Model(&craftsman_application.CraftsmanApplication{}).
+		if err := tx.Model(&entities.CraftsmanApplication{}).
 			Where("email = ?", req.Email).
 			Count(&attempts).Error; err != nil {
 			return fmt.Errorf("could not get attempts for user with email %s: %w", req.Email, err)
@@ -42,9 +42,9 @@ func (uc *UseCase) Execute(ctx context.Context, req CraftsmanApplicationRequest)
 			return fmt.Errorf("max attempts of %d exceeded", maxAttemptsPerUser)
 		}
 
-		var lastRejectedAttempt craftsman_application.CraftsmanApplication
+		var lastRejectedAttempt entities.CraftsmanApplication
 		err := tx.
-			Where("email = ? AND status = ?", req.Email, craftsman_application.StatusRejected).
+			Where("email = ? AND status = ?", req.Email, entities.StatusRejected).
 			Order("created_at DESC").
 			First(&lastRejectedAttempt).Error
 
@@ -61,9 +61,9 @@ func (uc *UseCase) Execute(ctx context.Context, req CraftsmanApplicationRequest)
 			}
 		}
 
-		newCA := craftsman_application.CraftsmanApplication{
+		newCA := entities.CraftsmanApplication{
 			Email:  req.Email,
-			Status: craftsman_application.StatusPending,
+			Status: entities.StatusPending,
 			Craft:  req.Craft,
 		}
 		if err := tx.Create(&newCA).Error; err != nil {

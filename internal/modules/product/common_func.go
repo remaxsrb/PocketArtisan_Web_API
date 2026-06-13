@@ -1,7 +1,7 @@
 package product
 
 import (
-	"PocketArtisan/internal/modules/users"
+	"PocketArtisan/internal/entities"
 	"context"
 	"errors"
 
@@ -9,7 +9,7 @@ import (
 )
 
 func GetCraftsmanIDByUsername(ctx context.Context, db *gorm.DB, username string) (uint64, error) {
-	var craftsman users.Craftsman
+	var craftsman entities.Craftsman
 	if err := db.WithContext(ctx).
 		Joins("JOIN users ON users.id = craftsmen.user_id").
 		Where("users.username = ?", username).

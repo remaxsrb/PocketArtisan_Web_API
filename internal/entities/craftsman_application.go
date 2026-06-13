@@ -1,4 +1,4 @@
-package craftsman_application
+package entities
 
 import "time"
 
