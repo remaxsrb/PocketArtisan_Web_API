@@ -1,0 +1,164 @@
+[
+  {
+    "username": "marko.petrovic",
+    "craft": "Kovač",
+    "category": "Alati i okovi",
+    "assetFolder": "ironwork",
+    "name": "Vikinški gvozdeni mač",
+    "description": "Ručno kovani vikinški mač izrađen od visokougljеničnog čelika. Svaki komad je jedinstven i rađen po tradicionalnim tehnikama kovanja.",
+    "price": 450.00
+  },
+  {
+    "username": "ana.jovanovic",
+    "craft": "Kovač",
+    "category": "Alati i okovi",
+    "assetFolder": "ironwork",
+    "name": "Vikinški gvozdeni mač — replika",
+    "description": "Dekorativna replika vikinškog mača, ručno kovana i polirana. Idealna za kolekcionare i ljubitelje istorije.",
+    "price": 380.00
+  },
+  {
+    "username": "nikola.nikolic",
+    "craft": "Kovač",
+    "category": "Alati i okovi",
+    "assetFolder": "ironwork",
+    "name": "Kovani vikinški mač — kolekcija",
+    "description": "Ekskluzivni ručno kovani mač vikinškog stila sa graviranom drškom. Izrađen po narudžbini za kolekcionare.",
+    "price": 520.00
+  },
+  {
+    "username": "snezana.savic",
+    "craft": "Grnčar",
+    "category": "Posuđe i keramika",
+    "assetFolder": "pottery",
+    "name": "Vinska figura — Vinča",
+    "description": "Ručno rađena keramička figura inspirisana vinčanskom kulturom. Izrađena od lokalne gline i prirodno glazirana.",
+    "price": 120.00
+  },
+  {
+    "username": "milica.markovic",
+    "craft": "Obućar",
+    "category": "Obuća i kožna galanterija",
+    "assetFolder": "shoes",
+    "name": "Reebok Classic — muške, zelene",
+    "description": "Ručno dorađene Reebok Classic patike u zelenoj boji. Prilagođene po meri sa dodatnom unutrašnjom podrškom.",
+    "price": 95.00
+  },
+  {
+    "username": "milica.markovic",
+    "craft": "Obućar",
+    "category": "Obuća i kožna galanterija",
+    "assetFolder": "shoes",
+    "name": "Reebok Classic — ženske, crne",
+    "description": "Ručno dorađene Reebok Classic patike za žene u crnoj boji. Udobne i izdržljive za svakodnevno nošenje.",
+    "price": 90.00
+  },
+  {
+    "username": "milica.markovic",
+    "craft": "Obućar",
+    "category": "Obuća i kožna galanterija",
+    "assetFolder": "shoes",
+    "name": "Reebok Classic — ženske, bele",
+    "description": "Klasične bele Reebok patike za žene, ručno obrađene i personalizovane. Savršene za sve prilike.",
+    "price": 90.00
+  },
+  {
+    "username": "stefan.stefanovic",
+    "craft": "Obućar",
+    "category": "Obuća i kožna galanterija",
+    "assetFolder": "shoes",
+    "name": "Reebok Classic — muške, zelene",
+    "description": "Muške Reebok Classic patike u prepoznatljivoj zelenoj boji, ručno dorađene i prilagođene po meri kupca.",
+    "price": 95.00
+  },
+  {
+    "username": "stefan.stefanovic",
+    "craft": "Obućar",
+    "category": "Obuća i kožna galanterija",
+    "assetFolder": "shoes",
+    "name": "Reebok Classic — ženske, crne",
+    "description": "Ženske Reebok Classic patike u crnoj boji sa ručnom dorađenom površinom i ojačanim đonom.",
+    "price": 90.00
+  },
+  {
+    "username": "stefan.stefanovic",
+    "craft": "Obućar",
+    "category": "Obuća i kožna galanterija",
+    "assetFolder": "shoes",
+    "name": "Reebok Classic — ženske, bele",
+    "description": "Bele ženske Reebok Classic patike, ručno obrađene sa premium ulošcima po meri.",
+    "price": 90.00
+  },
+  {
+    "username": "jelena.jelic",
+    "craft": "Obućar",
+    "category": "Obuća i kožna galanterija",
+    "assetFolder": "shoes",
+    "name": "Reebok Classic — muške, zelene",
+    "description": "Ručno dorađene muške Reebok Classic patike sa personalizovanim detaljima i ojačanom potplatom.",
+    "price": 95.00
+  },
+  {
+    "username": "jelena.jelic",
+    "craft": "Obućar",
+    "category": "Obuća i kožna galanterija",
+    "assetFolder": "shoes",
+    "name": "Reebok Classic — ženske, crne",
+    "description": "Elegantne crne ženske Reebok Classic patike sa ručno rađenim unutrašnjim ulošcima i premium završnom obradom.",
+    "price": 92.00
+  },
+  {
+    "username": "jelena.jelic",
+    "craft": "Obućar",
+    "category": "Obuća i kožna galanterija",
+    "assetFolder": "shoes",
+    "name": "Reebok Classic — ženske, bele",
+    "description": "Bele ženske Reebok Classic patike sa ručno rađenim detaljima i poboljšanom potplatom za duži vek trajanja.",
+    "price": 92.00
+  },
+  {
+    "username": "vladimir.vukovic",
+    "craft": "Obućar",
+    "category": "Obuća i kožna galanterija",
+    "assetFolder": "shoes",
+    "name": "Reebok Classic — muške, zelene",
+    "description": "Premium muške Reebok Classic patike u zelenoj boji, ručno dorađene sa ekstra ojačanjima na ključnim tačkama.",
+    "price": 98.00
+  },
+  {
+    "username": "vladimir.vukovic",
+    "craft": "Obućar",
+    "category": "Obuća i kožna galanterija",
+    "assetFolder": "shoes",
+    "name": "Reebok Classic — ženske, crne",
+    "description": "Premium crne ženske Reebok Classic patike sa ručnom obradom i personalizovanim monogramom po želji kupca.",
+    "price": 95.00
+  },
+  {
+    "username": "vladimir.vukovic",
+    "craft": "Obućar",
+    "category": "Obuća i kožna galanterija",
+    "assetFolder": "shoes",
+    "name": "Reebok Classic — ženske, bele",
+    "description": "Premium bele ženske Reebok Classic patike, ručno dorađene sa zaštitnim premazom i ortopedskim ulošcima.",
+    "price": 95.00
+  },
+  {
+    "username": "predrag.pavlovic",
+    "craft": "Stolar",
+    "category": "Igračke",
+    "assetFolder": "woodwork",
+    "name": "Drveni vikinški mač",
+    "description": "Ručno rezan i brušen drveni vikinški mač od punog hrasta. Idealan kao dekorativni komad ili dečija igračka.",
+    "price": 65.00
+  },
+  {
+    "username": "predrag.pavlovic",
+    "craft": "Stolar",
+    "category": "Igračke",
+    "assetFolder": "woodwork",
+    "name": "Vikinški dugi mač — drvo",
+    "description": "Ručno izrađen dugi vikinški mač od masivnog drveta sa graviranim runskim simbolima na dršci.",
+    "price": 85.00
+  }
+]

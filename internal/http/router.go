@@ -11,6 +11,8 @@ func SetupRouter() *gin.Engine {
 	router := gin.Default()
 	router.Use(routes.CorsMiddleware())
 
+	router.Static("/assets", "./assets")
+
 	jwtService := auth.GetJWTService()
 
 	routes.RegisterUserRoutes(router, jwtService)
