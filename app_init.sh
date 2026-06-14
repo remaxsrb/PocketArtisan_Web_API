@@ -41,4 +41,16 @@ echo "4) Product category bulk insertion test"
 ADMIN_BEARER_TOKEN="$ADMIN_BEARER_TOKEN" go test -v ./internal/modules/product_categories/create -run '^TestBulkProductCategoryCreate$'
 echo
 
+echo "5. Craftsman Application bulk insertion"
+go test -v ./internal/modules/craftsman_application/create -run '^TestBulkCreateCraftsmanApplication$'
+echo
+
+echo "6) Craftsman application bulk approve test"
+ADMIN_BEARER_TOKEN="$ADMIN_BEARER_TOKEN" go test -v ./internal/modules/craftsman_application/approve -run '^TestBulkApproveCraftsmanApplication$'
+echo
+
+echo "7) Bulk elevate user to craftsman"
+ADMIN_BEARER_TOKEN="$ADMIN_BEARER_TOKEN" go test -v ./internal/modules/users/craftsman/create -run '^TestBulkApproveCraftsmanApplication$'
+echo
+
 echo "All requested tests finished."

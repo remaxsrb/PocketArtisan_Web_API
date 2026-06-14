@@ -14,5 +14,6 @@ type CartItem struct {
 type Cart struct {
 	ID     uint64     `json:"id" gorm:"primaryKey;autoIncrement"`
 	UserID uint64     `json:"user_id" gorm:"uniqueIndex;not null"`
+	Total  float64    `json:"total" gorm:"not null; default:0"`
 	Items  []CartItem `json:"items,omitempty" gorm:"foreignKey:CartID;references:ID;constraint:OnDelete:CASCADE"`
 }

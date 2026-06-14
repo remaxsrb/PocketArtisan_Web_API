@@ -1,0 +1,38 @@
+[
+  {
+    "email": "marko.petrovic@pocketartisan.rs",
+    "craft": "Kovač"
+  },
+  {
+    "email": "ana.jovanovic@pocketartisan.rs",
+    "craft": "Kovač"
+  },
+  {
+    "email": "nikola.nikolic@pocketartisan.rs",
+    "craft": "Kovač"
+  },
+  {
+    "email": "milica.markovic@pocketartisan.rs",
+    "craft": "Obućar"
+  },
+  {
+    "email": "stefan.stefanovic@pocketartisan.rs",
+    "craft": "Obućar"
+  },
+  {
+    "email": "jelena.jelic@pocketartisan.rs",
+    "craft": "Obućar"
+  },
+  {
+    "email": "vladimir.vukovic@pocketartisan.rs",
+    "craft": "Obućar"
+  },
+  {
+    "email": "snezana.savic@pocketartisan.rs",
+    "craft": "Grnčar"
+  },
+  {
+    "email": "predrag.pavlovic@pocketartisan.rs",
+    "craft": "Stolar"
+  }
+]

@@ -47,8 +47,14 @@ func (uc *UseCase) Execute(ctx context.Context, req AddToCartRequest) (*AddToCar
 		return nil, err
 	}
 
-	var items []entities.CartItem
-	if err := uc.db.WithContext(ctx).Where("cart_id = ?", req.CartID).Find(&items).Error; err != nil {
+	var product_price = 0.0
+
+	err = uc.db.WithContext(ctx).
+		Model(entities.Product{}).
+		Select("price").
+		Where("id = ?", req.ProductID).
+		Scan(&product_price).Error
+	if err != nil {
 		return nil, err
 	}
 
@@ -66,6 +72,7 @@ func (uc *UseCase) Execute(ctx context.Context, req AddToCartRequest) (*AddToCar
 		return nil, cartErr
 	}
 
+	userCart.Total += product_price * float64(req.Quantity)
 	response.Cart = userCart
 
 	return &response, nil
