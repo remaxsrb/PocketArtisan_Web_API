@@ -11,7 +11,7 @@
 *.test
 *.out
 *.patch
-*.pdf
+/uploads/
 
 # Compiled object files
 *.o

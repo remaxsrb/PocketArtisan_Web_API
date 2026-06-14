@@ -2,6 +2,7 @@ package addtocart
 
 import (
 	"PocketArtisan/internal/entities"
+	"PocketArtisan/internal/modules/cart"
 	"context"
 	"errors"
 
@@ -18,7 +19,7 @@ func NewUseCase(db *gorm.DB, cache *redis.Client) *UseCase {
 	return &UseCase{db: db, cache: cache}
 }
 
-func (uc *UseCase) Execute(ctx context.Context, req AddToCartRequest) (*AddToCartResponse, error) {
+func (uc *UseCase) Execute(ctx context.Context, req AddToCartRequest) (*cart.CartResponse, error) {
 	if req.Quantity <= 0 {
 		return nil, errors.New("quantity must be greater than zero")
 	}
@@ -58,7 +59,7 @@ func (uc *UseCase) Execute(ctx context.Context, req AddToCartRequest) (*AddToCar
 		return nil, err
 	}
 
-	var response AddToCartResponse
+	var response cart.CartResponse
 	var userCart entities.Cart
 	cartErr := uc.db.WithContext(ctx).
 		Preload("Items").
@@ -73,6 +74,8 @@ func (uc *UseCase) Execute(ctx context.Context, req AddToCartRequest) (*AddToCar
 	}
 
 	userCart.Total += product_price * float64(req.Quantity)
+	uc.db.WithContext(ctx).Save(&userCart)
+
 	response.Cart = userCart
 
 	return &response, nil

@@ -19,8 +19,8 @@ func NewUseCase(db *gorm.DB, cache *redis.Client) *UseCase {
 	return &UseCase{db: db, cache: cache}
 }
 
-func (uc *UseCase) Execute(ctx context.Context, req RemoveFromCartRequest) (*cart.CartItemResponse, error) {
-	
+func (uc *UseCase) Execute(ctx context.Context, req RemoveFromCartRequest) (*cart.CartResponse, error) {
+
 	result := uc.db.WithContext(ctx).
 		Where("cart_id = ? AND product_id = ?", req.CartID, req.ProductID).
 		Delete(&entities.CartItem{})
@@ -36,9 +36,34 @@ func (uc *UseCase) Execute(ctx context.Context, req RemoveFromCartRequest) (*car
 		return nil, err
 	}
 
-	var response cart.CartItemResponse
-	response.ProductID = item.ProductID
-	response.Quantity = item.Quantity
+	var product_price = 0.0
+
+	err := uc.db.WithContext(ctx).
+		Model(entities.Product{}).
+		Select("price").
+		Where("id = ?", req.ProductID).
+		Scan(&product_price).Error
+	if err != nil {
+		return nil, err
+	}
+
+	var response cart.CartResponse
+	var userCart entities.Cart
+	cartErr := uc.db.WithContext(ctx).
+		Preload("Items").
+		Preload("Items.Product").
+		Preload("Items.Product.Images").
+		Where("user_id = ?", req.CartID).
+		First(&userCart).
+		Error
+
+	if cartErr != nil && !errors.Is(cartErr, gorm.ErrRecordNotFound) {
+		return nil, cartErr
+	}
+
+	userCart.Total -= product_price * float64(req.Quantity)
+	uc.db.WithContext(ctx).Save(&userCart)
+	response.Cart = userCart
 
 	return &response, nil
 }

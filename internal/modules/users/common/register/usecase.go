@@ -66,9 +66,9 @@ func (uc *UseCase) Execute(ctx context.Context, req RegisterRequest) (*entities.
 	}
 
 	if req.Gender == "male" {
-		user.ProfilePicture = "http://localhost:8080/files/avatars/default_male.png"
+		user.ProfilePicture = "http://localhost:8080/assets/avatars/default_male.png"
 	} else {
-		user.ProfilePicture = "http://localhost:8080/files/avatars/default_female.png"
+		user.ProfilePicture = "http://localhost:8080/assets/avatars/default_female.png"
 	}
 
 	if err := user.SetPassword(req.Password); err != nil {
