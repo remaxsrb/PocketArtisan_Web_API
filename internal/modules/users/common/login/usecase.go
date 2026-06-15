@@ -2,6 +2,7 @@ package login
 
 import (
 	"PocketArtisan/internal/entities"
+	"PocketArtisan/internal/modules/cart"
 	"PocketArtisan/internal/modules/users"
 	"PocketArtisan/internal/modules/utils"
 	"context"
@@ -13,13 +14,14 @@ import (
 )
 
 type UseCase struct {
-	db     *gorm.DB
-	cache  *redis.Client
-	secret string
+	db         *gorm.DB
+	cache      *redis.Client
+	cartReader cart.CartReader
+	secret     string
 }
 
 func NewUseCase(db *gorm.DB, cache *redis.Client) *UseCase {
-	return &UseCase{db: db, cache: cache}
+	return &UseCase{db: db, cache: cache, cartReader: cart.NewCartReader(db)}
 }
 
 func (uc *UseCase) Execute(ctx context.Context, req LoginRequest) (LoginResult, error) {
@@ -75,19 +77,12 @@ func (uc *UseCase) Execute(ctx context.Context, req LoginRequest) (LoginResult, 
 		},
 	}
 
-	var userCart entities.Cart
-	cartErr := uc.db.WithContext(ctx).
-		Preload("Items").
-		Preload("Items.Product").
-		Preload("Items.Product.Images").
-		Where("user_id = ?", existing.ID).
-		First(&userCart).
-		Error
-	if cartErr != nil && !errors.Is(cartErr, gorm.ErrRecordNotFound) {
+	userCart, cartErr := uc.cartReader.GetUserCart(ctx, existing.ID)
+	if cartErr != nil {
 		return LoginResult{}, cartErr
 	}
 
-	r.Cart = &userCart
+	r.Cart = userCart
 
 	return LoginResult{ID: existing.ID, Role: existing.Role, Response: r}, nil
 

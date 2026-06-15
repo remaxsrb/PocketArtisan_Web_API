@@ -2,8 +2,8 @@ package register
 
 import (
 	"PocketArtisan/internal/entities"
-	"PocketArtisan/internal/modules/users/validator"
 	"PocketArtisan/internal/modules/utils"
+	"PocketArtisan/internal/validators"
 	"context"
 	"errors"
 	"fmt"
@@ -25,11 +25,11 @@ func NewUseCase(db *gorm.DB, cache *redis.Client) *UseCase {
 func (uc *UseCase) Execute(ctx context.Context, req RegisterRequest) (*entities.User, error) {
 	var existing entities.User
 
-	if !validator.IsValidEmail(req.Email) {
+	if !validators.IsValidEmail(req.Email) {
 		return nil, errors.New("invalid email")
 	}
 
-	if err := validator.ValidatePassword(req.Password); err != nil {
+	if err := validators.ValidatePassword(req.Password); err != nil {
 		return nil, errors.New(err.Error())
 	}
 

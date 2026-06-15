@@ -2,8 +2,8 @@ package change_password
 
 import (
 	"PocketArtisan/internal/entities"
-	"PocketArtisan/internal/modules/users/validator"
 	"PocketArtisan/internal/modules/utils"
+	"PocketArtisan/internal/validators"
 	"context"
 	"errors"
 
@@ -23,7 +23,7 @@ func NewUseCase(db *gorm.DB, cache *redis.Client) *UseCase {
 func (uc *UseCase) Execute(ctx context.Context, req ChangePasswordRequest) error {
 	var user entities.User
 
-	if err := validator.ValidatePassword(req.NewPassword); err != nil {
+	if err := validators.ValidatePassword(req.NewPassword); err != nil {
 		return errors.New(err.Error())
 	}
 
