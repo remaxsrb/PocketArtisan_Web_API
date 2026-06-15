@@ -2,6 +2,7 @@ package main
 
 import (
 	"PocketArtisan/config"
+	"PocketArtisan/internal/container"
 	"PocketArtisan/internal/http"
 	"PocketArtisan/internal/modules/auth"
 	"log"
@@ -22,7 +23,13 @@ func main() {
 
 	auth.InitJWTService(24 * time.Hour)
 
-	r := http.SetupRouter()
+	appContainer := container.NewAppContainer(
+		config.DB,
+		config.RDB,
+		auth.GetJWTService(),
+	)
+
+	r := http.SetupRouter(appContainer)
 
 	port := os.Getenv("APP_PORT")
 	if port == "" {

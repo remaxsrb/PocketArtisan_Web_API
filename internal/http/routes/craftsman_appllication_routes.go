@@ -1,9 +1,8 @@
 package routes
 
 import (
-	"PocketArtisan/config"
+	"PocketArtisan/internal/container"
 	"PocketArtisan/internal/http/middleware"
-	"PocketArtisan/internal/modules/auth"
 	"PocketArtisan/internal/modules/craftsman_application/approve"
 	"PocketArtisan/internal/modules/craftsman_application/create"
 	"PocketArtisan/internal/modules/craftsman_application/get_all"
@@ -12,14 +11,14 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func RegisterCraftsmanApplicationRoutes(router *gin.Engine, jwtService auth.JWTService) {
+func RegisterCraftsmanApplicationRoutes(router *gin.Engine, appContainer *container.AppContainer) {
 
 	public := router.Group("/craftsman-applications")
-	create.RegisterRoutes(public, config.DB, config.RDB)
+	create.RegisterRoutes(public, appContainer.DB, appContainer.RDB)
 
 	admin := router.Group("/craftsman-applications")
-	admin.Use(middleware.JWT(), middleware.RequireRoles("admin"))
-	approve.RegisterRoutes(admin, config.DB, config.RDB)
-	reject.RegisterRoutes(admin, config.DB, config.RDB)
-	get_all.RegisterRoutes(admin, config.DB, config.RDB)
+	admin.Use(middleware.JWT(appContainer.JWTService), middleware.RequireRoles("admin"))
+	approve.RegisterRoutes(admin, appContainer.DB, appContainer.RDB)
+	reject.RegisterRoutes(admin, appContainer.DB, appContainer.RDB)
+	get_all.RegisterRoutes(admin, appContainer.DB, appContainer.RDB)
 }

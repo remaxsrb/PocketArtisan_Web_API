@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"PocketArtisan/internal/modules/auth"
+
 	"github.com/gin-gonic/gin"
 )
 
@@ -13,9 +14,7 @@ const (
 	ContextRole   = "role"
 )
 
-func JWT() gin.HandlerFunc {
-	jwtSvc := auth.GetJWTService()
-
+func JWT(jwtService auth.JWTService) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		authHeader := c.GetHeader("Authorization")
 		if authHeader == "" {
@@ -29,7 +28,7 @@ func JWT() gin.HandlerFunc {
 			return
 		}
 
-		identity, err := jwtSvc.Validate(parts[1])
+		identity, err := jwtService.Validate(parts[1])
 		if err != nil {
 			c.AbortWithStatus(http.StatusUnauthorized)
 			return

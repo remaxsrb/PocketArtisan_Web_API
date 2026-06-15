@@ -1,9 +1,8 @@
 package routes
 
 import (
-	"PocketArtisan/config"
+	"PocketArtisan/internal/container"
 	"PocketArtisan/internal/http/middleware"
-	"PocketArtisan/internal/modules/auth"
 	"PocketArtisan/internal/modules/product_categories/create"
 	"PocketArtisan/internal/modules/product_categories/delete"
 	"PocketArtisan/internal/modules/product_categories/get_all"
@@ -11,13 +10,12 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-
-func RegisterProductCategoryRoutes(router *gin.Engine, jwtService auth.JWTService) {
+func RegisterProductCategoryRoutes(router *gin.Engine, appContainer *container.AppContainer) {
 	productCategoryModeration := router.Group("/product-categories")
-	productCategoryModeration.Use(middleware.JWT(), middleware.RequireRoles("admin"))
-	create.RegisterRoutes(productCategoryModeration, config.DB, config.RDB)
-	delete.RegisterRoutes(productCategoryModeration, config.DB, config.RDB)
+	productCategoryModeration.Use(middleware.JWT(appContainer.JWTService), middleware.RequireRoles("admin"))
+	create.RegisterRoutes(productCategoryModeration, appContainer.DB, appContainer.RDB)
+	delete.RegisterRoutes(productCategoryModeration, appContainer.DB, appContainer.RDB)
 
 	productCategoryPublic := router.Group("/product-categories")
-	get_all.RegisterRoutes(productCategoryPublic, config.DB, config.RDB)
+	get_all.RegisterRoutes(productCategoryPublic, appContainer.DB, appContainer.RDB)
 }

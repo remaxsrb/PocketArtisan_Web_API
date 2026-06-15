@@ -1,6 +1,7 @@
 package routes
 
 import (
+	"PocketArtisan/internal/container"
 	"PocketArtisan/internal/modules/files/delete"
 	"PocketArtisan/internal/modules/files/serve"
 	"PocketArtisan/internal/modules/files/storage"
@@ -9,7 +10,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func RegisterFileRoutes(router *gin.Engine) {
+func RegisterFileRoutes(router *gin.Engine, appContainer *container.AppContainer) {
 	localStorage := storage.NewLocalStorage("./uploads", "http://localhost:8080/files")
 
 	files := router.Group("/files")

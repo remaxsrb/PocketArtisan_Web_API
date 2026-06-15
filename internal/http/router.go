@@ -1,28 +1,26 @@
 package http
 
 import (
+	"PocketArtisan/internal/container"
 	"PocketArtisan/internal/http/routes"
-	"PocketArtisan/internal/modules/auth"
 
 	"github.com/gin-gonic/gin"
 )
 
-func SetupRouter() *gin.Engine {
+func SetupRouter(appContainer *container.AppContainer) *gin.Engine {
 	router := gin.Default()
 	router.Use(routes.CorsMiddleware())
 
 	router.Static("/assets", "./assets")
 
-	jwtService := auth.GetJWTService()
-
-	routes.RegisterUserRoutes(router, jwtService)
-	routes.RegisterCraftsmanRoutes(router)
-	routes.RegisterProductRoutes(router, jwtService)
-	routes.RegisterCraftsmanApplicationRoutes(router, jwtService)
-	routes.RegisterFileRoutes(router)
-	routes.RegisterCartRoutes(router, jwtService)
-	routes.RegisterProductCategoryRoutes(router, jwtService)
-	routes.RegisterCraftRoutes(router, jwtService)
+	routes.RegisterUserRoutes(router, appContainer)
+	routes.RegisterCraftsmanRoutes(router, appContainer)
+	routes.RegisterProductRoutes(router, appContainer)
+	routes.RegisterCraftsmanApplicationRoutes(router, appContainer)
+	routes.RegisterFileRoutes(router, appContainer)
+	routes.RegisterCartRoutes(router, appContainer)
+	routes.RegisterProductCategoryRoutes(router, appContainer)
+	routes.RegisterCraftRoutes(router, appContainer)
 
 	return router
 }
