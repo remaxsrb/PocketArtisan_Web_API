@@ -14,6 +14,9 @@ import (
 	"strings"
 	"time"
 
+	_ "image/jpeg"
+	_ "image/png"
+
 	"github.com/h2non/filetype"
 	_ "golang.org/x/image/webp"
 )
@@ -27,8 +30,8 @@ func NewLocalStorage(basePath, baseURL string) *LocalStorage {
 	return &LocalStorage{BasePath: basePath, BaseURL: baseURL}
 }
 
-const maxImageHeight = 300
-const maxImageWidth = 300
+const maxImageHeight = 500
+const maxImageWidth = 500
 
 var (
 	ErrInvalidDimensions = errors.New("Maksimalne dimenzije za profilnu sliku su 300x300 piksela")
