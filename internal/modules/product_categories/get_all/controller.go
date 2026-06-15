@@ -8,8 +8,8 @@ import (
 	"gorm.io/gorm"
 )
 
-func RegisterRoutes(router *gin.RouterGroup, db interface{}, rdb interface{}) {
-	r := NewUseCase(db.(*gorm.DB), rdb.(*redis.Client))
+func RegisterRoutes(router *gin.RouterGroup, db *gorm.DB, rdb *redis.Client) {
+	r := NewUseCase(db, rdb)
 	router.GET("/all", func(c *gin.Context) {
 		categories, err := r.Execute(c.Request.Context())
 		if err != nil {

@@ -21,12 +21,12 @@ func main() {
 	config.InitRedis()
 	config.InitCrypto()
 
-	auth.InitJWTService(24 * time.Hour)
+	jwtService := auth.InitJWTService(24 * time.Hour)
 
 	appContainer := container.NewAppContainer(
 		config.DB,
 		config.RDB,
-		auth.GetJWTService(),
+		jwtService,
 	)
 
 	r := http.SetupRouter(appContainer)

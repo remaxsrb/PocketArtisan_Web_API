@@ -12,8 +12,8 @@ import (
 	"gorm.io/gorm"
 )
 
-func RegisterRoutes(router *gin.RouterGroup, db interface{}, rdb interface{}, jwtService auth.JWTService) {
-	r := NewUseCase(db.(*gorm.DB), rdb.(*redis.Client))
+func RegisterRoutes(router *gin.RouterGroup, db *gorm.DB, rdb *redis.Client, jwtService auth.JWTService) {
+	r := NewUseCase(db, rdb)
 	router.POST("/login", func(c *gin.Context) {
 		var req LoginRequest
 		if err := c.ShouldBindJSON(&req); err != nil {

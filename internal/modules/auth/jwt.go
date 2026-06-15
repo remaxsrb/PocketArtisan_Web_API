@@ -24,7 +24,7 @@ var (
 	once     sync.Once
 )
 
-func InitJWTService(ttl time.Duration) {
+func InitJWTService(ttl time.Duration) JWTService {
 	once.Do(func() {
 		secret := config.GetCrypto().JwtKeySecret
 
@@ -34,12 +34,7 @@ func InitJWTService(ttl time.Duration) {
 		}
 
 	})
-}
 
-func GetJWTService() JWTService {
-	if instance == nil {
-		panic("JWTService not initialized")
-	}
 	return instance
 }
 

@@ -8,8 +8,8 @@ import (
 	"gorm.io/gorm"
 )
 
-func RegisterRoutes(router *gin.RouterGroup, db interface{}, rdb interface{}) {
-	r := NewUseCase(db.(*gorm.DB), rdb.(*redis.Client))
+func RegisterRoutes(router *gin.RouterGroup, db *gorm.DB, rdb *redis.Client) {
+	r := NewUseCase(db, rdb)
 	router.PATCH("/set-profile-picture", func(c *gin.Context) {
 		var req SetProfilePictureRequest
 		if err := c.ShouldBindJSON(&req); err != nil {

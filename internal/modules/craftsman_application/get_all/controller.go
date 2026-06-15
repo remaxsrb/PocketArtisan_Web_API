@@ -8,8 +8,8 @@ import (
 	"gorm.io/gorm"
 )
 
-func RegisterRoutes(router *gin.RouterGroup, db interface{}, rdb interface{}) {
-	uc := NewUseCase(db.(*gorm.DB), rdb.(*redis.Client))
+func RegisterRoutes(router *gin.RouterGroup, db *gorm.DB, rdb *redis.Client) {
+	uc := NewUseCase(db, rdb)
 
 	router.GET("/all", func(c *gin.Context) {
 		var req GetAllRequest
