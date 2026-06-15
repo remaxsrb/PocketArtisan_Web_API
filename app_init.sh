@@ -19,8 +19,7 @@ go clean -testcache
 echo
 
 echo "Cleaning uploads directory"
-cd uploads
-rm -rf *
+find ./uploads -type f -delete 2>/dev/null || true
 
 echo "1) User bulk creation test"
 go test -v ./internal/modules/users/common/register -run '^TestBulkUserRegistration$'

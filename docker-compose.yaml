@@ -12,7 +12,8 @@ services:
     ports:
       - "${APP_PORT}:${APP_PORT}"
     volumes:
-      - ./uploads:/app/uploads:Z   # local file storage
+      - ./uploads:/app/uploads:Z  
+      - ./assets:/app/assets:Z
     restart: unless-stopped
 
   postgres:
