@@ -1,6 +1,7 @@
 package change_password
 
 import (
+	"PocketArtisan/internal/http/response"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -13,12 +14,12 @@ func RegisterRoutes(router *gin.RouterGroup, db interface{}, rdb interface{}) {
 	router.PATCH("/change-password", func(c *gin.Context) {
 		var req ChangePasswordRequest
 		if err := c.ShouldBindJSON(&req); err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			response.Error(c, http.StatusBadRequest, err.Error())
 			return
 		}
 		err := r.Execute(c.Request.Context(), req)
 		if err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			response.Error(c, http.StatusBadRequest, err.Error())
 			return
 		}
 		c.JSON(http.StatusOK, nil)

@@ -1,7 +1,6 @@
 package login
 
 import (
-	"PocketArtisan/internal/entities"
 	"PocketArtisan/internal/modules/cart"
 	"PocketArtisan/internal/modules/users"
 	"PocketArtisan/internal/modules/utils"
@@ -14,56 +13,52 @@ import (
 )
 
 type UseCase struct {
-	db         *gorm.DB
+	repo       Repository
 	cache      *redis.Client
 	cartReader cart.CartReader
 	secret     string
 }
 
 func NewUseCase(db *gorm.DB, cache *redis.Client) *UseCase {
-	return &UseCase{db: db, cache: cache, cartReader: cart.NewCartReader(db)}
+	return &UseCase{
+		repo:       NewRepository(db),
+		cache:      cache,
+		cartReader: cart.NewCartReader(db),
+	}
 }
 
 func (uc *UseCase) Execute(ctx context.Context, req LoginRequest) (LoginResult, error) {
 
-	var existing entities.User
-
-	if err := uc.db.WithContext(ctx).Where("username = ?", req.Username).First(&existing).Error; err != nil {
-		return LoginResult{}, errors.New("username not found")
+	existing, err := uc.repo.FindByUsername(ctx, req.Username)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return LoginResult{}, ErrUsernameNotFound
+		}
+		return LoginResult{}, err
 	}
 
 	if !existing.CheckPassword(req.Password) {
-		return LoginResult{}, errors.New("invalid password")
+		return LoginResult{}, ErrInvalidPassword
 	}
 
 	existing.LastLoginAt = time.Now()
-	uc.db.WithContext(ctx).Save(&existing)
+	if err := uc.repo.UpdateLastLogin(ctx, existing); err != nil {
+		return LoginResult{}, err
+	}
 	utils.BumpCacheVersion(ctx, uc.cache, "users")
 
 	if existing.Role == "craftsman" {
-		var r users.CraftsmanResponse
-		uc.db.WithContext(ctx).
-			Table("users").
-			Select(`
-        users.username,
-        users.firstname,
-        users.lastname,
-        users.email,
-        users.profile_picture,
-        users.gender,
-        crafts.name AS craft,
-        craftsmen.rating,
-        craftsmen.number_of_ratings
-    `).
-			Joins("INNER JOIN craftsmen ON craftsmen.user_id = users.id").
-			Joins("INNER JOIN crafts ON crafts.id = craftsmen.craft_id").
-			Where("users.username = ?", existing.Username).
-			Scan(&r)
+		r, err := uc.repo.GetCraftsmanProfileByUsername(ctx, existing.Username)
+		if err != nil {
+			return LoginResult{}, err
+		}
 
-		var craftsman entities.Craftsman
-		uc.db.WithContext(ctx).Where("user_id = ?", existing.ID).First(&craftsman)
+		craftsman, err := uc.repo.GetCraftsmanByUserID(ctx, existing.ID)
+		if err != nil {
+			return LoginResult{}, err
+		}
 
-		return LoginResult{ID: existing.ID, Role: existing.Role, CraftsmanID: craftsman.ID, Response: &r}, nil
+		return LoginResult{ID: existing.ID, Role: existing.Role, CraftsmanID: craftsman.ID, Response: r}, nil
 	}
 
 	r := &users.RegularUserResponse{

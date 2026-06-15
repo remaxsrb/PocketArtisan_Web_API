@@ -1,7 +1,9 @@
 package login
 
 import (
+	"PocketArtisan/internal/http/response"
 	"PocketArtisan/internal/modules/auth"
+	"errors"
 	"net/http"
 	"strconv"
 
@@ -15,21 +17,21 @@ func RegisterRoutes(router *gin.RouterGroup, db interface{}, rdb interface{}, jw
 	router.POST("/login", func(c *gin.Context) {
 		var req LoginRequest
 		if err := c.ShouldBindJSON(&req); err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			response.Error(c, http.StatusBadRequest, err.Error())
 			return
 		}
 
 		result, err := r.Execute(c.Request.Context(), req)
 		if err != nil {
-			if err.Error() == "username not found" {
-				c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+			if errors.Is(err, ErrUsernameNotFound) {
+				response.Error(c, http.StatusNotFound, err.Error())
 				return
 			}
-			if err.Error() == "invalid password" {
-				c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
+			if errors.Is(err, ErrInvalidPassword) {
+				response.Error(c, http.StatusUnauthorized, err.Error())
 				return
 			}
-			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			response.Error(c, http.StatusInternalServerError, err.Error())
 			return
 		}
 
@@ -43,7 +45,7 @@ func RegisterRoutes(router *gin.RouterGroup, db interface{}, rdb interface{}, jw
 
 		token, err := jwtService.Generate(identity)
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			response.Error(c, http.StatusInternalServerError, err.Error())
 			return
 		}
 

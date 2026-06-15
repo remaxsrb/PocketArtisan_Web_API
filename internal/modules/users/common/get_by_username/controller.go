@@ -1,6 +1,7 @@
 package getbyusername
 
 import (
+	"PocketArtisan/internal/http/response"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -17,13 +18,13 @@ func RegisterRoutes(router *gin.RouterGroup, db interface{}, rdb interface{}) {
 		resp, err := uc.Execute(c.Request.Context(), username)
 		if err != nil {
 			if err.Error() == "user not found" {
-				c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+				response.Error(c, http.StatusNotFound, err.Error())
 				return
 			}
-			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			response.Error(c, http.StatusInternalServerError, err.Error())
 			return
 		}
 
-		c.JSON(http.StatusOK, gin.H{"data": resp})
+		response.Data(c, http.StatusOK, resp)
 	})
 }

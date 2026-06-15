@@ -13,18 +13,19 @@ import (
 )
 
 type UseCase struct {
-	db    *gorm.DB
-	cache *redis.Client
+	db             *gorm.DB
+	cache          *redis.Client
+	productService product.Service
 }
 
 func NewUseCase(db *gorm.DB, cache *redis.Client) *UseCase {
-	return &UseCase{db: db, cache: cache}
+	return &UseCase{db: db, cache: cache, productService: product.NewService(db)}
 }
 
 func (uc *UseCase) Execute(ctx context.Context, req NewProductRequest) error {
 	var existing entities.Product
 
-	CraftsmanID, err := product.GetCraftsmanIDByUsername(ctx, uc.db, req.Username)
+	CraftsmanID, err := uc.productService.GetCraftsmanIDByUsername(ctx, req.Username)
 	if err != nil {
 		return err
 	}

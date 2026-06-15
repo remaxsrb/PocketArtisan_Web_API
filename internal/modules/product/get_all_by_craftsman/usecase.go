@@ -16,12 +16,13 @@ import (
 )
 
 type UseCase struct {
-	db    *gorm.DB
-	cache *redis.Client
+	db             *gorm.DB
+	cache          *redis.Client
+	productService product.Service
 }
 
 func NewUseCase(db *gorm.DB, cache *redis.Client) *UseCase {
-	return &UseCase{db: db, cache: cache}
+	return &UseCase{db: db, cache: cache, productService: product.NewService(db)}
 }
 
 func (uc *UseCase) Execute(ctx context.Context, req GetAllRequest) (GetAllResponse, error) {
@@ -52,7 +53,7 @@ func (uc *UseCase) Execute(ctx context.Context, req GetAllRequest) (GetAllRespon
 		fmt.Printf("Redis error: %v\n", err)
 	}
 
-	craftsmanID, err := product.GetCraftsmanIDByUsername(ctx, uc.db, req.Username)
+	craftsmanID, err := uc.productService.GetCraftsmanIDByUsername(ctx, req.Username)
 	if err != nil {
 		return GetAllResponse{}, err
 	}
