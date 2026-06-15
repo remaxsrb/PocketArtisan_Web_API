@@ -55,9 +55,6 @@ func runMigrations() {
 		{
 			table: "users",
 			migrate: func() error {
-				if err := DB.Exec("CREATE TYPE IF NOT EXISTS gender AS ENUM ('male', 'female')").Error; err != nil {
-					log.Printf("Warning: failed to create gender enum type: %v", err)
-				}
 				return DB.AutoMigrate(&entities.User{})
 			},
 		},
@@ -81,6 +78,12 @@ func runMigrations() {
 			table: "products",
 			migrate: func() error {
 				return DB.AutoMigrate(&entities.Product{}, &entities.ProductImage{}, &entities.ProductVideo{})
+			},
+		},
+		{
+			table: "orders",
+			migrate: func() error {
+				return DB.AutoMigrate(&entities.Order{}, &entities.OrderItem{})
 			},
 		},
 	}
