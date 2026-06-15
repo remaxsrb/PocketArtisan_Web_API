@@ -11,5 +11,5 @@ import (
 func RegisterOrdertRoutes(router *gin.Engine, appContainer *container.AppContainer) {
 	customerOrderRoutes := router.Group("/orders")
 	customerOrderRoutes.Use(middleware.JWT(appContainer.JWTService), middleware.RequireRoles("user"))
-	create.RegisterRoutes(customerOrderRoutes, appContainer.DB, appContainer.RDB, appContainer.Storage)
+	create.RegisterRoutes(customerOrderRoutes, appContainer.DB, appContainer.RDB, appContainer.Storage, appContainer.Fonts)
 }

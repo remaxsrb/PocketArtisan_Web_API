@@ -14,6 +14,7 @@ services:
     volumes:
       - ./uploads:/app/uploads:Z  
       - ./assets:/app/assets:Z
+      - ./internal/modules/files/generate_pdf/fonts:/app/fonts:Z
     restart: unless-stopped
 
   postgres:

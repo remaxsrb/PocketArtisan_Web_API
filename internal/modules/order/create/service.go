@@ -4,6 +4,7 @@ import (
 	"PocketArtisan/internal/entities"
 	orderPDF "PocketArtisan/internal/modules/files/generate_pdf/order"
 	"PocketArtisan/internal/modules/files/storage"
+	"PocketArtisan/internal/modules/utils/fonts"
 	"context"
 	"fmt"
 	"log"
@@ -23,11 +24,10 @@ type ProductPrice struct {
 	Price float64
 }
 
-func NewService(db *gorm.DB, cache *redis.Client, s storage.Storage) *Service {
-	return &Service{db: db, cache: cache, pdfService: orderPDF.NewService(s)}
+func NewService(db *gorm.DB, cache *redis.Client, s storage.Storage, f *fonts.Service) *Service {
+	return &Service{db: db, cache: cache, pdfService: orderPDF.NewService(s, f)}
 }
 
-// Execute creates the order and returns the URL of the generated order-confirmation PDF.
 func (uc *Service) Execute(ctx context.Context, req NewOrderRequest) (string, error) {
 
 	var order entities.Order
@@ -35,10 +35,10 @@ func (uc *Service) Execute(ctx context.Context, req NewOrderRequest) (string, er
 	order.CraftsmanID = req.CraftsmanID
 
 	switch req.PaymentType {
-	case "CREDIT_CARD":
+	case "CC":
 		order.PaymentType = entities.PaymentCreditCard
 		order.Status = entities.OrderPaymentReserved
-	case "CASH_ON_DELIVERY":
+	case "COD":
 		order.PaymentType = entities.CashOnDelivery
 		order.Status = entities.OrderPending
 	default:
@@ -109,11 +109,11 @@ func (uc *Service) Execute(ctx context.Context, req NewOrderRequest) (string, er
 			return fmt.Errorf("fetch customer: %w", err)
 		}
 
-		customer.Cart.Total = 0
-		customer.Cart.Items = []entities.CartItem{}
-
-		if err := tx.Save(&customer).Error; err != nil {
-			return fmt.Errorf("clear cart: %w", err)
+		if err := tx.Where("cart_id = (SELECT id FROM carts WHERE user_id = ?)", customer.ID).Delete(&entities.CartItem{}).Error; err != nil {
+			return fmt.Errorf("clear cart items: %w", err)
+		}
+		if err := tx.Model(&entities.Cart{}).Where("user_id = ?", customer.ID).Update("total", 0).Error; err != nil {
+			return fmt.Errorf("clear cart total: %w", err)
 		}
 
 		return nil

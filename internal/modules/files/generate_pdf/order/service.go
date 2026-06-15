@@ -2,6 +2,7 @@ package order
 
 import (
 	"PocketArtisan/internal/modules/files/storage"
+	"PocketArtisan/internal/modules/utils/fonts"
 	"bytes"
 	"fmt"
 	"time"
@@ -9,16 +10,17 @@ import (
 
 type Service struct {
 	storage storage.Storage
+	fonts   *fonts.Service
 }
 
-func NewService(s storage.Storage) *Service {
-	return &Service{storage: s}
+func NewService(s storage.Storage, f *fonts.Service) *Service {
+	return &Service{storage: s, fonts: f}
 }
 
 // Generate builds an order-confirmation PDF and saves it via the storage layer.
 // It returns the public URL of the saved file.
 func (s *Service) Generate(data OrderData) (string, error) {
-	f, err := buildPDF(data)
+	f, err := buildPDF(data, s.fonts)
 	if err != nil {
 		return "", fmt.Errorf("build pdf: %w", err)
 	}

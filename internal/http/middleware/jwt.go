@@ -1,7 +1,9 @@
 package middleware
 
 import (
+	"context"
 	"net/http"
+	"strconv"
 	"strings"
 
 	"PocketArtisan/internal/modules/auth"
@@ -35,6 +37,15 @@ func JWT(jwtService auth.JWTService) gin.HandlerFunc {
 		}
 
 		c.Set(ContextUserID, identity.ID)
+
+		idInt, err := strconv.Atoi(identity.ID)
+		if err != nil {
+			c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "invalid user ID format"})
+			return
+		}
+
+		ctx := context.WithValue(c.Request.Context(), "user_id", uint(idInt))
+		c.Request = c.Request.WithContext(ctx)
 		c.Set(ContextRole, identity.Role)
 
 		c.Next()

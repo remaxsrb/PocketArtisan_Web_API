@@ -6,6 +6,7 @@ import (
 	"PocketArtisan/internal/http"
 	"PocketArtisan/internal/modules/auth"
 	"PocketArtisan/internal/modules/files/storage"
+	"PocketArtisan/internal/modules/utils/fonts"
 	"log"
 	"os"
 	"time"
@@ -30,11 +31,17 @@ func main() {
 	}
 	localStorage := storage.NewLocalStorage("./uploads", baseURL+"/files")
 
+	fontService, err := fonts.NewService("./assets")
+	if err != nil {
+		log.Fatalf("failed to load fonts: %v", err)
+	}
+
 	appContainer := container.NewAppContainer(
 		config.DB,
 		config.RDB,
 		jwtService,
 		localStorage,
+		fontService,
 	)
 
 	r := http.SetupRouter(appContainer)
