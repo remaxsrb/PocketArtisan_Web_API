@@ -2,7 +2,7 @@
   {
     "username": "marko.petrovic",
     "craft": "Kovač",
-    "category": "Alati i okovi",
+    "category": "Alati i oružja",
     "assetFolder": "ironwork",
     "name": "Vikinški gvozdeni mač",
     "description": "Ručno kovani vikinški mač izrađen od visokougljеničnog čelika. Svaki komad je jedinstven i rađen po tradicionalnim tehnikama kovanja.",
@@ -11,7 +11,7 @@
   {
     "username": "ana.jovanovic",
     "craft": "Kovač",
-    "category": "Alati i okovi",
+    "category": "Alati i oružja",
     "assetFolder": "ironwork",
     "name": "Vikinški gvozdeni mač — replika",
     "description": "Dekorativna replika vikinškog mača, ručno kovana i polirana. Idealna za kolekcionare i ljubitelje istorije.",
@@ -20,7 +20,7 @@
   {
     "username": "nikola.nikolic",
     "craft": "Kovač",
-    "category": "Alati i okovi",
+    "category": "Alati i oružja",
     "assetFolder": "ironwork",
     "name": "Kovani vikinški mač — kolekcija",
     "description": "Ekskluzivni ručno kovani mač vikinškog stila sa graviranom drškom. Izrađen po narudžbini za kolekcionare.",
@@ -31,14 +31,14 @@
     "craft": "Grnčar",
     "category": "Posuđe i keramika",
     "assetFolder": "pottery",
-    "name": "Vinska figura — Vinča",
+    "name": "Vinčanska figura — Vinča",
     "description": "Ručno rađena keramička figura inspirisana vinčanskom kulturom. Izrađena od lokalne gline i prirodno glazirana.",
     "price": 120.00
   },
   {
     "username": "milica.markovic",
     "craft": "Obućar",
-    "category": "Obuća i kožna galanterija",
+    "category": "Obuća",
     "assetFolder": "shoes",
     "name": "Reebok Classic — muške, zelene",
     "description": "Ručno dorađene Reebok Classic patike u zelenoj boji. Prilagođene po meri sa dodatnom unutrašnjom podrškom.",
@@ -47,7 +47,7 @@
   {
     "username": "milica.markovic",
     "craft": "Obućar",
-    "category": "Obuća i kožna galanterija",
+    "category": "Obuća",
     "assetFolder": "shoes",
     "name": "Reebok Classic — ženske, crne",
     "description": "Ručno dorađene Reebok Classic patike za žene u crnoj boji. Udobne i izdržljive za svakodnevno nošenje.",
@@ -56,7 +56,7 @@
   {
     "username": "milica.markovic",
     "craft": "Obućar",
-    "category": "Obuća i kožna galanterija",
+    "category": "Obuća",
     "assetFolder": "shoes",
     "name": "Reebok Classic — ženske, bele",
     "description": "Klasične bele Reebok patike za žene, ručno obrađene i personalizovane. Savršene za sve prilike.",
@@ -65,7 +65,7 @@
   {
     "username": "stefan.stefanovic",
     "craft": "Obućar",
-    "category": "Obuća i kožna galanterija",
+    "category": "Obuća",
     "assetFolder": "shoes",
     "name": "Reebok Classic — muške, zelene",
     "description": "Muške Reebok Classic patike u prepoznatljivoj zelenoj boji, ručno dorađene i prilagođene po meri kupca.",
@@ -74,7 +74,7 @@
   {
     "username": "stefan.stefanovic",
     "craft": "Obućar",
-    "category": "Obuća i kožna galanterija",
+    "category": "Obuća",
     "assetFolder": "shoes",
     "name": "Reebok Classic — ženske, crne",
     "description": "Ženske Reebok Classic patike u crnoj boji sa ručnom dorađenom površinom i ojačanim đonom.",
@@ -83,7 +83,7 @@
   {
     "username": "stefan.stefanovic",
     "craft": "Obućar",
-    "category": "Obuća i kožna galanterija",
+    "category": "Obuća",
     "assetFolder": "shoes",
     "name": "Reebok Classic — ženske, bele",
     "description": "Bele ženske Reebok Classic patike, ručno obrađene sa premium ulošcima po meri.",
@@ -92,7 +92,7 @@
   {
     "username": "jelena.jelic",
     "craft": "Obućar",
-    "category": "Obuća i kožna galanterija",
+    "category": "Obuća",
     "assetFolder": "shoes",
     "name": "Reebok Classic — muške, zelene",
     "description": "Ručno dorađene muške Reebok Classic patike sa personalizovanim detaljima i ojačanom potplatom.",
@@ -101,7 +101,7 @@
   {
     "username": "jelena.jelic",
     "craft": "Obućar",
-    "category": "Obuća i kožna galanterija",
+    "category": "Obuća",
     "assetFolder": "shoes",
     "name": "Reebok Classic — ženske, crne",
     "description": "Elegantne crne ženske Reebok Classic patike sa ručno rađenim unutrašnjim ulošcima i premium završnom obradom.",
@@ -110,7 +110,7 @@
   {
     "username": "jelena.jelic",
     "craft": "Obućar",
-    "category": "Obuća i kožna galanterija",
+    "category": "Obuća",
     "assetFolder": "shoes",
     "name": "Reebok Classic — ženske, bele",
     "description": "Bele ženske Reebok Classic patike sa ručno rađenim detaljima i poboljšanom potplatom za duži vek trajanja.",
@@ -119,7 +119,7 @@
   {
     "username": "vladimir.vukovic",
     "craft": "Obućar",
-    "category": "Obuća i kožna galanterija",
+    "category": "Obuća",
     "assetFolder": "shoes",
     "name": "Reebok Classic — muške, zelene",
     "description": "Premium muške Reebok Classic patike u zelenoj boji, ručno dorađene sa ekstra ojačanjima na ključnim tačkama.",
@@ -128,7 +128,7 @@
   {
     "username": "vladimir.vukovic",
     "craft": "Obućar",
-    "category": "Obuća i kožna galanterija",
+    "category": "Obuća",
     "assetFolder": "shoes",
     "name": "Reebok Classic — ženske, crne",
     "description": "Premium crne ženske Reebok Classic patike sa ručnom obradom i personalizovanim monogramom po želji kupca.",
@@ -137,7 +137,7 @@
   {
     "username": "vladimir.vukovic",
     "craft": "Obućar",
-    "category": "Obuća i kožna galanterija",
+    "category": "Obuća",
     "assetFolder": "shoes",
     "name": "Reebok Classic — ženske, bele",
     "description": "Premium bele ženske Reebok Classic patike, ručno dorađene sa zaštitnim premazom i ortopedskim ulošcima.",
@@ -146,7 +146,7 @@
   {
     "username": "predrag.pavlovic",
     "craft": "Stolar",
-    "category": "Igračke",
+    "category": "Drveni suveniri",
     "assetFolder": "woodwork",
     "name": "Drveni vikinški mač",
     "description": "Ručno rezan i brušen drveni vikinški mač od punog hrasta. Idealan kao dekorativni komad ili dečija igračka.",
@@ -155,7 +155,7 @@
   {
     "username": "predrag.pavlovic",
     "craft": "Stolar",
-    "category": "Igračke",
+    "category": "Drveni suveniri",
     "assetFolder": "woodwork",
     "name": "Vikinški dugi mač — drvo",
     "description": "Ručno izrađen dugi vikinški mač od masivnog drveta sa graviranim runskim simbolima na dršci.",
