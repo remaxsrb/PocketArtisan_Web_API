@@ -28,7 +28,7 @@ func buildPDF(data OrderData, f *fonts.Service) (*fpdf.Fpdf, error) {
 	pdf.SetFillColor(30, 30, 60)
 	pdf.SetTextColor(255, 255, 255)
 	pdf.SetFont("DejaVuSans", "B", 20)
-	pdf.CellFormat(contentW, 14, "Faktura / Račun", "", 1, "C", true, 0, "")
+	pdf.CellFormat(contentW, 14, "Faktura", "", 1, "C", true, 0, "")
 	pdf.Ln(4)
 
 	// -- Order meta -----------------------------------------------------------

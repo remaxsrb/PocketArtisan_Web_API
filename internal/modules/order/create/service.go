@@ -134,10 +134,16 @@ func (uc *Service) Execute(ctx context.Context, req NewOrderRequest) (string, er
 		CustomerName:    customer.Username,
 		CustomerEmail:   customer.Email,
 		ShippingAddress: req.ShippingAddress,
-		PaymentType:     string(req.PaymentType),
 		Items:           orderItems,
 		OrderDate:       order.CreatedAt.Format("02/01/2006"),
 		TotalPrice:      order.TotalPrice,
+	}
+
+	switch req.PaymentType {
+	case "CC":
+		pdfData.PaymentType = "Platna kartica"
+	case "COD":
+		pdfData.PaymentType = "Plaćanje pouzećem"
 	}
 
 	pdfURL, err := uc.pdfService.Generate(pdfData)
