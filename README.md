@@ -41,8 +41,9 @@ JWT_SECRET=test_jwt_secret
 - Whenever `docker compose down -v` is executed it is important to run ./app_init.sh from project root to clear go test cache and repopulate database with initial data
 
 
+## General notes
 
-## Admin panel
+- In this prototype stage there will be no integraticon with payment Gateway like Payten. Instead mock transaction will be used.
 
-- Idea is to first decide whether application for craftsman is approved or rejected
-- Then use role set to set role in database
+- in `/notes` directory you can see notes which I made for myself when assistet by agents to serve as future reference and study material
+
