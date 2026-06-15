@@ -10,7 +10,7 @@ import (
 )
 
 func RegisterRoutes(router *gin.RouterGroup, db *gorm.DB, rdb *redis.Client) {
-	r := NewUseCase(db, rdb)
+	r := NewService(db, rdb)
 	router.PATCH("/change-password", func(c *gin.Context) {
 		var req ChangePasswordRequest
 		if err := c.ShouldBindJSON(&req); err != nil {

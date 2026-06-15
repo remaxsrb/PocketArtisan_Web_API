@@ -9,7 +9,7 @@ import (
 )
 
 func RegisterRoutes(router *gin.RouterGroup, s storage.Storage) {
-	uc := NewUseCase(s)
+	uc := NewService(s)
 
 	router.POST("/upload", func(c *gin.Context) {
 		file, err := c.FormFile("file")

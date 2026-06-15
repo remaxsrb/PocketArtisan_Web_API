@@ -1,9 +1,8 @@
 package create
 
-
 type Request struct {
 	Email string `json:"email"`
-	Craft  string `json:"craft"`
+	Craft string `json:"craft"`
 }
 
 type Response struct {

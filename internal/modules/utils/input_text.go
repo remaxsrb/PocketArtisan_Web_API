@@ -39,6 +39,6 @@ func NormalizeForSearch(s string) string {
 	// 2. Remove diacritics (e.g., ć -> c)
 	t := transform.Chain(norm.NFD, runes.Remove(runes.In(unicode.Mn)), norm.NFC)
 	result, _, _ := transform.String(t, s)
-	
+
 	return strings.ToLower(result)
 }

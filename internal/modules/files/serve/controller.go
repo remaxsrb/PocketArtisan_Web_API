@@ -9,7 +9,7 @@ import (
 )
 
 func RegisterRoutes(router *gin.RouterGroup, s storage.Storage) {
-	uc := NewUseCase(s)
+	uc := NewService(s)
 
 	router.GET("/*filepath", func(c *gin.Context) {
 		filepath := c.Param("filepath")

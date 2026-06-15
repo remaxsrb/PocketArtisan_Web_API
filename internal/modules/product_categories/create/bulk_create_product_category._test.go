@@ -50,7 +50,7 @@ func createProductCategory(t *testing.T, category NewProductCategoryRequest, adm
 		return
 	}
 	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("Authorization", "Bearer "+ adminToken)
+	req.Header.Set("Authorization", "Bearer "+adminToken)
 
 	client := &http.Client{Timeout: 10 * time.Second}
 	resp, err := client.Do(req)

@@ -9,7 +9,7 @@ import (
 )
 
 func RegisterRoutes(router *gin.RouterGroup, db *gorm.DB, rdb *redis.Client) {
-	uc := NewUseCase(db, rdb)
+	uc := NewService(db, rdb)
 
 	router.GET("/all", func(c *gin.Context) {
 		var req GetAllRequest

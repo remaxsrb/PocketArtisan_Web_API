@@ -8,7 +8,7 @@ import (
 )
 
 func RegisterRoutes(router *gin.RouterGroup, s storage.Storage) {
-	uc := NewUseCase(s)
+	uc := NewService(s)
 
 	router.DELETE("/delete/:filename", func(c *gin.Context) {
 		filename := c.Param("filename")

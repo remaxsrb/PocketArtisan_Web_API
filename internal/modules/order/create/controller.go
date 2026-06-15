@@ -9,7 +9,7 @@ import (
 )
 
 func RegisterRoutes(router *gin.RouterGroup, db *gorm.DB, rdb *redis.Client) {
-	r := NewUseCase(db, rdb)
+	r := NewService(db, rdb)
 	router.POST("/create", func(c *gin.Context) {
 		var req NewOrderRequest
 		if err := c.ShouldBindJSON(&req); err != nil {
@@ -21,6 +21,6 @@ func RegisterRoutes(router *gin.RouterGroup, db *gorm.DB, rdb *redis.Client) {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
-		c.JSON(http.StatusCreated, gin.H{"message": "product created successfully"})
+		c.JSON(http.StatusCreated, gin.H{"message": "order created successfully"})
 	})
 }
