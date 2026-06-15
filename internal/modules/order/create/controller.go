@@ -1,6 +1,7 @@
 package create
 
 import (
+	"PocketArtisan/internal/modules/files/storage"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -8,19 +9,19 @@ import (
 	"gorm.io/gorm"
 )
 
-func RegisterRoutes(router *gin.RouterGroup, db *gorm.DB, rdb *redis.Client) {
-	r := NewService(db, rdb)
+func RegisterRoutes(router *gin.RouterGroup, db *gorm.DB, rdb *redis.Client, s storage.Storage) {
+	r := NewService(db, rdb, s)
 	router.POST("/create", func(c *gin.Context) {
 		var req NewOrderRequest
 		if err := c.ShouldBindJSON(&req); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
-		err := r.Execute(c.Request.Context(), req)
+		url, err := r.Execute(c.Request.Context(), req)
 		if err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
-		c.JSON(http.StatusCreated, gin.H{"message": "order created successfully"})
+		c.JSON(http.StatusCreated, gin.H{"message": "order created successfully", "url": url})
 	})
 }

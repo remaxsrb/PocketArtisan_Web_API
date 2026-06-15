@@ -10,7 +10,7 @@ import (
 )
 
 const (
-	ContextUserID = "userID"
+	ContextUserID = "user_id"
 	ContextRole   = "role"
 )
 

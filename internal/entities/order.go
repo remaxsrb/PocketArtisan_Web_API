@@ -30,6 +30,7 @@ type Order struct {
 	CompletedAt time.Time `json:"completed_at" gorm:"autoUpdateTime"`
 	Status     OrderStatus `json:"status" gorm:"type:text;default:'PENDING_CRAFTSMAN_REVIEW'"`
 	PaymentType PaymentType `json:"payment_type" gorm:"type:text;'"`
+	URL 	  string `json:"url" gorm:"type:text;" default:""`
 }
 
 type OrderItem struct {

@@ -128,6 +128,17 @@ func (l *LocalStorage) SaveFile(file *multipart.FileHeader, purpose string) (str
 	return l.BaseURL + "/" + subDir + "/" + fileName, nil
 }
 
+func (l *LocalStorage) SaveRawFile(data []byte, filename, subDir string) (string, error) {
+	path := filepath.Join(l.BasePath, subDir, filename)
+	if err := os.MkdirAll(filepath.Dir(path), 0755); err != nil {
+		return "", err
+	}
+	if err := os.WriteFile(path, data, 0644); err != nil {
+		return "", err
+	}
+	return l.BaseURL + "/" + subDir + "/" + filename, nil
+}
+
 func (l *LocalStorage) DeleteFile(fileName string) error {
 	path := filepath.Join(l.BasePath, fileName)
 	return os.Remove(path)

@@ -5,6 +5,7 @@ import (
 	"PocketArtisan/internal/container"
 	"PocketArtisan/internal/http"
 	"PocketArtisan/internal/modules/auth"
+	"PocketArtisan/internal/modules/files/storage"
 	"log"
 	"os"
 	"time"
@@ -23,10 +24,17 @@ func main() {
 
 	jwtService := auth.InitJWTService(24 * time.Hour)
 
+	baseURL := os.Getenv("BASE_URL")
+	if baseURL == "" {
+		baseURL = "http://localhost:8080"
+	}
+	localStorage := storage.NewLocalStorage("./uploads", baseURL+"/files")
+
 	appContainer := container.NewAppContainer(
 		config.DB,
 		config.RDB,
 		jwtService,
+		localStorage,
 	)
 
 	r := http.SetupRouter(appContainer)

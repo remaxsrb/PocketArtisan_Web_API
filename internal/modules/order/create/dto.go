@@ -4,7 +4,7 @@ import "PocketArtisan/internal/entities"
 
 type NewOrderRequest struct {
 	CraftsmanID     uint                  `json:"craftsman_id" binding:"required"`
-	Items           []NewOrderItemRequest `json:"items" binding:"required, min=1,dive,required"`
+	Items           []NewOrderItemRequest `json:"items" binding:"required,min=1,dive,required"`
 	PaymentType     entities.PaymentType  `json:"payment_type" binding:"required"`
 	ShippingAddress string                `json:"shipping_address" binding:"required"`
 	CreditCardData  *CreditCardData       `json:"credit_card_data,omitempty"`
