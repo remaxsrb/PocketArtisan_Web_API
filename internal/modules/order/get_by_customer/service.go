@@ -69,6 +69,7 @@ func (uc *Service) Execute(ctx context.Context, req GetAllRequest) (GetAllRespon
 	for _, o := range raw {
 		orderList = append(orderList, &order.OrderResponse{
 			OrderID:        o.ID,
+			CraftsmanID:    o.CraftsmanID,
 			OrderDate:      o.CreatedAt,
 			CompletionDate: o.CompletedAt,
 			URL:            o.URL,
