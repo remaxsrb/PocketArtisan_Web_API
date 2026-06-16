@@ -20,7 +20,7 @@ type Service struct {
 }
 
 type ProductPrice struct {
-	ID    uint
+	ID    uint64
 	Price float64
 }
 
@@ -31,7 +31,7 @@ func NewService(db *gorm.DB, cache *redis.Client, s storage.Storage, f *fonts.Se
 func (uc *Service) Execute(ctx context.Context, req NewOrderRequest) (string, error) {
 
 	var order entities.Order
-	order.CustomerID = ctx.Value("user_id").(uint)
+	order.CustomerID = ctx.Value("user_id").(uint64)
 	order.CraftsmanID = req.CraftsmanID
 
 	switch req.PaymentType {
@@ -45,10 +45,10 @@ func (uc *Service) Execute(ctx context.Context, req NewOrderRequest) (string, er
 		return "", fmt.Errorf("invalid payment type: %s", req.PaymentType)
 	}
 
-	productIDs := make([]uint, len(req.Items))
-	quantities := make(map[uint]int)
+	productIDs := make([]uint64, len(req.Items))
+	quantities := make(map[uint64]int)
 	// Map to store product prices in case craftsman changes them during the order creation process
-	prices := make(map[uint]float64)
+	prices := make(map[uint64]float64)
 
 	for i, item := range req.Items {
 		productIDs[i] = item.ProductID

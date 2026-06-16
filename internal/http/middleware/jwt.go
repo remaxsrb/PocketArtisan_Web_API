@@ -44,7 +44,7 @@ func JWT(jwtService auth.JWTService) gin.HandlerFunc {
 			return
 		}
 
-		ctx := context.WithValue(c.Request.Context(), "user_id", uint(idInt))
+		ctx := context.WithValue(c.Request.Context(), "user_id", uint64(idInt))
 		c.Request = c.Request.WithContext(ctx)
 		c.Set(ContextRole, identity.Role)
 

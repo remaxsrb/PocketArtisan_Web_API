@@ -3,7 +3,7 @@ package order
 import "PocketArtisan/internal/entities"
 
 type OrderData struct {
-	OrderID         uint                 `json:"order_id"`
+	OrderID         uint64               `json:"order_id"`
 	CustomerName    string               `json:"customer_name"`
 	CustomerEmail   string               `json:"customer_email"`
 	ShippingAddress string               `json:"shipping_address"`
