@@ -28,7 +28,7 @@ func NewService(db *gorm.DB, cache *redis.Client, s storage.Storage, f *fonts.Se
 	return &Service{db: db, cache: cache, pdfService: orderPDF.NewService(s, f)}
 }
 
-func (uc *Service) Execute(ctx context.Context, req NewOrderRequest) (string, error) {
+func (uc *Service) Execute(ctx context.Context, req NewOrderRequest) (OrderCreationResult, error) {
 
 	var order entities.Order
 	order.CustomerID = ctx.Value("user_id").(uint64)
@@ -42,7 +42,7 @@ func (uc *Service) Execute(ctx context.Context, req NewOrderRequest) (string, er
 		order.PaymentType = entities.CashOnDelivery
 		order.Status = entities.OrderPending
 	default:
-		return "", fmt.Errorf("invalid payment type: %s", req.PaymentType)
+		return OrderCreationResult{}, fmt.Errorf("invalid payment type: %s", req.PaymentType)
 	}
 
 	productIDs := make([]uint64, len(req.Items))
@@ -63,11 +63,11 @@ func (uc *Service) Execute(ctx context.Context, req NewOrderRequest) (string, er
 		Find(&products).Error
 
 	if err != nil {
-		return "", fmt.Errorf("failed to fetch product prices: %w", err)
+		return OrderCreationResult{}, fmt.Errorf("failed to fetch product prices: %w", err)
 	}
 
 	if len(products) != len(productIDs) {
-		return "", fmt.Errorf("one or more products do not exist")
+		return OrderCreationResult{}, fmt.Errorf("one or more products do not exist")
 	}
 
 	total := 0.0
@@ -109,24 +109,17 @@ func (uc *Service) Execute(ctx context.Context, req NewOrderRequest) (string, er
 			return fmt.Errorf("fetch customer: %w", err)
 		}
 
-		if err := tx.Where("cart_id = (SELECT id FROM carts WHERE user_id = ?)", customer.ID).Delete(&entities.CartItem{}).Error; err != nil {
-			return fmt.Errorf("clear cart items: %w", err)
-		}
-		if err := tx.Model(&entities.Cart{}).Where("user_id = ?", customer.ID).Update("total", 0).Error; err != nil {
-			return fmt.Errorf("clear cart total: %w", err)
-		}
-
 		return nil
 	})
 
 	if err != nil {
-		return "", err
+		return OrderCreationResult{}, err
 	}
 
 	// Reload order items with product details for the PDF
 	if err := uc.db.WithContext(ctx).Preload("Product").Find(&orderItems, "order_id = ?", order.ID).Error; err != nil {
 		log.Printf("order %d: failed to preload items for PDF: %v", order.ID, err)
-		return "", nil
+		return OrderCreationResult{OrderID: order.ID, TotalPrice: order.TotalPrice}, nil
 	}
 
 	pdfData := orderPDF.OrderData{
@@ -148,15 +141,13 @@ func (uc *Service) Execute(ctx context.Context, req NewOrderRequest) (string, er
 
 	pdfURL, err := uc.pdfService.Generate(pdfData)
 	if err != nil {
-		// PDF generation failure should not block order creation; log and continue
 		log.Printf("order %d: pdf generation failed: %v", order.ID, err)
-		return "", nil
+		return OrderCreationResult{OrderID: order.ID, TotalPrice: order.TotalPrice}, nil
 	}
 
-	// Persist the PDF URL on the order record
 	if err := uc.db.WithContext(ctx).Model(&order).Update("url", pdfURL).Error; err != nil {
 		log.Printf("order %d: failed to persist pdf url: %v", order.ID, err)
 	}
 
-	return pdfURL, nil
+	return OrderCreationResult{OrderID: order.ID, TotalPrice: order.TotalPrice, PDFURL: pdfURL}, nil
 }

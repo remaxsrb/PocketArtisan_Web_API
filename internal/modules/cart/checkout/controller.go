@@ -1,7 +1,8 @@
-package create
+package checkout
 
 import (
 	"PocketArtisan/internal/modules/files/storage"
+	"PocketArtisan/internal/modules/order/create"
 	"PocketArtisan/internal/modules/utils/fonts"
 	"net/http"
 
@@ -11,18 +12,20 @@ import (
 )
 
 func RegisterRoutes(router *gin.RouterGroup, db *gorm.DB, rdb *redis.Client, s storage.Storage, f *fonts.Service) {
-	r := NewService(db, rdb, s, f)
-	router.POST("/create", func(c *gin.Context) {
-		var req NewOrderRequest
+	orderCreate := create.NewService(db, rdb, s, f)
+	svc := NewService(db, rdb, orderCreate)
+
+	router.POST("/checkout", func(c *gin.Context) {
+		var req CheckoutRequest
 		if err := c.ShouldBindJSON(&req); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
-		result, err := r.Execute(c.Request.Context(), req)
+		results, err := svc.Execute(c.Request.Context(), req)
 		if err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
-		c.JSON(http.StatusCreated, gin.H{"message": "order created successfully", "url": result.PDFURL})
+		c.JSON(http.StatusCreated, gin.H{"orders": results})
 	})
 }

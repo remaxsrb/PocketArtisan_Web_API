@@ -23,3 +23,9 @@ type CreditCardData struct {
 	ExpirationDate string `json:"expiration_date" binding:"required"`
 	CVV            string `json:"cvv" binding:"required"`
 }
+
+type OrderCreationResult struct {
+	OrderID    uint64
+	TotalPrice float64
+	PDFURL     string
+}
