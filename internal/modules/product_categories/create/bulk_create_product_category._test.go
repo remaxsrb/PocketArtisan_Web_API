@@ -13,7 +13,7 @@ import (
 )
 
 const (
-	productCategoryCreateAPIURL = "http://localhost:8080/product-categories/create"
+	productCategoryCreateAPIURL = "http://localhost:8080/api/product-categories/create"
 	categoryDataFile            = "categories_data.json"
 	categoryMaxWorkers          = 5
 )

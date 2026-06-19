@@ -12,7 +12,7 @@ import (
 func RegisterRoutes(router *gin.RouterGroup, db *gorm.DB, rdb *redis.Client) {
 	uc := NewService(db, rdb)
 
-	router.GET("username/:username", func(c *gin.Context) {
+	router.GET("/username/:username", func(c *gin.Context) {
 		username := c.Param("username")
 
 		resp, err := uc.Execute(c.Request.Context(), username)

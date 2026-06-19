@@ -18,19 +18,19 @@ import (
 )
 
 func RegisterUserRoutes(router *gin.Engine, appContainer *container.AppContainer) {
-	public := router.Group("/users")
+	public := router.Group("/api/users")
 	register.RegisterRoutes(public, appContainer.DB, appContainer.RDB)
 	login.RegisterRoutes(public, appContainer.DB, appContainer.RDB, appContainer.JWTService)
 	change_password.RegisterRoutes(public, appContainer.DB, appContainer.RDB)
 	get_by_username.RegisterRoutes(public, appContainer.DB, appContainer.RDB)
 
-	protected := router.Group("/users")
+	protected := router.Group("/api/users")
 	protected.Use(middleware.JWT(appContainer.JWTService))
 	set_profile_picture.RegisterRoutes(protected, appContainer.DB, appContainer.RDB)
 	delete_account.RegisterRoutes(protected, appContainer.DB, appContainer.RDB)
 	rate.RegisterRoutes(protected, appContainer.DB, appContainer.RDB)
 
-	admin := router.Group("/users")
+	admin := router.Group("/api/users")
 	admin.Use(middleware.JWT(appContainer.JWTService), middleware.RequireRoles("admin"))
 	get_all.RegisterRoutes(admin, appContainer.DB, appContainer.RDB)
 	set_role.RegisterRoutes(admin, appContainer.DB, appContainer.RDB)

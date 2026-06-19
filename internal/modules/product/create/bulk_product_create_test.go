@@ -14,8 +14,8 @@ import (
 )
 
 const (
-	fileUploadAPIURL    = "http://localhost:8080/files/upload"
-	productCreateAPIURL = "http://localhost:8080/products/create"
+	fileUploadAPIURL    = "http://localhost:8080/api/files/upload"
+	productCreateAPIURL = "http://localhost:8080/api/products/create"
 )
 
 type productEntry struct {

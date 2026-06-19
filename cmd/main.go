@@ -29,7 +29,7 @@ func main() {
 	if baseURL == "" {
 		baseURL = "http://localhost:8080"
 	}
-	localStorage := storage.NewLocalStorage("./uploads", baseURL+"/files")
+	localStorage := storage.NewLocalStorage("./uploads", baseURL+"/api/files")
 
 	fontService, err := fonts.NewService("./assets")
 	if err != nil {

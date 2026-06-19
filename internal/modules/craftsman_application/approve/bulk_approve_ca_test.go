@@ -13,7 +13,7 @@ import (
 )
 
 const (
-	CApproveAPIURL = "http://localhost:8080/craftsman-applications/approve"
+	CApproveAPIURL = "http://localhost:8080/api/admin/craftsman-applications/approve"
 	caDataFile     = "approve_data.json"
 	caMaxWorkers   = 5
 )

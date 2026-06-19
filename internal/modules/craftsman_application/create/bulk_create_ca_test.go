@@ -13,7 +13,7 @@ import (
 )
 
 const (
-	CACreateAPIURL = "http://localhost:8080/craftsman-applications/create"
+	CACreateAPIURL = "http://localhost:8080/api/craftsman-applications/create"
 	caDataFile     = "ca_requests.json"
 	caMaxWorkers   = 5
 )

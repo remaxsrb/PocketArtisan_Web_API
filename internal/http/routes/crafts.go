@@ -11,12 +11,12 @@ import (
 )
 
 func RegisterCraftRoutes(router *gin.Engine, appContainer *container.AppContainer) {
-	craftModeration := router.Group("/crafts")
+	craftModeration := router.Group("/api/crafts")
 	craftModeration.Use(middleware.JWT(appContainer.JWTService), middleware.RequireRoles("admin"))
 	create.RegisterRoutes(craftModeration, appContainer.DB, appContainer.RDB)
 	delete.RegisterRoutes(craftModeration, appContainer.DB, appContainer.RDB)
 
-	craftPublic := router.Group("/crafts")
+	craftPublic := router.Group("/api/crafts")
 	get_all.RegisterRoutes(craftPublic, appContainer.DB, appContainer.RDB)
 
 }

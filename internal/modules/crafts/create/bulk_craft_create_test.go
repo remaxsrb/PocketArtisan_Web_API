@@ -13,7 +13,7 @@ import (
 )
 
 const (
-	craftCreateAPIURL = "http://localhost:8080/crafts/create"
+	craftCreateAPIURL = "http://localhost:8080/api/crafts/create"
 	craftDataFile     = "raw_craft_data.json"
 	craftMaxWorkers   = 5
 )

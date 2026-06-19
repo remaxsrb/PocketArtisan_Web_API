@@ -10,7 +10,7 @@ import (
 
 func RegisterRoutes(router *gin.RouterGroup, db *gorm.DB, rdb *redis.Client) {
 	r := NewService(db, rdb)
-	router.DELETE("/delete", func(c *gin.Context) {
+	handler := func(c *gin.Context) {
 		var req DeleteAccountRequest
 		if err := c.ShouldBindJSON(&req); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -22,5 +22,8 @@ func RegisterRoutes(router *gin.RouterGroup, db *gorm.DB, rdb *redis.Client) {
 			return
 		}
 		c.JSON(http.StatusOK, nil)
-	})
+	}
+
+	router.DELETE("/delete", handler)
+	router.DELETE("/delete/", handler)
 }

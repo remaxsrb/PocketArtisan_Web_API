@@ -11,7 +11,7 @@ func SetupRouter(appContainer *container.AppContainer) *gin.Engine {
 	router := gin.Default()
 	router.Use(routes.CorsMiddleware())
 
-	router.Static("/assets", "./assets")
+	router.Static("/api/assets", "./assets")
 
 	routes.RegisterUserRoutes(router, appContainer)
 	routes.RegisterCraftsmanRoutes(router, appContainer)

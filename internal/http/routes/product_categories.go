@@ -11,11 +11,11 @@ import (
 )
 
 func RegisterProductCategoryRoutes(router *gin.Engine, appContainer *container.AppContainer) {
-	productCategoryModeration := router.Group("/product-categories")
+	productCategoryModeration := router.Group("/api/product-categories")
 	productCategoryModeration.Use(middleware.JWT(appContainer.JWTService), middleware.RequireRoles("admin"))
 	create.RegisterRoutes(productCategoryModeration, appContainer.DB, appContainer.RDB)
 	delete.RegisterRoutes(productCategoryModeration, appContainer.DB, appContainer.RDB)
 
-	productCategoryPublic := router.Group("/product-categories")
+	productCategoryPublic := router.Group("/api/product-categories")
 	get_all.RegisterRoutes(productCategoryPublic, appContainer.DB, appContainer.RDB)
 }

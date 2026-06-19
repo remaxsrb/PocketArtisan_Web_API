@@ -12,10 +12,10 @@ import (
 )
 
 func RegisterProductRoutes(router *gin.Engine, appContainer *container.AppContainer) {
-	public := router.Group("/products")
+	public := router.Group("/api/products")
 	get_all.RegisterRoutes(public, appContainer.DB, appContainer.RDB)
 
-	craftsman := router.Group("/products")
+	craftsman := router.Group("/api/products")
 	craftsman.Use(middleware.JWT(appContainer.JWTService), middleware.RequireRoles("craftsman"))
 	create.RegisterRoutes(craftsman, appContainer.DB, appContainer.RDB)
 	delete.RegisterRoutes(craftsman, appContainer.DB, appContainer.RDB)

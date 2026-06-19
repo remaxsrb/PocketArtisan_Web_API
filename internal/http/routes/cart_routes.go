@@ -11,7 +11,7 @@ import (
 )
 
 func RegisterCartRoutes(router *gin.Engine, appContainer *container.AppContainer) {
-	cartClosed := router.Group("/cart")
+	cartClosed := router.Group("/api/carts")
 	cartClosed.Use(middleware.JWT(appContainer.JWTService), middleware.RequireRoles("user"))
 	addtocart.RegisterRoutes(cartClosed, appContainer.DB, appContainer.RDB)
 	removefromcart.RegisterRoutes(cartClosed, appContainer.DB, appContainer.RDB)

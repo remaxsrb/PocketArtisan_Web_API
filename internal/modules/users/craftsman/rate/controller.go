@@ -10,7 +10,7 @@ import (
 
 func RegisterRoutes(router *gin.RouterGroup, db *gorm.DB, rdb *redis.Client) {
 	r := NewService(db, rdb)
-	router.PATCH("/rate", func(c *gin.Context) {
+	router.POST("/rate", func(c *gin.Context) {
 		var req Request
 		if err := c.ShouldBindJSON(&req); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})

@@ -13,7 +13,7 @@ import (
 )
 
 const (
-	apiURL     = "http://localhost:8080/users/register"
+	apiURL     = "http://localhost:8080/api/users/register"
 	dataFile   = "userdata.json"
 	maxWorkers = 5 // Limit concurrent requests to avoid overwhelming the server
 )

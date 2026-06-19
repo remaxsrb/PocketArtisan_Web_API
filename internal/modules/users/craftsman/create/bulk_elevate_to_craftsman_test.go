@@ -13,7 +13,7 @@ import (
 )
 
 const (
-	createCraftsmanAPIURL     = "http://localhost:8080/craftsman/create"
+	createCraftsmanAPIURL     = "http://localhost:8080/api/admin/craftsmen/create"
 	createCraftsmanDataFile   = "craftsman_data.json"
 	createCraftsmanMaxWorkers = 5
 )

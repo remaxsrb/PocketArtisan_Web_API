@@ -12,7 +12,7 @@ import (
 func RegisterRoutes(router *gin.RouterGroup, db *gorm.DB, rdb *redis.Client) {
 	uc := NewService(db, rdb)
 
-	router.GET("/craftsman/:craftsman_id", func(c *gin.Context) {
+	router.GET("/craftsmen/:craftsman_id", func(c *gin.Context) {
 		craftsmanID := c.Param("craftsman_id")
 		if craftsmanID == "" {
 			c.JSON(http.StatusBadRequest, gin.H{"error": "craftsman_id is required"})

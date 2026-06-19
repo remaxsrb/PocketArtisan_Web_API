@@ -14,12 +14,12 @@ import (
 )
 
 func RegisterOrdertRoutes(router *gin.Engine, appContainer *container.AppContainer) {
-	customerOrderRoutes := router.Group("/orders")
+	customerOrderRoutes := router.Group("/api/orders")
 	customerOrderRoutes.Use(middleware.JWT(appContainer.JWTService), middleware.RequireRoles("user"))
 	create.RegisterRoutes(customerOrderRoutes, appContainer.DB, appContainer.RDB, appContainer.Storage, appContainer.Fonts)
 	get_by_customer.RegisterRoutes(customerOrderRoutes, appContainer.DB, appContainer.RDB)
 
-	craftsmanOrderRoutes := router.Group("/orders")
+	craftsmanOrderRoutes := router.Group("/api/orders")
 	craftsmanOrderRoutes.Use(middleware.JWT(appContainer.JWTService), middleware.RequireRoles("craftsman"))
 	get_by_craftsman.RegisterRoutes(craftsmanOrderRoutes, appContainer.DB, appContainer.RDB)
 	accept.RegisterRoutes(craftsmanOrderRoutes, appContainer.DB, appContainer.RDB)
