@@ -6,6 +6,7 @@ import (
 	"PocketArtisan/internal/http"
 	"PocketArtisan/internal/modules/auth"
 	"PocketArtisan/internal/modules/files/storage"
+	"PocketArtisan/internal/modules/payment"
 	"PocketArtisan/internal/modules/utils/fonts"
 	"log"
 	"os"
@@ -36,12 +37,16 @@ func main() {
 		log.Fatalf("failed to load fonts: %v", err)
 	}
 
+	var gateway payment.Gateway = payment.NewMockGateway()
+	wrappedGateway := payment.NewBreakerGateway(gateway, 5, 30*time.Second)
+
 	appContainer := container.NewAppContainer(
 		config.DB,
 		config.RDB,
 		jwtService,
 		localStorage,
 		fontService,
+		wrappedGateway,
 	)
 
 	r := http.SetupRouter(appContainer)

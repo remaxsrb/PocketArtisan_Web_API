@@ -29,8 +29,9 @@ type Order struct {
 	CreatedAt       time.Time   `json:"created_at" gorm:"autoCreateTime"`
 	CompletedAt     time.Time   `json:"completed_at" gorm:"autoUpdateTime" default:"NULL"`
 	Status          OrderStatus `json:"status" gorm:"type:text;default:'PENDING_CRAFTSMAN_REVIEW'"`
-	PaymentType     PaymentType `json:"payment_type" gorm:"type:text;'"`
-	URL             string      `json:"url" gorm:"type:text;" default:""`
+	PaymentType          PaymentType `json:"payment_type" gorm:"type:text;'"`
+	URL                  string      `json:"url" gorm:"type:text;" default:""`
+	PaymentReservationID string      `json:"payment_reservation_id" gorm:"type:text;default:''"`
 }
 
 type OrderItem struct {

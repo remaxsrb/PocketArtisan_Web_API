@@ -15,5 +15,5 @@ func RegisterCartRoutes(router *gin.Engine, appContainer *container.AppContainer
 	cartClosed.Use(middleware.JWT(appContainer.JWTService), middleware.RequireRoles("user"))
 	addtocart.RegisterRoutes(cartClosed, appContainer.DB, appContainer.RDB)
 	removefromcart.RegisterRoutes(cartClosed, appContainer.DB, appContainer.RDB)
-	checkout.RegisterRoutes(cartClosed, appContainer.DB, appContainer.RDB, appContainer.Storage, appContainer.Fonts)
+	checkout.RegisterRoutes(cartClosed, appContainer.DB, appContainer.RDB, appContainer.Storage, appContainer.Fonts, appContainer.BreakerGateway)
 }

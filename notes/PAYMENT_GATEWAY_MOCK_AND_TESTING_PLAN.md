@@ -121,6 +121,15 @@ func (m *MockGateway) Refund(ctx context.Context, reservationID string) error {
 
 Wrap `Gateway` with the circuit breaker before injecting it into the container. The breaker sits between the calling service and the gateway — the calling code never sees it.
 
+### Previous version — bugs
+
+The original `call` method had a `switch` with only a `case "OPEN"`. This caused two silent bugs:
+
+1. **No probe limiting in HALF_OPEN.** The `"HALF_OPEN"` state was never cased, so every concurrent request fell through and reached the inner gateway. HALF_OPEN is supposed to allow exactly one probe at a time.
+2. **Failed probe did not immediately re-open.** A failure in HALF_OPEN incremented `failures` toward the threshold instead of re-opening the circuit immediately. One failed probe is sufficient to conclude the service is still down.
+
+### Corrected implementation
+
 ```go
 // internal/modules/payment/breaker_gateway.go
 package payment
@@ -137,10 +146,11 @@ type BreakerGateway struct {
     failureThreshold int
     openTimeout      time.Duration
 
-    mu       sync.Mutex
-    failures int
-    state    string // "CLOSED", "OPEN", "HALF_OPEN"
-    openedAt time.Time
+    mu            sync.Mutex
+    failures      int
+    state         string // "CLOSED", "OPEN", "HALF_OPEN"
+    openedAt      time.Time
+    probeInFlight bool
 }
 
 func NewBreakerGateway(inner Gateway, failureThreshold int, openTimeout time.Duration) *BreakerGateway {
@@ -154,27 +164,42 @@ func NewBreakerGateway(inner Gateway, failureThreshold int, openTimeout time.Dur
 
 func (b *BreakerGateway) call(ctx context.Context, fn func() error) error {
     b.mu.Lock()
+
     switch b.state {
     case "OPEN":
-        if time.Since(b.openedAt) >= b.openTimeout {
-            b.state = "HALF_OPEN"
-        } else {
+        if time.Since(b.openedAt) < b.openTimeout {
             b.mu.Unlock()
             return fmt.Errorf("payment gateway circuit open")
         }
+        // Timeout expired — transition to HALF_OPEN and let this request be the probe.
+        b.state = "HALF_OPEN"
+        b.probeInFlight = true
+
+    case "HALF_OPEN":
+        // Only one probe at a time; reject all others until the probe resolves.
+        if b.probeInFlight {
+            b.mu.Unlock()
+            return fmt.Errorf("payment gateway circuit half-open, probe in flight")
+        }
+        b.probeInFlight = true
+
+    // default (CLOSED): fall through, no gate needed.
     }
+
     b.mu.Unlock()
-
     err := fn()
-
     b.mu.Lock()
     defer b.mu.Unlock()
 
+    b.probeInFlight = false
+
     if err != nil {
         b.failures++
-        if b.failures >= b.failureThreshold {
+        // In HALF_OPEN a single failure is enough to re-open immediately.
+        if b.state == "HALF_OPEN" || b.failures >= b.failureThreshold {
             b.state = "OPEN"
             b.openedAt = time.Now()
+            b.failures = 0
         }
         return err
     }
@@ -202,6 +227,17 @@ func (b *BreakerGateway) Refund(ctx context.Context, reservationID string) error
     return b.call(ctx, func() error { return b.inner.Refund(ctx, reservationID) })
 }
 ```
+
+**What changed and why:**
+
+| # | Change | Reason |
+|---|--------|--------|
+| 1 | Added `probeInFlight bool` field | Tracks whether a probe is already in progress so concurrent requests in HALF_OPEN are rejected |
+| 2 | Added explicit `case "HALF_OPEN"` | Makes the intended behaviour visible instead of relying on switch fall-through |
+| 3 | OPEN → HALF_OPEN transition sets `probeInFlight = true` immediately | The request that triggers the transition is itself the probe; no second gate needed |
+| 4 | `probeInFlight` cleared before result evaluation | Ensures the flag is always reset even if the result handling panics |
+| 5 | `b.state == "HALF_OPEN"` check before threshold in failure path | A single failed probe re-opens the circuit immediately without waiting for more failures |
+| 6 | `b.failures = 0` on re-open | Resets the counter so the next CLOSED phase starts clean |
 
 ---
 

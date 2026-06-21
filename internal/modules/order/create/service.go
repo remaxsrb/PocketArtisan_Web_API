@@ -4,6 +4,7 @@ import (
 	"PocketArtisan/internal/entities"
 	orderPDF "PocketArtisan/internal/modules/files/generate_pdf/order"
 	"PocketArtisan/internal/modules/files/storage"
+	"PocketArtisan/internal/modules/payment"
 	"PocketArtisan/internal/modules/utils/fonts"
 	"context"
 	"fmt"
@@ -17,6 +18,7 @@ type Service struct {
 	db         *gorm.DB
 	cache      *redis.Client
 	pdfService *orderPDF.Service
+	gateway    payment.Gateway
 }
 
 type ProductPrice struct {
@@ -24,8 +26,8 @@ type ProductPrice struct {
 	Price float64
 }
 
-func NewService(db *gorm.DB, cache *redis.Client, s storage.Storage, f *fonts.Service) *Service {
-	return &Service{db: db, cache: cache, pdfService: orderPDF.NewService(s, f)}
+func NewService(db *gorm.DB, cache *redis.Client, s storage.Storage, f *fonts.Service, gw payment.Gateway) *Service {
+	return &Service{db: db, cache: cache, pdfService: orderPDF.NewService(s, f), gateway: gw}
 }
 
 func (uc *Service) Execute(ctx context.Context, req NewOrderRequest) (OrderCreationResult, error) {
@@ -116,10 +118,29 @@ func (uc *Service) Execute(ctx context.Context, req NewOrderRequest) (OrderCreat
 		return OrderCreationResult{}, err
 	}
 
+	// Reserve funds for CC orders. On failure, compensate by deleting the committed order.
+	var reservationID string
+	if order.PaymentType == entities.PaymentCreditCard {
+		res, err := uc.gateway.Reserve(ctx, payment.ReserveRequest{
+			OrderID:     uint(order.ID),
+			Amount:      order.TotalPrice,
+			Currency:    "RSD",
+			Description: fmt.Sprintf("Order #%d", order.ID),
+		})
+		if err != nil {
+			uc.deleteOrder(ctx, order.ID)
+			return OrderCreationResult{}, fmt.Errorf("payment reservation failed: %w", err)
+		}
+		reservationID = res.ID
+		if err := uc.db.WithContext(ctx).Model(&order).Update("payment_reservation_id", reservationID).Error; err != nil {
+			log.Printf("order %d: failed to persist reservation id: %v", order.ID, err)
+		}
+	}
+
 	// Reload order items with product details for the PDF
 	if err := uc.db.WithContext(ctx).Preload("Product").Find(&orderItems, "order_id = ?", order.ID).Error; err != nil {
 		log.Printf("order %d: failed to preload items for PDF: %v", order.ID, err)
-		return OrderCreationResult{OrderID: order.ID, TotalPrice: order.TotalPrice}, nil
+		return OrderCreationResult{OrderID: order.ID, TotalPrice: order.TotalPrice, PaymentReservationID: reservationID}, nil
 	}
 
 	pdfData := orderPDF.OrderData{
@@ -142,12 +163,27 @@ func (uc *Service) Execute(ctx context.Context, req NewOrderRequest) (OrderCreat
 	pdfURL, err := uc.pdfService.Generate(pdfData)
 	if err != nil {
 		log.Printf("order %d: pdf generation failed: %v", order.ID, err)
-		return OrderCreationResult{OrderID: order.ID, TotalPrice: order.TotalPrice}, nil
+		return OrderCreationResult{OrderID: order.ID, TotalPrice: order.TotalPrice, PaymentReservationID: reservationID}, nil
 	}
 
 	if err := uc.db.WithContext(ctx).Model(&order).Update("url", pdfURL).Error; err != nil {
 		log.Printf("order %d: failed to persist pdf url: %v", order.ID, err)
 	}
 
-	return OrderCreationResult{OrderID: order.ID, TotalPrice: order.TotalPrice, PDFURL: pdfURL}, nil
+	return OrderCreationResult{
+		OrderID:              order.ID,
+		TotalPrice:           order.TotalPrice,
+		PDFURL:               pdfURL,
+		PaymentReservationID: reservationID,
+	}, nil
+}
+
+// deleteOrder removes a committed order and its items when a post-transaction step fails.
+func (uc *Service) deleteOrder(ctx context.Context, orderID uint64) {
+	if err := uc.db.WithContext(ctx).Where("order_id = ?", orderID).Delete(&entities.OrderItem{}).Error; err != nil {
+		log.Printf("order %d: compensation delete items failed: %v", orderID, err)
+	}
+	if err := uc.db.WithContext(ctx).Delete(&entities.Order{}, orderID).Error; err != nil {
+		log.Printf("order %d: compensation delete order failed: %v", orderID, err)
+	}
 }

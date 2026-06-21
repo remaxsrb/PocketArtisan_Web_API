@@ -2,21 +2,24 @@ package decline
 
 import (
 	"PocketArtisan/internal/entities"
+	"PocketArtisan/internal/modules/payment"
 	"PocketArtisan/internal/modules/utils"
 	"context"
 	"errors"
+	"fmt"
 
 	"github.com/go-redis/redis/v8"
 	"gorm.io/gorm"
 )
 
 type Service struct {
-	db    *gorm.DB
-	cache *redis.Client
+	db      *gorm.DB
+	cache   *redis.Client
+	gateway payment.Gateway
 }
 
-func NewService(db *gorm.DB, cache *redis.Client) *Service {
-	return &Service{db: db, cache: cache}
+func NewService(db *gorm.DB, cache *redis.Client, gw payment.Gateway) *Service {
+	return &Service{db: db, cache: cache, gateway: gw}
 }
 
 func (uc *Service) Execute(ctx context.Context, req DeclineOrderRequest) (entities.OrderStatus, error) {
@@ -30,6 +33,13 @@ func (uc *Service) Execute(ctx context.Context, req DeclineOrderRequest) (entiti
 	if existing.CraftsmanID != req.CraftsmanID {
 		return "", errors.New("forbidden: order does not belong to this craftsman")
 	}
+
+	if existing.PaymentType == entities.PaymentCreditCard && existing.PaymentReservationID != "" {
+		if err := uc.gateway.Refund(ctx, existing.PaymentReservationID); err != nil {
+			return "", fmt.Errorf("refund payment: %w", err)
+		}
+	}
+
 	existing.Status = entities.OrderDeclined
 
 	if err := uc.db.WithContext(ctx).Save(&existing).Error; err != nil {

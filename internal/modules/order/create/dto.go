@@ -25,7 +25,8 @@ type CreditCardData struct {
 }
 
 type OrderCreationResult struct {
-	OrderID    uint64
-	TotalPrice float64
-	PDFURL     string
+	OrderID              uint64
+	TotalPrice           float64
+	PDFURL               string
+	PaymentReservationID string
 }

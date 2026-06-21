@@ -3,6 +3,7 @@ package checkout
 import (
 	"PocketArtisan/internal/modules/files/storage"
 	"PocketArtisan/internal/modules/order/create"
+	"PocketArtisan/internal/modules/payment"
 	"PocketArtisan/internal/modules/utils/fonts"
 	"net/http"
 
@@ -11,8 +12,8 @@ import (
 	"gorm.io/gorm"
 )
 
-func RegisterRoutes(router *gin.RouterGroup, db *gorm.DB, rdb *redis.Client, s storage.Storage, f *fonts.Service) {
-	orderCreate := create.NewService(db, rdb, s, f)
+func RegisterRoutes(router *gin.RouterGroup, db *gorm.DB, rdb *redis.Client, s storage.Storage, f *fonts.Service, gw payment.Gateway) {
+	orderCreate := create.NewService(db, rdb, s, f, gw)
 	svc := NewService(db, rdb, orderCreate)
 
 	router.POST("/checkout", func(c *gin.Context) {

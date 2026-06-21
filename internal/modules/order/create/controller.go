@@ -2,6 +2,7 @@ package create
 
 import (
 	"PocketArtisan/internal/modules/files/storage"
+	"PocketArtisan/internal/modules/payment"
 	"PocketArtisan/internal/modules/utils/fonts"
 	"net/http"
 
@@ -10,8 +11,8 @@ import (
 	"gorm.io/gorm"
 )
 
-func RegisterRoutes(router *gin.RouterGroup, db *gorm.DB, rdb *redis.Client, s storage.Storage, f *fonts.Service) {
-	r := NewService(db, rdb, s, f)
+func RegisterRoutes(router *gin.RouterGroup, db *gorm.DB, rdb *redis.Client, s storage.Storage, f *fonts.Service, gw payment.Gateway) {
+	r := NewService(db, rdb, s, f, gw)
 	router.POST("/create", func(c *gin.Context) {
 		var req NewOrderRequest
 		if err := c.ShouldBindJSON(&req); err != nil {

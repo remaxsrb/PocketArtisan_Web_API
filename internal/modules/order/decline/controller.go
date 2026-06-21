@@ -1,14 +1,16 @@
 package decline
 
 import (
-	"github.com/gin-gonic/gin"
-	"gorm.io/gorm"
-	"github.com/go-redis/redis/v8"
 	"net/http"
+
+	"PocketArtisan/internal/modules/payment"
+	"github.com/gin-gonic/gin"
+	"github.com/go-redis/redis/v8"
+	"gorm.io/gorm"
 )
 
-func RegisterRoutes(router *gin.RouterGroup, db *gorm.DB, rdb *redis.Client) {
-	r := NewService(db, rdb)
+func RegisterRoutes(router *gin.RouterGroup, db *gorm.DB, rdb *redis.Client, gw payment.Gateway) {
+	r := NewService(db, rdb, gw)
 	router.POST("/decline", func(c *gin.Context) {
 		var req DeclineOrderRequest
 		if err := c.ShouldBindJSON(&req); err != nil {
