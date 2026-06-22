@@ -1,28 +1,29 @@
 package decline
 
 import (
+	ordermod "PocketArtisan/internal/modules/order"
+	"PocketArtisan/internal/modules/payment"
 	"net/http"
 
-	"PocketArtisan/internal/modules/payment"
 	"github.com/gin-gonic/gin"
 	"github.com/go-redis/redis/v8"
 	"gorm.io/gorm"
 )
 
 func RegisterRoutes(router *gin.RouterGroup, db *gorm.DB, rdb *redis.Client, gw payment.Gateway) {
-	r := NewService(db, rdb, gw)
+	svc := NewService(db, rdb, gw)
+	errHandler := ordermod.NewErrorHandler()
 	router.POST("/decline", func(c *gin.Context) {
 		var req DeclineOrderRequest
 		if err := c.ShouldBindJSON(&req); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
-		status, err := r.Execute(c.Request.Context(), req)
+		status, err := svc.Execute(c.Request.Context(), req)
 		if err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			errHandler.HandleOrderOperationError(c, err)
 			return
 		}
 		c.JSON(http.StatusOK, gin.H{"status": status})
-
 	})
 }

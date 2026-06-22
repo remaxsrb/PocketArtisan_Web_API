@@ -11,6 +11,7 @@ import (
 	"PocketArtisan/internal/modules/files/storage"
 	"PocketArtisan/internal/modules/order/create"
 	"PocketArtisan/internal/modules/payment"
+
 	"gorm.io/gorm"
 )
 
@@ -21,7 +22,7 @@ func createSvc(t *testing.T, tx *gorm.DB, gw payment.Gateway) *create.Service {
 	if testFonts == nil {
 		t.Skip("font assets unavailable — set TEST_ASSETS_DIR to the project assets directory")
 	}
-	s := storage.NewLocalStorage(t.TempDir(), "http://localhost/files")
+	s := storage.NewLocalStorage(t.TempDir(), "http://localhost/api/files")
 	return create.NewService(tx, nil, s, testFonts, gw)
 }
 

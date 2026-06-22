@@ -27,13 +27,13 @@ echo
 
 echo "2) Login as admin and fetch access token"
 LOGIN_PAYLOAD=$(printf '{"username":"%s","password":"%s"}' "$ADMIN_USERNAME" "$ADMIN_PASSWORD")
-LOGIN_RESPONSE=$(curl -sS -X POST "$API_BASE_URL/users/login" \
+LOGIN_RESPONSE=$(curl -sS -X POST "$API_BASE_URL/api/users/login" \
   -H "Content-Type: application/json" \
   -d "$LOGIN_PAYLOAD")
 ADMIN_BEARER_TOKEN=$(printf '%s' "$LOGIN_RESPONSE" | tr -d '\n' | \
   sed -n 's/.*"access_token":"\([^"]*\)".*/\1/p')
 if [[ -z "$ADMIN_BEARER_TOKEN" ]]; then
-  echo "Failed to get admin access token from /users/login"
+  echo "Failed to get admin access token from /api/users/login"
   echo "Login response: $LOGIN_RESPONSE"
   exit 1
 fi
@@ -74,7 +74,7 @@ USERNAMES=$(jq -r '.[].username' "$PRODUCT_DATA_FILE" | awk '!seen[$0]++')
 while IFS= read -r USERNAME; do
   echo "  → Logging in as $USERNAME"
   CRAFTSMAN_LOGIN_PAYLOAD=$(printf '{"username":"%s","password":"%s"}' "$USERNAME" "$CRAFTSMAN_PASSWORD")
-  CRAFTSMAN_LOGIN_RESPONSE=$(curl -sS -X POST "$API_BASE_URL/users/login" \
+  CRAFTSMAN_LOGIN_RESPONSE=$(curl -sS -X POST "$API_BASE_URL/api/users/login" \
     -H "Content-Type: application/json" \
     -d "$CRAFTSMAN_LOGIN_PAYLOAD")
   BEARER_TOKEN=$(printf '%s' "$CRAFTSMAN_LOGIN_RESPONSE" | tr -d '\n' | \
