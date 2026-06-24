@@ -1,0 +1,32 @@
+HOW TO VIEW THE DATABASE IN MONGODB COMPASS
+============================================
+
+The docker-compose maps the MongoDB container port to your host machine:
+    host port 27017  →  container port 27017
+
+As long as `docker compose up` is running, Compass can reach the DB directly
+from your host OS — no need to enter the container.
+
+CONNECTION STRING FOR COMPASS
+------------------------------
+    mongodb://localhost:27017
+
+Steps:
+  1. Open MongoDB Compass
+  2. Paste the connection string above into the URI field
+  3. Click Connect
+  4. Select the "napravimi" database in the left panel
+
+WHY "localhost" AND NOT "mongo_db"
+------------------------------------
+"mongo_db" is the container name — it only resolves inside the Docker network
+(i.e., from other containers like the app). From your host machine, you
+always use "localhost" because Docker maps the port to your local interface.
+
+QUICK CHECK FROM TERMINAL (no Compass needed)
+----------------------------------------------
+If you have mongosh installed:
+    mongosh "mongodb://localhost:27017/napravimi"
+
+Or check the container is running:
+    docker ps | grep mongo_db
