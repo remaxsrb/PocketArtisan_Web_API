@@ -34,6 +34,13 @@ type Craftsman struct {
 	Craft           *Craft  `json:"craft,omitempty" gorm:"foreignKey:CraftID;constraint:OnDelete:RESTRICT;"`
 }
 
+// CraftsmanRatingRecord ensures one customer can rate one craftsman at most once.
+// The composite primary key enforces the uniqueness at the DB level.
+type CraftsmanRatingRecord struct {
+	CustomerID  uint64 `gorm:"primaryKey;not null"`
+	CraftsmanID uint64 `gorm:"primaryKey;not null"`
+}
+
 func (u *User) SetPassword(password string) error {
 	hash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {

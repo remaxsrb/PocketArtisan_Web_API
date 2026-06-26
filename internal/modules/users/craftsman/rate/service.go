@@ -1,10 +1,11 @@
 package rate
 
 import (
-	"PocketArtisan/internal/entities"
-	"PocketArtisan/internal/modules/utils"
 	"context"
 	"errors"
+
+	"PocketArtisan/internal/entities"
+	"PocketArtisan/internal/modules/utils"
 
 	"github.com/go-redis/redis/v8"
 	"gorm.io/gorm"
@@ -20,25 +21,46 @@ func NewService(db *gorm.DB, cache *redis.Client) *Service {
 }
 
 func (uc *Service) Execute(ctx context.Context, req Request) (Response, error) {
+	customerID := ctx.Value("user_id").(uint64)
+
 	var craftsman entities.Craftsman
+	var resp Response
 
-	if err := uc.db.WithContext(ctx).Where("user_id = ?", req.UserID).First(&craftsman).Error; err != nil {
-		return Response{}, errors.New("craftsman not found")
-	}
+	err := uc.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		if err := tx.Where("user_id = ?", req.UserID).First(&craftsman).Error; err != nil {
+			return errors.New("craftsman not found")
+		}
 
-	new_avg_rating := ((craftsman.Rating * float64(craftsman.NumberOfRatings)) + float64(req.Rating)) / float64(craftsman.NumberOfRatings+1)
+		var existing entities.CraftsmanRatingRecord
+		err := tx.Where("customer_id = ? AND craftsman_id = ?", customerID, uint64(req.UserID)).First(&existing).Error
+		if err == nil {
+			return errors.New("you have already rated this craftsman")
+		}
+		if !errors.Is(err, gorm.ErrRecordNotFound) {
+			return err
+		}
 
-	craftsman.Rating = new_avg_rating
-	craftsman.NumberOfRatings++
+		record := entities.CraftsmanRatingRecord{
+			CustomerID:  customerID,
+			CraftsmanID: uint64(req.UserID),
+		}
+		if err := tx.Create(&record).Error; err != nil {
+			return err
+		}
 
-	if err := uc.db.Save(&craftsman).Error; err != nil {
+		craftsman.Rating = ((craftsman.Rating * float64(craftsman.NumberOfRatings)) + float64(req.Rating)) / float64(craftsman.NumberOfRatings+1)
+		craftsman.NumberOfRatings++
+
+		return tx.Save(&craftsman).Error
+	})
+
+	if err != nil {
 		return Response{}, err
 	}
 
 	utils.BumpCacheVersion(ctx, uc.cache, "users", "craftsmen")
 
-	return Response{
-		AverageRating:   craftsman.Rating,
-		NumberOfRatings: craftsman.NumberOfRatings,
-	}, nil
+	resp.AverageRating = craftsman.Rating
+	resp.NumberOfRatings = craftsman.NumberOfRatings
+	return resp, nil
 }

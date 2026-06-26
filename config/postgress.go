@@ -86,6 +86,10 @@ func runMigrations() {
 				return DB.AutoMigrate(&entities.Order{}, &entities.OrderItem{})
 			},
 		},
+		{
+			table:   "craftsman_rating_records",
+			migrate: func() error { return DB.AutoMigrate(&entities.CraftsmanRatingRecord{}) },
+		},
 	}
 
 	for _, m := range migrations {
