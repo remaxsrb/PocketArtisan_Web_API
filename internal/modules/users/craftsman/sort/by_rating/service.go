@@ -69,11 +69,11 @@ func (uc *Service) Execute(ctx context.Context, direction custom_types.SortDirec
         craftsmen.id as craftsman_id,
         crafts.name as craft, 
         craftsmen.rating, 
-        craftsmen.number_of_ratings
+        craftsmen.number_of_ratings as numberOfRatings
     `).
 		Offset(req.Skip).
 		Limit(req.Limit).
-		Order("rating " + direction).
+		Order("craftsmen.rating " + string(direction)).
 		Scan(&craftsmanList).Error; err != nil {
 		return SortCraftsmenResponse{}, err
 	}

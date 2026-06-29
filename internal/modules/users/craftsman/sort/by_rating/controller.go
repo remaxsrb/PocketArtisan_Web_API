@@ -4,7 +4,6 @@ import (
 	"PocketArtisan/internal/custom_types"
 	"net/http"
 	"strconv"
-	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/go-redis/redis/v8"
@@ -14,15 +13,15 @@ import (
 func RegisterRoutes(router *gin.RouterGroup, db *gorm.DB, rdb *redis.Client) {
 	uc := NewService(db, rdb)
 
-	router.GET("/direction/:direction", func(c *gin.Context) {
+	router.GET("/sort/:direction", func(c *gin.Context) {
 		param := c.Param("direction")
 
-		direction := custom_types.SortDirection(strings.ToUpper(param))
-
+		direction := custom_types.SortDirection(param)
 		if !direction.IsValid() {
 			direction = custom_types.Descending
+		} else {
+			direction = direction.Normalized()
 		}
-
 		skip, err := strconv.Atoi(c.DefaultQuery("skip", "0"))
 		if err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": "invalid skip"})

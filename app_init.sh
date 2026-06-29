@@ -102,4 +102,8 @@ while IFS= read -r USERNAME; do
   echo
 done <<< "$USERNAMES"
 
+#echo "9) Seed craftsman ratings directly into DB"
+#go test -v ./internal/modules/users/craftsman/rate -run '^TestSeedCraftsmanRatings$'
+#echo
+
 echo "All requested tests finished."

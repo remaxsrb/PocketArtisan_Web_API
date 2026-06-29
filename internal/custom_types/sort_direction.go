@@ -10,10 +10,14 @@ const (
 )
 
 func (s SortDirection) IsValid() bool {
-	switch SortDirection(strings.ToUpper(string(s))) {
-	case Ascending, Descending:
-		return true
-	default:
-		return false
+	cleaned := SortDirection(strings.ToUpper(strings.TrimSpace(string(s))))
+	return cleaned == Ascending || cleaned == Descending
+}
+
+func (s SortDirection) Normalized() SortDirection {
+	cleaned := strings.ToUpper(strings.TrimSpace(string(s)))
+	if cleaned == "ASC" {
+		return Ascending
 	}
+	return Descending
 }
