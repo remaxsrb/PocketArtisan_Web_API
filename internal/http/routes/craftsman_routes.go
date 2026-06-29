@@ -6,6 +6,7 @@ import (
 	craftsman_create "PocketArtisan/internal/modules/users/craftsman/create"
 	craftsman_get_all "PocketArtisan/internal/modules/users/craftsman/get_all"
 	get_by_craft "PocketArtisan/internal/modules/users/craftsman/get_by_craft"
+	"PocketArtisan/internal/modules/users/craftsman/sort/by_rating"
 
 	"github.com/gin-gonic/gin"
 )
@@ -14,6 +15,7 @@ func RegisterCraftsmanRoutes(router *gin.Engine, appContainer *container.AppCont
 	public := router.Group("/api/craftsmen")
 	craftsman_get_all.RegisterRoutes(public, appContainer.DB, appContainer.RDB)
 	get_by_craft.RegisterRoutes(public, appContainer.DB, appContainer.RDB)
+	by_rating.RegisterRoutes(public, appContainer.DB, appContainer.RDB)
 
 	admin := router.Group("/api/admin/craftsmen")
 	admin.Use(middleware.JWT(appContainer.JWTService), middleware.RequireRoles("admin"))
