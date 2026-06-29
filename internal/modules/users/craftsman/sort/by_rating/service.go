@@ -69,7 +69,7 @@ func (uc *Service) Execute(ctx context.Context, direction custom_types.SortDirec
         craftsmen.id as craftsman_id,
         crafts.name as craft, 
         craftsmen.rating, 
-        craftsmen.number_of_ratings as numberOfRatings
+        craftsmen.number_of_ratings
     `).
 		Offset(req.Skip).
 		Limit(req.Limit).
