@@ -36,7 +36,7 @@ COPY --from=builder /app/server .
 RUN chmod +x /app/server
 
 # Copy .env file
-COPY --from=builder /app/.env .
+#COPY --from=builder /app/.env .
 
 # Switch to non-root users
 USER $UID:$GID
