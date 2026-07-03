@@ -25,7 +25,7 @@ RUN groupadd -g $GID appuser \
 WORKDIR /app
 
 # Optional: install CA certificates for HTTPS
-# RUN apt-get update && apt-get install -y ca-certificates && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install -y ca-certificates && rm -rf /var/lib/apt/lists/*
 
 # Create uploads folder and assign ownership
 RUN mkdir -p /app/uploads \
