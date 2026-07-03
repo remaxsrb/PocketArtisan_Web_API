@@ -17,7 +17,7 @@ func RegisterRoutes(router *gin.RouterGroup, db *gorm.DB, rdb *redis.Client) {
 			response.Error(c, http.StatusBadRequest, err.Error())
 			return
 		}
-		user, err := r.Execute(c.Request.Context(), req)
+		user, err := r.Execute(c.Request.Context(), req, c.ClientIP())
 		if err != nil {
 			response.Error(c, http.StatusBadRequest, err.Error())
 			return

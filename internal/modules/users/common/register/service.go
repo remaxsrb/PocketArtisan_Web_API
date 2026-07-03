@@ -1,8 +1,10 @@
 package register
 
 import (
+	"PocketArtisan/config"
 	"PocketArtisan/internal/entities"
 	"PocketArtisan/internal/modules/utils"
+	"PocketArtisan/internal/modules/utils/turnstile"
 	"PocketArtisan/internal/validators"
 	"context"
 	"errors"
@@ -16,16 +18,25 @@ import (
 )
 
 type Service struct {
-	db    *gorm.DB
-	cache *redis.Client
+	db        *gorm.DB
+	cache     *redis.Client
+	turnstile *turnstile.Verifier
 }
 
 func NewService(db *gorm.DB, cache *redis.Client) *Service {
-	return &Service{db: db, cache: cache}
+	return &Service{
+		db:        db,
+		cache:     cache,
+		turnstile: turnstile.NewVerifier(config.GetCrypto().TurnstileSecret),
+	}
 }
 
-func (uc *Service) Execute(ctx context.Context, req RegisterRequest) (*entities.User, error) {
+func (uc *Service) Execute(ctx context.Context, req RegisterRequest, remoteIP string) (*entities.User, error) {
 	var existing entities.User
+
+	if _, err := uc.turnstile.Verify(ctx, req.TurnstileToken, remoteIP); err != nil {
+		return nil, errors.New("captcha verification failed")
+	}
 
 	if !validators.IsValidEmail(req.Email) {
 		return nil, errors.New("invalid email")
@@ -94,10 +105,7 @@ func (uc *Service) Execute(ctx context.Context, req RegisterRequest) (*entities.
 	return user, nil
 }
 
-// defaultAvatarURL builds the public URL for a default avatar image. On
-// deployment the images are hosted in the "avatars" folder at the root of the
-// Cloudflare R2 bucket, so the base is derived from R2_PUBLIC_URL. It falls
-// back to the local asset route for development.
+
 func defaultAvatarURL(fileName string) string {
 	base := "http://localhost:8080/api/assets/avatars"
 	if publicURL := os.Getenv("R2_ENDPOINT"); publicURL != "" {

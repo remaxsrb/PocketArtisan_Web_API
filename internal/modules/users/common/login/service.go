@@ -16,7 +16,6 @@ type Service struct {
 	repo       Repository
 	cache      *redis.Client
 	cartReader cart.CartReader
-	secret     string
 }
 
 func NewService(db *gorm.DB, cache *redis.Client) *Service {

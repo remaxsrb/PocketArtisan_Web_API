@@ -7,7 +7,8 @@ import (
 )
 
 type Crypto struct {
-	JwtKeySecret string
+	JwtKeySecret    string
+	TurnstileSecret string
 }
 
 var (
@@ -23,8 +24,14 @@ func InitCrypto() {
 			log.Fatal("JWT_SECRET must be set")
 		}
 
+		turnstile := os.Getenv("TURNSTILE_SECRET")
+		if turnstile == "" {
+			log.Fatal("TURNSTILE_SECRET must be set")
+		}
+
 		cryptoInstance = &Crypto{
-			JwtKeySecret: jwt,
+			JwtKeySecret:    jwt,
+			TurnstileSecret: turnstile,
 		}
 	})
 }
