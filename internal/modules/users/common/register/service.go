@@ -7,6 +7,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"os"
+	"strings"
 	"time"
 
 	"github.com/go-redis/redis/v8"
@@ -65,10 +67,11 @@ func (uc *Service) Execute(ctx context.Context, req RegisterRequest) (*entities.
 		Role:        req.Role,
 	}
 
-	if req.Gender == "male" {
-		user.ProfilePicture = "http://localhost:8080/api/assets/avatars/default_male.png"
-	} else if req.Gender == "female" {
-		user.ProfilePicture = "http://localhost:8080/api/assets/avatars/default_female.png"
+	switch req.Gender {
+	case "male":
+		user.ProfilePicture = defaultAvatarURL("default_male.png")
+	case "female":
+		user.ProfilePicture = defaultAvatarURL("default_female.png")
 	}
 
 	if err := user.SetPassword(req.Password); err != nil {
@@ -89,4 +92,16 @@ func (uc *Service) Execute(ctx context.Context, req RegisterRequest) (*entities.
 	utils.BumpCacheVersion(ctx, uc.cache, "users")
 
 	return user, nil
+}
+
+// defaultAvatarURL builds the public URL for a default avatar image. On
+// deployment the images are hosted in the "avatars" folder at the root of the
+// Cloudflare R2 bucket, so the base is derived from R2_PUBLIC_URL. It falls
+// back to the local asset route for development.
+func defaultAvatarURL(fileName string) string {
+	base := "http://localhost:8080/api/assets/avatars"
+	if publicURL := os.Getenv("R2_PUBLIC_URL"); publicURL != "" {
+		base = strings.TrimRight(publicURL, "/") + "/avatars"
+	}
+	return base + "/" + fileName
 }
