@@ -105,10 +105,9 @@ func (uc *Service) Execute(ctx context.Context, req RegisterRequest, remoteIP st
 	return user, nil
 }
 
-
 func defaultAvatarURL(fileName string) string {
 	base := "http://localhost:8080/api/assets/avatars"
-	if publicURL := os.Getenv("R2_ENDPOINT"); publicURL != "" {
+	if publicURL := os.Getenv("R2_PUBLIC_URL"); publicURL != "" {
 		base = strings.TrimRight(publicURL, "/") + "/avatars"
 	}
 	return base + "/" + fileName
