@@ -35,6 +35,9 @@ RUN mkdir -p /app/uploads \
 COPY --from=builder /app/server .
 RUN chmod +x /app/server
 
+# Copy assets (fonts, seed images, etc.) needed at runtime
+COPY --from=builder /app/assets ./assets
+
 # Copy .env file
 #COPY --from=builder /app/.env .
 
