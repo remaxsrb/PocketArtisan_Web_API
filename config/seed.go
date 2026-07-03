@@ -164,7 +164,7 @@ func seedProductCategories() {
 // it points to R2 when configured, otherwise the local asset route.
 func adminAvatarURL() string {
 	base := "http://localhost:8080/api/assets/avatars"
-	if publicURL := os.Getenv("R2_ENDPOINT"); publicURL != "" {
+	if publicURL := os.Getenv("R2_PUBLIC_URL"); publicURL != "" {
 		base = strings.TrimRight(publicURL, "/") + "/avatars"
 	}
 	return base + "/default_male.png"
