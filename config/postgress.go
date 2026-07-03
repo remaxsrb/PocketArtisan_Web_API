@@ -22,6 +22,7 @@ func InitPostgresDB() {
 	DB = mustConnectDB()
 	runMigrations()
 	runIndexes()
+	runSeeds()
 	log.Println("Postgres ready")
 }
 
