@@ -5,7 +5,6 @@ import (
 	"PocketArtisan/internal/container"
 	"PocketArtisan/internal/http"
 	"PocketArtisan/internal/modules/auth"
-	"PocketArtisan/internal/modules/files/storage"
 	"PocketArtisan/internal/modules/payment"
 	"PocketArtisan/internal/modules/utils/fonts"
 	"log"
@@ -30,7 +29,8 @@ func main() {
 	if baseURL == "" {
 		baseURL = "http://localhost:8080"
 	}
-	localStorage := storage.NewLocalStorage("./uploads", baseURL+"/api/files")
+
+	fileStorage := config.InitStorage(baseURL)
 
 	fontService, err := fonts.NewService("./assets")
 	if err != nil {
@@ -44,7 +44,7 @@ func main() {
 		config.DB,
 		config.RDB,
 		jwtService,
-		localStorage,
+		fileStorage,
 		fontService,
 		wrappedGateway,
 	)

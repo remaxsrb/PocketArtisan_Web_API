@@ -17,7 +17,7 @@ func RegisterRoutes(router *gin.RouterGroup, s storage.Storage) {
 			filepath = filepath[1:]
 		}
 
-		_, err := uc.Execute(filepath)
+		url, err := uc.Execute(filepath)
 		if err != nil {
 			c.JSON(http.StatusNotFound, gin.H{"error": "file not found"})
 			return
@@ -29,7 +29,7 @@ func RegisterRoutes(router *gin.RouterGroup, s storage.Storage) {
 			return
 		}
 
-		//// If cloud storage, redirect to URL
-		//c.Redirect(http.StatusTemporaryRedirect, url)
+		// If cloud storage, redirect to the object URL
+		c.Redirect(http.StatusTemporaryRedirect, url)
 	})
 }
