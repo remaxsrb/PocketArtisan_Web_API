@@ -100,7 +100,7 @@ func (uc *Service) Execute(ctx context.Context, req RegisterRequest) (*entities.
 // back to the local asset route for development.
 func defaultAvatarURL(fileName string) string {
 	base := "http://localhost:8080/api/assets/avatars"
-	if publicURL := os.Getenv("R2_PUBLIC_URL"); publicURL != "" {
+	if publicURL := os.Getenv("R2_ENDPOINT"); publicURL != "" {
 		base = strings.TrimRight(publicURL, "/") + "/avatars"
 	}
 	return base + "/" + fileName
