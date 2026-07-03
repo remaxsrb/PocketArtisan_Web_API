@@ -9,6 +9,7 @@ type CraftsmanApplication struct {
 	CreatedAt  time.Time `json:"created_at" gorm:"autoCreateTime"`
 	ResolvedAt time.Time `json:"resolved_at"`
 	Craft      string    `json:"craft" gorm:"not null"`
+	ResumeURL  string    `json:"resume_url" gorm:"not null"`
 }
 
 const (

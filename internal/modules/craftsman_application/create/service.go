@@ -62,9 +62,10 @@ func (uc *Service) Execute(ctx context.Context, req CraftsmanApplicationRequest)
 		}
 
 		newCA := entities.CraftsmanApplication{
-			Email:  req.Email,
-			Status: entities.StatusPending,
-			Craft:  req.Craft,
+			Email:     req.Email,
+			Status:    entities.StatusPending,
+			Craft:     req.Craft,
+			ResumeURL: req.ResumeURL,
 		}
 		if err := tx.Create(&newCA).Error; err != nil {
 			return fmt.Errorf("failed to create application: %w", err)
