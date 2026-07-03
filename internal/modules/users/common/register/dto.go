@@ -9,7 +9,7 @@ type RegisterRequest struct {
 	DateOfBirth    string `json:"date_of_birth"`
 	Gender         string `json:"gender" binding:"required"`
 	Role           string `json:"role,omitempty"`
-	TurnstileToken string `json:"turnstileToken" binding:"required"`
+	TurnstileToken string `json:"turnstile_token" binding:"required"`
 }
 
 type RegisterResponse struct {
