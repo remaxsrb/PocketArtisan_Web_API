@@ -34,8 +34,10 @@ func NewService(db *gorm.DB, cache *redis.Client) *Service {
 func (uc *Service) Execute(ctx context.Context, req RegisterRequest, remoteIP string) (*entities.User, error) {
 	var existing entities.User
 
-	if _, err := uc.turnstile.Verify(ctx, req.TurnstileToken, remoteIP); err != nil {
-		return nil, errors.New("captcha verification failed")
+	if os.Getenv("APP_ENV") == "production" {
+		if _, err := uc.turnstile.Verify(ctx, req.TurnstileToken, remoteIP); err != nil {
+			return nil, errors.New("captcha verification failed")
+		}
 	}
 
 	if !validators.IsValidEmail(req.Email) {
