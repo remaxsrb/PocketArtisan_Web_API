@@ -13,7 +13,6 @@ import (
 	"gorm.io/gorm/clause"
 )
 
-// seedItem describes a craft or product category with its human keywords.
 type seedItem struct {
 	Name     string
 	Keywords []string
@@ -65,10 +64,6 @@ var productCategorySeed = []seedItem{
 	{"Slike i skulpture", []string{"slikar", "painter", "vajar", "sculptor", "umetnost", "skulpture", "platna"}},
 }
 
-// runSeeds populates baseline reference data required for the application to be
-// usable right after an initial migration: an admin user, the craftsman types
-// (crafts) and the product categories. Every seed is idempotent, so it is safe
-// to run on every startup.
 func runSeeds() {
 	log.Println("Seeding baseline data...")
 	seedAdminUser()
@@ -160,8 +155,6 @@ func seedProductCategories() {
 	log.Printf("Seeded %d product categories", len(productCategorySeed))
 }
 
-// adminAvatarURL mirrors the default avatar resolution used at registration:
-// it points to R2 when configured, otherwise the local asset route.
 func adminAvatarURL() string {
 	base := "http://localhost:8080/api/assets/avatars"
 	if publicURL := os.Getenv("R2_PUBLIC_URL"); publicURL != "" {

@@ -8,10 +8,11 @@ import (
 )
 
 // InitStorage builds the file Storage implementation based on environment
-// configuration. When R2 credentials are present it uses Cloudflare R2,
-// otherwise it falls back to local disk storage.
+// configuration. Production uses Cloudflare R2; every other APP_ENV (dev,
+// feature branches, unset) uses local disk storage so local work never
+// writes to the shared production bucket.
 func InitStorage(baseURL string) storage.Storage {
-	if os.Getenv("R2_ACCESS_KEY_ID") != "" {
+	if os.Getenv("APP_ENV") == "production" {
 		r2Storage, err := storage.NewR2Storage(
 			os.Getenv("R2_ACCOUNT_ID"),
 			os.Getenv("R2_ACCESS_KEY_ID"),
