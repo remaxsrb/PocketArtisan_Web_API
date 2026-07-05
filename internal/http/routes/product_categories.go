@@ -6,6 +6,7 @@ import (
 	"PocketArtisan/internal/modules/product_categories/create"
 	"PocketArtisan/internal/modules/product_categories/delete"
 	"PocketArtisan/internal/modules/product_categories/get_all"
+	getbycraftsman "PocketArtisan/internal/modules/product_categories/get_by_craftsman"
 
 	"github.com/gin-gonic/gin"
 )
@@ -18,4 +19,5 @@ func RegisterProductCategoryRoutes(router *gin.Engine, appContainer *container.A
 
 	productCategoryPublic := router.Group("/api/product-categories")
 	get_all.RegisterRoutes(productCategoryPublic, appContainer.DB, appContainer.RDB)
+	getbycraftsman.RegisterRoutes(productCategoryPublic, appContainer.DB, appContainer.RDB)
 }

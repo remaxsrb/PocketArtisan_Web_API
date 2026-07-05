@@ -10,6 +10,7 @@ import (
 
 type Service interface {
 	GetCraftsmanIDByUsername(ctx context.Context, username string) (uint64, error)
+	GetCraftsmanByUsername(ctx context.Context, username string) (*entities.Craftsman, error)
 }
 
 type gormService struct {
@@ -32,4 +33,18 @@ func (s *gormService) GetCraftsmanIDByUsername(ctx context.Context, username str
 		return 0, err
 	}
 	return craftsman.ID, nil
+}
+
+func (s *gormService) GetCraftsmanByUsername(ctx context.Context, username string) (*entities.Craftsman, error) {
+	var craftsman entities.Craftsman
+	if err := s.db.WithContext(ctx).
+		Joins("JOIN users ON users.id = craftsmen.user_id").
+		Where("users.username = ?", username).
+		First(&craftsman).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, errors.New("craftsman not found")
+		}
+		return nil, err
+	}
+	return &craftsman, nil
 }

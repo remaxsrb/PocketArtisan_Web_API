@@ -25,7 +25,7 @@ func NewService(db *gorm.DB, cache *redis.Client) *Service {
 func (uc *Service) Execute(ctx context.Context, req NewProductRequest) error {
 	var existing entities.Product
 
-	CraftsmanID, err := uc.productService.GetCraftsmanIDByUsername(ctx, req.Username)
+	craftsman, err := uc.productService.GetCraftsmanByUsername(ctx, req.Username)
 	if err != nil {
 		return err
 	}
@@ -38,7 +38,15 @@ func (uc *Service) Execute(ctx context.Context, req NewProductRequest) error {
 		return err
 	}
 
-	if err := uc.db.WithContext(ctx).Where("name = ? AND craftsman_id = ?", req.Name, CraftsmanID).First(&existing).Error; err == nil {
+	var link entities.CraftProductCategory
+	if err := uc.db.WithContext(ctx).Where("craft_id = ? AND category_id = ?", craftsman.CraftID, pc.ID).First(&link).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return errors.New("product category is not related to your craft")
+		}
+		return err
+	}
+
+	if err := uc.db.WithContext(ctx).Where("name = ? AND craftsman_id = ?", req.Name, craftsman.ID).First(&existing).Error; err == nil {
 		return errors.New("product already exists")
 	} else if !errors.Is(err, gorm.ErrRecordNotFound) {
 		return err
@@ -46,7 +54,7 @@ func (uc *Service) Execute(ctx context.Context, req NewProductRequest) error {
 
 	new_product := &entities.Product{
 		Name:        req.Name,
-		CraftsmanID: CraftsmanID,
+		CraftsmanID: craftsman.ID,
 		CategoryID:  pc.ID,
 		Price:       req.Price,
 		Hidden:      false,

@@ -87,6 +87,10 @@ func runMigrations() {
 			migrate: func() error { return DB.AutoMigrate(&entities.ProductCategory{}) },
 		},
 		{
+			table:   "craft_product_categories",
+			migrate: func() error { return DB.AutoMigrate(&entities.CraftProductCategory{}) },
+		},
+		{
 			table: "products",
 			migrate: func() error {
 				return DB.AutoMigrate(&entities.Product{}, &entities.ProductImage{}, &entities.ProductVideo{})
