@@ -28,7 +28,7 @@ func buildPDF(data OrderData, f *fonts.Service) (*fpdf.Fpdf, error) {
 	pdf.SetFillColor(30, 30, 60)
 	pdf.SetTextColor(255, 255, 255)
 	pdf.SetFont("DejaVuSans", "B", 20)
-	pdf.CellFormat(contentW, 14, "Faktura", "", 1, "C", true, 0, "")
+	pdf.CellFormat(contentW, 14, "Фактура", "", 1, "C", true, 0, "")
 	pdf.Ln(4)
 
 	// -- Order meta -----------------------------------------------------------
@@ -41,11 +41,11 @@ func buildPDF(data OrderData, f *fonts.Service) (*fpdf.Fpdf, error) {
 		pdf.Ln(rowH)
 	}
 	metaLabel("ID Porudžbine", fmt.Sprintf("#%d", data.OrderID))
-	metaLabel("Datum", data.OrderDate)
-	metaLabel("Kupac", data.CustomerName)
-	metaLabel("E-mail", data.CustomerEmail)
-	metaLabel("Adresa dostave", data.ShippingAddress)
-	metaLabel("Način plaćanja", data.PaymentType)
+	metaLabel("Датум", data.OrderDate)
+	metaLabel("Купац", data.CustomerName)
+	metaLabel("E-пошта", data.CustomerEmail)
+	metaLabel("Адреса доставе", data.ShippingAddress)
+	metaLabel("Начин плаћања", data.PaymentType)
 	pdf.Ln(4)
 
 	// -- Items table header ---------------------------------------------------
@@ -57,10 +57,10 @@ func buildPDF(data OrderData, f *fonts.Service) (*fpdf.Fpdf, error) {
 	pdf.SetFillColor(50, 50, 90)
 	pdf.SetTextColor(255, 255, 255)
 	pdf.SetFont("DejaVuSans", "B", 10)
-	pdf.CellFormat(colProduct, rowH, "Proizvod", "1", 0, "L", true, 0, "")
-	pdf.CellFormat(colQty, rowH, "Količina", "1", 0, "C", true, 0, "")
-	pdf.CellFormat(colUnit, rowH, "Cena po komadu", "1", 0, "R", true, 0, "")
-	pdf.CellFormat(colTotal, rowH, "Ukupna cena stavke", "1", 1, "R", true, 0, "")
+	pdf.CellFormat(colProduct, rowH, "Производ", "1", 0, "L", true, 0, "")
+	pdf.CellFormat(colQty, rowH, "Количина", "1", 0, "C", true, 0, "")
+	pdf.CellFormat(colUnit, rowH, "Цена", "1", 0, "R", true, 0, "")
+	//pdf.CellFormat(colTotal, rowH, "Укупно", "1", 1, "R", true, 0, "")
 
 	// -- Item rows ------------------------------------------------------------
 	pdf.SetTextColor(40, 40, 40)
@@ -72,11 +72,9 @@ func buildPDF(data OrderData, f *fonts.Service) (*fpdf.Fpdf, error) {
 		} else {
 			pdf.SetFillColor(255, 255, 255)
 		}
-		subtotal := item.UnitPrice * float64(item.Quantity)
 		pdf.CellFormat(colProduct, rowH, item.Product.Name, "1", 0, "L", true, 0, "")
 		pdf.CellFormat(colQty, rowH, fmt.Sprintf("%d", item.Quantity), "1", 0, "C", true, 0, "")
-		pdf.CellFormat(colUnit, rowH, fmt.Sprintf("%.2f RSD", item.UnitPrice), "1", 0, "R", true, 0, "")
-		pdf.CellFormat(colTotal, rowH, fmt.Sprintf("%.2f RSD", subtotal), "1", 1, "R", true, 0, "")
+		pdf.CellFormat(colUnit, rowH, fmt.Sprintf("%.2f РСД", item.UnitPrice), "1", 0, "R", true, 0, "")
 		fill = !fill
 	}
 
@@ -84,14 +82,14 @@ func buildPDF(data OrderData, f *fonts.Service) (*fpdf.Fpdf, error) {
 	pdf.SetFillColor(30, 30, 60)
 	pdf.SetTextColor(255, 255, 255)
 	pdf.SetFont("DejaVuSans", "B", 11)
-	pdf.CellFormat(colProduct+colQty+colUnit, rowH, "Ukupno", "1", 0, "R", true, 0, "")
-	pdf.CellFormat(colTotal, rowH, fmt.Sprintf("%.2f RSD", data.TotalPrice), "1", 1, "R", true, 0, "")
+	pdf.CellFormat(colProduct+colQty+colUnit, rowH, "Укупно", "1", 0, "R", true, 0, "")
+	pdf.CellFormat(colTotal, rowH, fmt.Sprintf("%.2f РСД", data.TotalPrice), "1", 1, "R", true, 0, "")
 
 	// -- Footer ---------------------------------------------------------------
 	pdf.Ln(8)
 	pdf.SetTextColor(120, 120, 120)
 	pdf.SetFont("DejaVuSans", "I", 9)
-	pdf.MultiCell(contentW, 5, "Hvala Vam na porudžbini!", "", "C", false)
+	pdf.MultiCell(contentW, 5, "Хвала Вам на поруџбини!", "", "C", false)
 
 	return pdf, nil
 }

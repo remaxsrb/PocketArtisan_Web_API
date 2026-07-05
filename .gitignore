@@ -12,6 +12,7 @@
 *.out
 *.patch
 /uploads/
+/notes/
 
 # Compiled object files
 *.o

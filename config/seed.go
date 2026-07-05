@@ -19,49 +19,74 @@ type seedItem struct {
 }
 
 var craftSeed = []seedItem{
-	{"Kovač", []string{"kovač", "blacksmith"}},
-	{"Duborezac", []string{"duborezac", "woodcarver"}},
-	{"Obućar", []string{"obućar", "shoemaker"}},
-	{"Grnčar", []string{"grnčar", "potter"}},
-	{"Bačvar", []string{"bačvar", "cooper"}},
-	{"Stolar", []string{"stolar", "carpenter"}},
-	{"Tesar", []string{"tesar", "joiner"}},
-	{"Kamenorezac", []string{"kamenorezac", "stonemason"}},
-	{"Juvelir", []string{"juvelir", "zlatar", "goldsmith", "jeweler"}},
-	{"Časovničar", []string{"časovničar", "watchmaker"}},
-	{"Krojač", []string{"krojač", "tailor"}},
-	{"Korpar", []string{"korpar", "basketweaver", "basket maker"}},
-	{"Staklorezac", []string{"staklorezac", "glassworker", "glassmaker"}},
-	{"Keramičar", []string{"keramičar", "ceramicist", "tile setter"}},
-	{"Rezbar", []string{"rezbar", "engraver"}},
-	{"Ikonopisac", []string{"ikonopisac", "iconographer", "icon painter"}},
-	{"Kaligraf", []string{"kaligraf", "calligrapher"}},
-	{"Izrađivač nakita", []string{"nakit", "izrađivač nakita", "jewelry maker", "handmade jewelry"}},
-	{"Izrađivač kožnih proizvoda", []string{"koža", "kožni proizvodi", "leatherworker", "leather craft"}},
-	{"Izrađivač igračaka", []string{"igračke", "toymaker"}},
-	{"Slikar", []string{"slikar", "artist", "painter"}},
-	{"Vajar", []string{"vajar", "sculptor"}},
+	{"Ковач", []string{"kovač", "ковач", "blacksmith"}},
+	{"Дуборезац", []string{"duborezac", "дуборезац", "woodcarver"}},
+	{"Обућар", []string{"obućar", "обућар", "shoemaker"}},
+	{"Грнчар", []string{"grnčar", "грнчар", "potter"}},
+	{"Бачвар", []string{"bačvar", "бачвар", "cooper"}},
+	{"Столар", []string{"stolar", "столар", "carpenter"}},
+	{"Тесар", []string{"tesar", "тесар", "joiner"}},
+	{"Каменорезац", []string{"kamenorezac", "каменорезац", "stonemason"}},
+	{"Јувелир", []string{"juvelir", "јувелир", "zlatar", "златар", "goldsmith", "jeweler"}},
+	{"Часовничар", []string{"časovničar", "часовничар", "watchmaker"}},
+	{"Кројач", []string{"krojač", "кројач", "tailor"}},
+	{"Корпар", []string{"korpar", "корпар", "basketweaver", "basket maker"}},
+	{"Стаклорезац", []string{"staklorezac", "стаклорезац", "glassworker", "glassmaker"}},
+	{"Керамичар", []string{"keramičar", "керамичар", "ceramicist", "tile setter"}},
+	{"Резбар", []string{"rezbar", "резбар", "engraver"}},
+	{"Иконописац", []string{"ikonopisac", "иконописац", "iconographer", "icon painter"}},
+	{"Калиграф", []string{"kaligraf", "калиграф", "calligrapher"}},
+	{"Израђивач накита", []string{"nakit", "накит", "izrađivač nakita", "израђивач накита", "jewelry maker", "handmade jewelry"}},
+	{"Израђивач кожних производа", []string{"koža", "кожа", "kožni proizvodi", "кожни производи", "leatherworker", "leather craft"}},
+	{"Израђивач играчака", []string{"igračke", "играчке", "toymaker"}},
+	{"Сликар", []string{"slikar", "сликар", "artist", "painter"}},
+	{"Вајар", []string{"vajar", "вајар", "sculptor"}},
 }
 
 var productCategorySeed = []seedItem{
-	{"Alati i oruđa", []string{"kovač", "blacksmith", "alat", "okovi", "čelik"}},
-	{"Drveni suveniri", []string{"duborezac", "woodcarver", "drvorez", "suveniri", "ukrasi"}},
-	{"Obuća", []string{"obućar", "shoemaker", "cipele", "sandale", "koža"}},
-	{"Posuđe i keramika", []string{"grnčar", "potter", "keramičar", "ceramicist", "keramika", "posuđe", "vaze"}},
-	{"Drvena burad i ambalaža", []string{"bačvar", "cooper", "burad", "drvena ambalaža"}},
-	{"Nameštaj", []string{"stolar", "tesar", "carpenter", "joiner", "nameštaj", "drvene konstrukcije"}},
-	{"Kameni elementi", []string{"kamenorezac", "stonemason", "kamen", "ploče", "spomenici"}},
-	{"Nakit", []string{"juvelir", "zlatar", "jeweler", "izrađivač nakita", "prstenje", "ogrlice"}},
-	{"Satovi", []string{"časovničar", "watchmaker", "ručni satovi", "zidni satovi"}},
-	{"Odevni predmeti", []string{"krojač", "tailor", "odeća", "tekstil"}},
-	{"Pletene korpe", []string{"korpar", "basketweaver", "korpe", "nameštaj od pruća"}},
-	{"Stakleni ukrasi", []string{"staklorezac", "glassworker", "staklo", "ogledala", "vitraži"}},
-	{"Umetničke gravure", []string{"rezbar", "engraver", "graviranje", "pločice"}},
-	{"Ikonografija", []string{"ikonopisac", "iconographer", "ikone", "verski predmeti"}},
-	{"Kaligrafija", []string{"kaligraf", "calligrapher", "ispisivanje", "sertifikati"}},
-	{"Kožni proizvodi", []string{"izrađivač kožnih proizvoda", "leatherworker", "torbe", "kaiševi"}},
-	{"Igračke", []string{"izrađivač igračaka", "toymaker", "drvene igračke", "ručni rad"}},
-	{"Slike i skulpture", []string{"slikar", "painter", "vajar", "sculptor", "umetnost", "skulpture", "platna"}},
+	{"Алати и оружја", []string{"kovač", "ковач", "blacksmith", "alat", "алат", "okovi", "окови", "čelik", "челик"}},
+	{"Дрвени сувенири", []string{"duborezac", "дуборезац", "woodcarver", "drvorez", "дрворез", "suveniri", "сувенири", "ukrasi", "украси"}},
+	{"Обућа", []string{"obućar", "обућар", "shoemaker", "cipele", "ципеле", "sandale", "сандале", "koža", "кожа"}},
+	{"Посуђе и керамика", []string{"grnčar", "грнчар", "potter", "keramičar", "керамичар", "ceramicist", "keramika", "керамика", "posuđe", "посуђе", "vaze", "вазе"}},
+	{"Дрвена бурад и амбалажа", []string{"bačvar", "бачвар", "cooper", "burad", "бурад", "drvena ambalaža", "дрвена амбалажа"}},
+	{"Намештај", []string{"stolar", "столар", "tesar", "тесар", "carpenter", "joiner", "nameštaj", "намештај", "drvene konstrukcije", "дрвене конструкције"}},
+	{"Камени елементи", []string{"kamenorezac", "каменорезац", "stonemason", "kamen", "камен", "ploče", "плоче", "spomenici", "споменици"}},
+	{"Накит", []string{"juvelir", "јувелир", "zlatar", "златар", "jeweler", "izrađivač nakita", "израђивач накита", "prstenje", "прстење", "ogrlice", "огрлице"}},
+	{"Сатови", []string{"časovničar", "часовничар", "watchmaker", "ručni satovi", "ручни сатови", "zidni satovi", "зидни сатови"}},
+	{"Одевни предмети", []string{"krojač", "кројач", "tailor", "odeća", "одећа", "tekstil", "текстил"}},
+	{"Плетене корпе", []string{"korpar", "корпар", "basketweaver", "korpe", "корпе", "nameštaj od pruća", "намештај од прућа"}},
+	{"Стаклени украси", []string{"staklorezac", "стаклорезац", "glassworker", "staklo", "стакло", "ogledala", "огледала", "vitraži", "витражи"}},
+	{"Уметничке гравуре", []string{"rezbar", "резбар", "engraver", "graviranje", "гравирање", "pločice", "плочице"}},
+	{"Иконографија", []string{"ikonopisac", "иконописац", "iconographer", "ikone", "иконе", "verski predmeti", "верски предмети"}},
+	{"Калиграфија", []string{"kaligraf", "калиграф", "calligrapher", "ispisivanje", "исписивање", "sertifikati", "сертификати"}},
+	{"Кожни производи", []string{"izrađivač kožnih proizvoda", "израђивач кожних производа", "leatherworker", "torbe", "торбе", "kaiševi", "каишеви"}},
+	{"Играчке", []string{"izrađivač igračaka", "израђивач играчака", "toymaker", "drvene igračke", "дрвене играчке", "ručni rad", "ручни рад"}},
+	{"Слике и скулптуре", []string{"slikar", "сликар", "painter", "vajar", "вајар", "sculptor", "umetnost", "уметност", "skulpture", "скулптуре", "platna", "платна"}},
+}
+
+var craftCategoryLinks = map[string][]string{
+	"Ковач":                      {"Алати и оружја"},
+	"Дуборезац":                  {"Дрвени сувенири"},
+	"Обућар":                     {"Обућа"},
+	"Грнчар":                     {"Посуђе и керамика"},
+	"Бачвар":                     {"Дрвена бурад и амбалажа"},
+	"Столар":                     {"Намештај"},
+	"Тесар":                      {"Намештај"},
+	"Каменорезац":                {"Камени елементи"},
+	"Јувелир":                    {"Накит"},
+	"Часовничар":                 {"Сатови"},
+	"Кројач":                     {"Одевни предмети"},
+	"Корпар":                     {"Плетене корпе"},
+	"Стаклорезац":                {"Стаклени украси"},
+	"Керамичар":                  {"Посуђе и керамика"},
+	"Резбар":                     {"Уметничке гравуре"},
+	"Иконописац":                 {"Иконографија"},
+	"Калиграф":                   {"Калиграфија"},
+	"Израђивач накита":           {"Накит"},
+	"Израђивач кожних производа": {"Кожни производи"},
+	"Израђивач играчака":         {"Играчке"},
+	"Сликар":                     {"Слике и скулптуре"},
+	"Вајар":                      {"Слике и скулптуре"},
 }
 
 func runSeeds() {
@@ -69,6 +94,7 @@ func runSeeds() {
 	seedAdminUser()
 	seedCrafts()
 	seedProductCategories()
+	seedCraftProductCategories()
 }
 
 func buildSearchKeywords(name string, keywords []string) pq.StringArray {
@@ -153,6 +179,28 @@ func seedProductCategories() {
 		}
 	}
 	log.Printf("Seeded %d product categories", len(productCategorySeed))
+}
+
+func seedCraftProductCategories() {
+	var links []entities.CraftProductCategory
+	for craftName, categoryNames := range craftCategoryLinks {
+		var craft entities.Craft
+		if err := DB.Where("name = ?", craftName).First(&craft).Error; err != nil {
+			log.Fatalf("Failed to look up craft %q for category linking: %v", craftName, err)
+		}
+		for _, categoryName := range categoryNames {
+			var category entities.ProductCategory
+			if err := DB.Where("name = ?", categoryName).First(&category).Error; err != nil {
+				log.Fatalf("Failed to look up product category %q for craft %q: %v", categoryName, craftName, err)
+			}
+			links = append(links, entities.CraftProductCategory{CraftID: craft.ID, CategoryID: category.ID})
+		}
+	}
+
+	if err := DB.Clauses(clause.OnConflict{DoNothing: true}).Create(&links).Error; err != nil {
+		log.Fatalf("Failed to seed craft-product category links: %v", err)
+	}
+	log.Printf("Seeded %d craft-product category links", len(links))
 }
 
 func adminAvatarURL() string {
