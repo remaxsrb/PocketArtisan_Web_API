@@ -15,8 +15,14 @@ type GetAllRequest struct {
 	Skip        int `form:"skip" query:"skip"`
 }
 
+type CategoryOrderCount struct {
+	Category string `json:"category"`
+	Count    int64  `json:"count"`
+}
+
 type GetAllResponse struct {
-	Orders []*order.OrderResponse `json:"orders"`
-	Total  int64                  `json:"total,omitempty"`
-	Page   int                    `json:"page,omitempty"`
+	Orders         []*order.OrderResponse `json:"orders"`
+	Total          int64                  `json:"total,omitempty"`
+	Page           int                    `json:"page,omitempty"`
+	CategoryCounts []CategoryOrderCount   `json:"category_counts"`
 }

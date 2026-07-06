@@ -18,6 +18,8 @@ type UserResponse struct {
 	Email          string `json:"email"`
 	ProfilePicture string `json:"profilePicture"`
 	Gender         string `json:"gender"`
+	Role           string `json:"role"`
+	CreatedAt      string `json:"created_at"`
 }
 
 type RegularUserResponse struct {

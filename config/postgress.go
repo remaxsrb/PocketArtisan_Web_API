@@ -75,8 +75,13 @@ func runMigrations() {
 			migrate: func() error { return DB.AutoMigrate(&entities.Craft{}) },
 		},
 		{
-			table:   "craftsmen",
-			migrate: func() error { return DB.AutoMigrate(&entities.Craftsman{}) },
+			table: "craftsmen",
+			migrate: func() error {
+				if err := DB.AutoMigrate(&entities.Craftsman{}); err != nil {
+					return err
+				}
+				return DB.Exec(`UPDATE craftsmen SET approved_at = NOW() WHERE approved_at IS NULL`).Error
+			},
 		},
 		{
 			table:   "craftsman_applications",
@@ -118,6 +123,8 @@ func runMigrations() {
 func runIndexes() {
 	indexes := []string{
 		`CREATE INDEX IF NOT EXISTS idx_users_created_at_id ON users (created_at DESC, id DESC)`,
+		`CREATE INDEX IF NOT EXISTS idx_craftsmen_approved_at ON craftsmen (approved_at)`,
+		`CREATE INDEX IF NOT EXISTS idx_orders_completed_at ON orders (completed_at)`,
 	}
 	for _, idx := range indexes {
 		if err := DB.Exec(idx).Error; err != nil {
