@@ -12,8 +12,9 @@ import (
 )
 
 const (
-	ContextUserID = "user_id"
-	ContextRole   = "role"
+	ContextUserID      = "user_id"
+	ContextRole        = "role"
+	ContextCraftsmanID = "craftsman_id"
 )
 
 func JWT(jwtService auth.JWTService) gin.HandlerFunc {

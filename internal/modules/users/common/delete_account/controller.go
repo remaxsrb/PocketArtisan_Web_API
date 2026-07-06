@@ -3,6 +3,8 @@ package delete_account
 import (
 	"net/http"
 
+	"PocketArtisan/internal/http/middleware"
+
 	"github.com/gin-gonic/gin"
 	"github.com/go-redis/redis/v8"
 	"gorm.io/gorm"
@@ -11,12 +13,13 @@ import (
 func RegisterRoutes(router *gin.RouterGroup, db *gorm.DB, rdb *redis.Client) {
 	r := NewService(db, rdb)
 	handler := func(c *gin.Context) {
-		var req DeleteAccountRequest
-		if err := c.ShouldBindJSON(&req); err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		userID, ok := c.Request.Context().Value(middleware.ContextUserID).(uint64)
+		if !ok {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "user not resolved"})
 			return
 		}
-		err := r.Execute(c.Request.Context(), req)
+
+		err := r.Execute(c.Request.Context(), DeleteAccountRequest{UserID: userID})
 		if err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return

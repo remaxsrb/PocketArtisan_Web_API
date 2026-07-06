@@ -19,7 +19,7 @@ func RegisterCraftsmanRoutes(router *gin.Engine, appContainer *container.AppCont
 	by_rating.RegisterRoutes(public, appContainer.DB, appContainer.RDB)
 
 	craftsman := router.Group("/api/craftsmen")
-	craftsman.Use(middleware.JWT(appContainer.JWTService), middleware.RequireRoles("craftsman"))
+	craftsman.Use(middleware.JWT(appContainer.JWTService), middleware.RequireRoles("craftsman"), middleware.RequireCraftsman(appContainer.DB))
 	set_biography.RegisterRoutes(craftsman, appContainer.DB, appContainer.RDB)
 
 	admin := router.Group("/api/admin/craftsmen")

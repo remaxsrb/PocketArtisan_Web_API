@@ -5,6 +5,7 @@ import (
 	"PocketArtisan/internal/modules/files/storage"
 	"PocketArtisan/internal/modules/payment"
 	"PocketArtisan/internal/modules/utils/fonts"
+	"PocketArtisan/internal/modules/utils/timeutil"
 
 	"github.com/go-redis/redis/v8"
 	"gorm.io/gorm"
@@ -18,9 +19,10 @@ type AppContainer struct {
 	Storage        storage.Storage
 	Fonts          *fonts.Service
 	BreakerGateway *payment.BreakerGateway
+	TimeService    timeutil.Service
 }
 
-func NewAppContainer(db *gorm.DB, rdb *redis.Client, jwtService auth.JWTService, s storage.Storage, f *fonts.Service, bg *payment.BreakerGateway) *AppContainer {
+func NewAppContainer(db *gorm.DB, rdb *redis.Client, jwtService auth.JWTService, s storage.Storage, f *fonts.Service, bg *payment.BreakerGateway, ts timeutil.Service) *AppContainer {
 	return &AppContainer{
 		DB:             db,
 		RDB:            rdb,
@@ -28,5 +30,6 @@ func NewAppContainer(db *gorm.DB, rdb *redis.Client, jwtService auth.JWTService,
 		Storage:        s,
 		Fonts:          f,
 		BreakerGateway: bg,
+		TimeService:    ts,
 	}
 }

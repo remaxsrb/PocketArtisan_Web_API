@@ -10,9 +10,9 @@ const (
 )
 
 type GetAllRequest struct {
-	CraftsmanID string `form:"craftsman_id" query:"craftsman_id"`
-	Limit       int    `form:"limit" query:"limit"`
-	Skip        int    `form:"skip" query:"skip"`
+	CraftsmanID uint64
+	Limit       int `form:"limit" query:"limit"`
+	Skip        int `form:"skip" query:"skip"`
 }
 
 type GetAllResponse struct {

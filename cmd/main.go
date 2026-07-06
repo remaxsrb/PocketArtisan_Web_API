@@ -7,6 +7,7 @@ import (
 	"PocketArtisan/internal/modules/auth"
 	"PocketArtisan/internal/modules/payment"
 	"PocketArtisan/internal/modules/utils/fonts"
+	"PocketArtisan/internal/modules/utils/timeutil"
 	"log"
 	"os"
 	"time"
@@ -40,6 +41,8 @@ func main() {
 	var gateway payment.Gateway = payment.NewMockGateway()
 	wrappedGateway := payment.NewBreakerGateway(gateway, 5, 30*time.Second)
 
+	timeService := timeutil.NewService()
+
 	appContainer := container.NewAppContainer(
 		config.DB,
 		config.RDB,
@@ -47,6 +50,7 @@ func main() {
 		fileStorage,
 		fontService,
 		wrappedGateway,
+		timeService,
 	)
 
 	r := http.SetupRouter(appContainer)

@@ -2,7 +2,6 @@ package create
 
 import (
 	"PocketArtisan/internal/entities"
-	"PocketArtisan/internal/modules/product"
 	"PocketArtisan/internal/modules/utils"
 	"context"
 	"errors"
@@ -13,21 +12,20 @@ import (
 )
 
 type Service struct {
-	db             *gorm.DB
-	cache          *redis.Client
-	productService product.Service
+	db    *gorm.DB
+	cache *redis.Client
 }
 
 func NewService(db *gorm.DB, cache *redis.Client) *Service {
-	return &Service{db: db, cache: cache, productService: product.NewService(db)}
+	return &Service{db: db, cache: cache}
 }
 
 func (uc *Service) Execute(ctx context.Context, req NewProductRequest) error {
 	var existing entities.Product
 
-	craftsman, err := uc.productService.GetCraftsmanByUsername(ctx, req.Username)
-	if err != nil {
-		return err
+	var craftsman entities.Craftsman
+	if err := uc.db.WithContext(ctx).Where("id = ?", req.CraftsmanID).First(&craftsman).Error; err != nil {
+		return errors.New("craftsman not found")
 	}
 
 	var pc entities.ProductCategory

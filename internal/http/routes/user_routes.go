@@ -21,11 +21,11 @@ func RegisterUserRoutes(router *gin.Engine, appContainer *container.AppContainer
 	public := router.Group("/api/users")
 	register.RegisterRoutes(public, appContainer.DB, appContainer.RDB)
 	login.RegisterRoutes(public, appContainer.DB, appContainer.RDB, appContainer.JWTService)
-	change_password.RegisterRoutes(public, appContainer.DB, appContainer.RDB)
 	get_by_username.RegisterRoutes(public, appContainer.DB, appContainer.RDB)
 
 	protected := router.Group("/api/users")
 	protected.Use(middleware.JWT(appContainer.JWTService))
+	change_password.RegisterRoutes(protected, appContainer.DB, appContainer.RDB)
 	set_profile_picture.RegisterRoutes(protected, appContainer.DB, appContainer.RDB)
 	delete_account.RegisterRoutes(protected, appContainer.DB, appContainer.RDB)
 	rate.RegisterRoutes(protected, appContainer.DB, appContainer.RDB)

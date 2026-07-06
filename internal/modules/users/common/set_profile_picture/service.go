@@ -23,8 +23,8 @@ func (uc *Service) Execute(ctx context.Context, req SetProfilePictureRequest) er
 
 	var existing entities.User
 
-	if err := uc.db.WithContext(ctx).Where("username = ?", req.Username).First(&existing).Error; err != nil {
-		return errors.New("username not found")
+	if err := uc.db.WithContext(ctx).Where("id = ?", req.UserID).First(&existing).Error; err != nil {
+		return errors.New("user not found")
 	}
 
 	existing.ProfilePicture = req.NewProfilePicture
