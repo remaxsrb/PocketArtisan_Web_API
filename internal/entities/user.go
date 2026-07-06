@@ -25,14 +25,15 @@ type User struct {
 }
 
 type Craftsman struct {
-	ID              uint64  `json:"id" gorm:"primaryKey"`
-	UserID          uint64  `json:"user_id" gorm:"unique;not null"`
-	CraftID         uint64  `json:"craft_id" gorm:"not null"`
-	Biography       string  `json:"biography" gorm:"size:200"`
-	Rating          float64 `json:"rating" gorm:"not null;default:0.0"`
-	NumberOfRatings int     `json:"number_of_ratings" gorm:"not null;default:0"`
-	User            *User   `json:"user,omitempty" gorm:"foreignKey:UserID;constraint:OnDelete:CASCADE;"`
-	Craft           *Craft  `json:"craft,omitempty" gorm:"foreignKey:CraftID;constraint:OnDelete:RESTRICT;"`
+	ID              uint64    `json:"id" gorm:"primaryKey"`
+	UserID          uint64    `json:"user_id" gorm:"unique;not null"`
+	CraftID         uint64    `json:"craft_id" gorm:"not null"`
+	Biography       string    `json:"biography" gorm:"size:200"`
+	Rating          float64   `json:"rating" gorm:"not null;default:0.0"`
+	NumberOfRatings int       `json:"number_of_ratings" gorm:"not null;default:0"`
+	ApprovedAt      time.Time `json:"approved_at" gorm:"autoCreateTime"`
+	User            *User     `json:"user,omitempty" gorm:"foreignKey:UserID;constraint:OnDelete:CASCADE;"`
+	Craft           *Craft    `json:"craft,omitempty" gorm:"foreignKey:CraftID;constraint:OnDelete:RESTRICT;"`
 }
 
 // CraftsmanRatingRecord ensures one customer can rate one craftsman at most once.

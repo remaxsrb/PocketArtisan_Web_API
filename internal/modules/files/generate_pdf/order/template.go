@@ -60,7 +60,7 @@ func buildPDF(data OrderData, f *fonts.Service) (*fpdf.Fpdf, error) {
 	pdf.CellFormat(colProduct, rowH, "Производ", "1", 0, "L", true, 0, "")
 	pdf.CellFormat(colQty, rowH, "Количина", "1", 0, "C", true, 0, "")
 	pdf.CellFormat(colUnit, rowH, "Цена", "1", 0, "R", true, 0, "")
-	//pdf.CellFormat(colTotal, rowH, "Укупно", "1", 1, "R", true, 0, "")
+	pdf.CellFormat(colTotal, rowH, "Укупно", "1", 1, "R", true, 0, "")
 
 	// -- Item rows ------------------------------------------------------------
 	pdf.SetTextColor(40, 40, 40)
@@ -72,9 +72,11 @@ func buildPDF(data OrderData, f *fonts.Service) (*fpdf.Fpdf, error) {
 		} else {
 			pdf.SetFillColor(255, 255, 255)
 		}
+		lineTotal := item.UnitPrice * float64(item.Quantity)
 		pdf.CellFormat(colProduct, rowH, item.Product.Name, "1", 0, "L", true, 0, "")
 		pdf.CellFormat(colQty, rowH, fmt.Sprintf("%d", item.Quantity), "1", 0, "C", true, 0, "")
 		pdf.CellFormat(colUnit, rowH, fmt.Sprintf("%.2f РСД", item.UnitPrice), "1", 0, "R", true, 0, "")
+		pdf.CellFormat(colTotal, rowH, fmt.Sprintf("%.2f РСД", lineTotal), "1", 1, "R", true, 0, "")
 		fill = !fill
 	}
 

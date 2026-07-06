@@ -71,10 +71,23 @@ func (uc *Service) Execute(ctx context.Context, req GetAllRequest) (GetAllRespon
 		})
 	}
 
+	categoryCounts := make([]CategoryOrderCount, 0)
+	uc.db.WithContext(ctx).
+		Table("orders").
+		Joins("JOIN order_items ON order_items.order_id = orders.id").
+		Joins("JOIN products ON products.id = order_items.product_id").
+		Joins("JOIN product_categories ON product_categories.id = products.category_id").
+		Select("product_categories.name as category, COUNT(DISTINCT orders.id) as count").
+		Where("orders.craftsman_id = ? AND orders.status = ?", req.CraftsmanID, entities.OrderShipped).
+		Group("product_categories.name").
+		Order("product_categories.name").
+		Scan(&categoryCounts)
+
 	resp := GetAllResponse{
-		Orders: orderList,
-		Total:  total,
-		Page:   (req.Skip / req.Limit) + 1,
+		Orders:         orderList,
+		Total:          total,
+		Page:           (req.Skip / req.Limit) + 1,
+		CategoryCounts: categoryCounts,
 	}
 
 	jsonData, marshalErr := json.Marshal(resp)
