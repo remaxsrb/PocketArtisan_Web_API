@@ -22,6 +22,7 @@ func SetupRouter(appContainer *container.AppContainer) *gin.Engine {
 	routes.RegisterProductCategoryRoutes(router, appContainer)
 	routes.RegisterCraftRoutes(router, appContainer)
 	routes.RegisterOrdertRoutes(router, appContainer)
+	routes.RegisterHealthRoute(router)
 
 	return router
 }
