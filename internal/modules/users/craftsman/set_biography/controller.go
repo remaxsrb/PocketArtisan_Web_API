@@ -3,6 +3,8 @@ package set_biography
 import (
 	"net/http"
 
+	"PocketArtisan/internal/http/middleware"
+
 	"github.com/gin-gonic/gin"
 	"github.com/go-redis/redis/v8"
 	"gorm.io/gorm"
@@ -16,6 +18,14 @@ func RegisterRoutes(router *gin.RouterGroup, db *gorm.DB, rdb *redis.Client) {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
+
+		craftsmanID := c.GetUint64(middleware.ContextCraftsmanID)
+		if craftsmanID == 0 {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "craftsman not resolved"})
+			return
+		}
+		req.CraftsmanID = craftsmanID
+
 		err := r.Execute(c.Request.Context(), req)
 		if err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})

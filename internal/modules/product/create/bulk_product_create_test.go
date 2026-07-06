@@ -180,12 +180,12 @@ func TestSingleProductCreate(t *testing.T) {
 		imageURLs = append(imageURLs, url)
 	}
 
-	// All uploads done — now create the product.
+	// All uploads done — now create the product. Craftsman identity is
+	// resolved server-side from the bearer token, not sent by the client.
 	product := NewProductRequest{
 		Name:        entry.Name,
 		Description: entry.Description,
 		Price:       entry.Price,
-		Username:    entry.Username,
 		Category:    entry.Category,
 		Images:      imageURLs,
 	}

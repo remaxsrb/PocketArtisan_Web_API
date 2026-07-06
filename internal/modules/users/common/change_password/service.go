@@ -27,7 +27,7 @@ func (uc *Service) Execute(ctx context.Context, req ChangePasswordRequest) error
 		return errors.New(err.Error())
 	}
 
-	if err := uc.db.WithContext(ctx).Where("username = ?", req.Username).First(&user).Error; err != nil {
+	if err := uc.db.WithContext(ctx).Where("id = ?", req.UserID).First(&user).Error; err != nil {
 		return errors.New("user not found")
 	}
 

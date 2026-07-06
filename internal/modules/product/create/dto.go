@@ -6,6 +6,6 @@ type NewProductRequest struct {
 	Description string   `json:"description"`
 	Images      []string `json:"images"`
 	Videos      []string `json:"videos"`
-	Username    string   `json:"username"`
 	Category    string   `json:"category"`
+	CraftsmanID uint64   `json:"-"`
 }

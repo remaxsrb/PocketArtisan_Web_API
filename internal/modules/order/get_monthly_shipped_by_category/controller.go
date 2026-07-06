@@ -3,6 +3,7 @@ package get_monthly_shipped_by_category
 import (
 	"net/http"
 
+	"PocketArtisan/internal/http/middleware"
 	"PocketArtisan/internal/modules/utils/timeutil"
 
 	"github.com/gin-gonic/gin"
@@ -13,10 +14,10 @@ import (
 func RegisterRoutes(router *gin.RouterGroup, db *gorm.DB, rdb *redis.Client, timeService timeutil.Service) {
 	uc := NewService(db, rdb, timeService)
 
-	router.GET("/craftsmen/:craftsman_id/stats/monthly-by-category", func(c *gin.Context) {
-		craftsmanID := c.Param("craftsman_id")
-		if craftsmanID == "" {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "craftsman_id is required"})
+	router.GET("/stats/monthly-by-category", func(c *gin.Context) {
+		craftsmanID := c.GetUint64(middleware.ContextCraftsmanID)
+		if craftsmanID == 0 {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "craftsman not resolved"})
 			return
 		}
 

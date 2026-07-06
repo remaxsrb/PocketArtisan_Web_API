@@ -8,7 +8,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"strconv"
 	"time"
 
 	"github.com/go-redis/redis/v8"
@@ -36,13 +35,8 @@ func (uc *Service) Execute(ctx context.Context, req GetAllRequest) (GetAllRespon
 		req.Limit = maxLimit
 	}
 
-	craftsmanID, err := strconv.ParseUint(req.CraftsmanID, 10, 64)
-	if err != nil {
-		return GetAllResponse{}, fmt.Errorf("invalid craftsman_id: %w", err)
-	}
-
 	cacheVersion := utils.GetCacheVersion(ctx, uc.cache, "orders")
-	cacheKey := fmt.Sprintf("orders:craftsman:v:%d:%d:skip:%d:limit:%d", cacheVersion, craftsmanID, req.Skip, req.Limit)
+	cacheKey := fmt.Sprintf("orders:craftsman:v:%d:%d:skip:%d:limit:%d", cacheVersion, req.CraftsmanID, req.Skip, req.Limit)
 
 	cachedData, err := uc.cache.Get(ctx, cacheKey).Result()
 	if err == nil {
@@ -55,11 +49,11 @@ func (uc *Service) Execute(ctx context.Context, req GetAllRequest) (GetAllRespon
 	}
 
 	var total int64
-	uc.db.WithContext(ctx).Model(&entities.Order{}).Where("craftsman_id = ?", craftsmanID).Count(&total)
+	uc.db.WithContext(ctx).Model(&entities.Order{}).Where("craftsman_id = ?", req.CraftsmanID).Count(&total)
 
 	raw := make([]*entities.Order, 0, req.Limit)
 	uc.db.WithContext(ctx).
-		Where("craftsman_id = ?", craftsmanID).
+		Where("craftsman_id = ?", req.CraftsmanID).
 		Offset(req.Skip).
 		Limit(req.Limit).
 		Order("created_at desc").

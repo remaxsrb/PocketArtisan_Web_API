@@ -16,7 +16,7 @@ func RegisterProductRoutes(router *gin.Engine, appContainer *container.AppContai
 	get_all.RegisterRoutes(public, appContainer.DB, appContainer.RDB)
 
 	craftsman := router.Group("/api/products")
-	craftsman.Use(middleware.JWT(appContainer.JWTService), middleware.RequireRoles("craftsman"))
+	craftsman.Use(middleware.JWT(appContainer.JWTService), middleware.RequireRoles("craftsman"), middleware.RequireCraftsman(appContainer.DB))
 	create.RegisterRoutes(craftsman, appContainer.DB, appContainer.RDB)
 	delete.RegisterRoutes(craftsman, appContainer.DB, appContainer.RDB)
 	toggle_hide.RegisterRoutes(craftsman, appContainer.DB, appContainer.RDB)

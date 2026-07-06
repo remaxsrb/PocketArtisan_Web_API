@@ -1,6 +1,7 @@
 package change_password
 
 import (
+	"PocketArtisan/internal/http/middleware"
 	"PocketArtisan/internal/http/response"
 	"net/http"
 
@@ -17,6 +18,14 @@ func RegisterRoutes(router *gin.RouterGroup, db *gorm.DB, rdb *redis.Client) {
 			response.Error(c, http.StatusBadRequest, err.Error())
 			return
 		}
+
+		userID, ok := c.Request.Context().Value(middleware.ContextUserID).(uint64)
+		if !ok {
+			response.Error(c, http.StatusUnauthorized, "user not resolved")
+			return
+		}
+		req.UserID = userID
+
 		err := r.Execute(c.Request.Context(), req)
 		if err != nil {
 			response.Error(c, http.StatusBadRequest, err.Error())

@@ -25,7 +25,7 @@ func RegisterOrdertRoutes(router *gin.Engine, appContainer *container.AppContain
 	get_by_customer.RegisterRoutes(customerOrderRoutes, appContainer.DB, appContainer.RDB)
 
 	craftsmanOrderRoutes := router.Group("/api/orders")
-	craftsmanOrderRoutes.Use(middleware.JWT(appContainer.JWTService), middleware.RequireRoles("craftsman"))
+	craftsmanOrderRoutes.Use(middleware.JWT(appContainer.JWTService), middleware.RequireRoles("craftsman"), middleware.RequireCraftsman(appContainer.DB))
 	get_by_craftsman.RegisterRoutes(craftsmanOrderRoutes, appContainer.DB, appContainer.RDB)
 	get_monthly_shipped_by_category.RegisterRoutes(craftsmanOrderRoutes, appContainer.DB, appContainer.RDB, appContainer.TimeService)
 	accept.RegisterRoutes(craftsmanOrderRoutes, appContainer.DB, appContainer.RDB)

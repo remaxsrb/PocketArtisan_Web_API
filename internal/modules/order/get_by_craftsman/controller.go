@@ -4,6 +4,8 @@ import (
 	"net/http"
 	"strconv"
 
+	"PocketArtisan/internal/http/middleware"
+
 	"github.com/gin-gonic/gin"
 	"github.com/go-redis/redis/v8"
 	"gorm.io/gorm"
@@ -12,10 +14,10 @@ import (
 func RegisterRoutes(router *gin.RouterGroup, db *gorm.DB, rdb *redis.Client) {
 	uc := NewService(db, rdb)
 
-	router.GET("/craftsmen/:craftsman_id", func(c *gin.Context) {
-		craftsmanID := c.Param("craftsman_id")
-		if craftsmanID == "" {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "craftsman_id is required"})
+	router.GET("/craftsmen/me", func(c *gin.Context) {
+		craftsmanID := c.GetUint64(middleware.ContextCraftsmanID)
+		if craftsmanID == 0 {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "craftsman not resolved"})
 			return
 		}
 

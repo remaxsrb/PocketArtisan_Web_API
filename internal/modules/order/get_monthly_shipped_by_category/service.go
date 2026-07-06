@@ -8,7 +8,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"strconv"
 	"time"
 
 	"github.com/go-redis/redis/v8"
@@ -28,18 +27,13 @@ func NewService(db *gorm.DB, cache *redis.Client, timeService timeutil.Service) 
 func (uc *Service) Execute(ctx context.Context, req MonthlyShippedByCategoryRequest) ([]MonthlyCategoryCount, error) {
 	const cacheTTL = 5 * time.Minute
 
-	craftsmanID, err := strconv.ParseUint(req.CraftsmanID, 10, 64)
-	if err != nil {
-		return nil, fmt.Errorf("invalid craftsman_id: %w", err)
-	}
-
 	from, to, err := uc.timeService.ParseDateRange(req.From, req.To)
 	if err != nil {
 		return nil, err
 	}
 
 	cacheVersion := utils.GetCacheVersion(ctx, uc.cache, "orders")
-	cacheKey := fmt.Sprintf("orders:stats:monthly:craftsman:v:%d:%d:%s:%s", cacheVersion, craftsmanID, req.From, req.To)
+	cacheKey := fmt.Sprintf("orders:stats:monthly:craftsman:v:%d:%d:%s:%s", cacheVersion, req.CraftsmanID, req.From, req.To)
 
 	if cached, err := uc.cache.Get(ctx, cacheKey).Result(); err == nil {
 		cachedResp := make([]MonthlyCategoryCount, 0)
@@ -60,7 +54,7 @@ func (uc *Service) Execute(ctx context.Context, req MonthlyShippedByCategoryRequ
 			product_categories.name as category,
 			COUNT(DISTINCT orders.id) as count
 		`).
-		Where("orders.craftsman_id = ? AND orders.status = ?", craftsmanID, entities.OrderShipped)
+		Where("orders.craftsman_id = ? AND orders.status = ?", req.CraftsmanID, entities.OrderShipped)
 
 	if from != nil {
 		query = query.Where("orders.completed_at >= ?", *from)
