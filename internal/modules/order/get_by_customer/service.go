@@ -7,7 +7,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"strconv"
 	"time"
 
 	"github.com/go-redis/redis/v8"
@@ -35,13 +34,8 @@ func (uc *Service) Execute(ctx context.Context, req GetAllRequest) (GetAllRespon
 		req.Limit = maxLimit
 	}
 
-	customerID, err := strconv.ParseUint(req.CustomerID, 10, 64)
-	if err != nil {
-		return GetAllResponse{}, fmt.Errorf("invalid user_id: %w", err)
-	}
-
 	cacheVersion := utils.GetCacheVersion(ctx, uc.cache, "orders")
-	cacheKey := fmt.Sprintf("orders:customer:v:%d:%d:skip:%d:limit:%d", cacheVersion, customerID, req.Skip, req.Limit)
+	cacheKey := fmt.Sprintf("orders:customer:v:%d:%d:skip:%d:limit:%d", cacheVersion, req.CustomerID, req.Skip, req.Limit)
 
 	cachedData, err := uc.cache.Get(ctx, cacheKey).Result()
 	if err == nil {
@@ -53,12 +47,12 @@ func (uc *Service) Execute(ctx context.Context, req GetAllRequest) (GetAllRespon
 		fmt.Printf("Redis error: %v\n", err)
 	}
 
-	total, err := uc.repo.CountByCustomer(ctx, customerID)
+	total, err := uc.repo.CountByCustomer(ctx, req.CustomerID)
 	if err != nil {
 		return GetAllResponse{}, err
 	}
 
-	raw, err := uc.repo.ListByCustomer(ctx, customerID, req.Skip, req.Limit)
+	raw, err := uc.repo.ListByCustomer(ctx, req.CustomerID, req.Skip, req.Limit)
 	if err != nil {
 		return GetAllResponse{}, err
 	}

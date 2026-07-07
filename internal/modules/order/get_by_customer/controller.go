@@ -1,6 +1,7 @@
 package get_by_customer
 
 import (
+	"PocketArtisan/internal/http/middleware"
 	"PocketArtisan/internal/http/response"
 	"net/http"
 	"strconv"
@@ -13,10 +14,10 @@ import (
 func RegisterRoutes(router *gin.RouterGroup, db *gorm.DB, rdb *redis.Client) {
 	uc := NewService(db, rdb)
 
-	router.GET("/customers/:user_id", func(c *gin.Context) {
-		userID := c.Param("user_id")
-		if userID == "" {
-			response.Error(c, http.StatusBadRequest, "user_id is required")
+	router.GET("/customers/me", func(c *gin.Context) {
+		userID, ok := c.Request.Context().Value(middleware.ContextUserID).(uint64)
+		if !ok {
+			response.Error(c, http.StatusUnauthorized, "user not resolved")
 			return
 		}
 

@@ -24,14 +24,19 @@ func (uc *Service) Execute(ctx context.Context, req AddToCartRequest) (*cartmod.
 		return nil, errors.New("quantity must be greater than zero")
 	}
 
-	existingItem, err := uc.repo.FindCartItem(ctx, req.CartID, req.ProductID)
+	userCart, err := uc.repo.GetUserCart(ctx, req.UserID)
+	if err != nil {
+		return nil, err
+	}
+
+	existingItem, err := uc.repo.FindCartItem(ctx, userCart.ID, req.ProductID)
 	if err == nil {
 		existingItem.Quantity += req.Quantity
 		if err := uc.repo.SaveCartItem(ctx, existingItem); err != nil {
 			return nil, err
 		}
 	} else if errors.Is(err, gorm.ErrRecordNotFound) {
-		newItem := &entities.CartItem{CartID: req.CartID, ProductID: req.ProductID, Quantity: req.Quantity}
+		newItem := &entities.CartItem{CartID: userCart.ID, ProductID: req.ProductID, Quantity: req.Quantity}
 		if err := uc.repo.CreateCartItem(ctx, newItem); err != nil {
 			return nil, err
 		}
@@ -39,20 +44,14 @@ func (uc *Service) Execute(ctx context.Context, req AddToCartRequest) (*cartmod.
 		return nil, err
 	}
 
-	price, err := uc.repo.GetProductPrice(ctx, req.ProductID)
+	if err := uc.repo.RefreshCartTotal(ctx, userCart.ID); err != nil {
+		return nil, err
+	}
+
+	updatedCart, err := uc.repo.GetUserCart(ctx, req.UserID)
 	if err != nil {
 		return nil, err
 	}
 
-	userCart, err := uc.repo.GetUserCart(ctx, req.CartID)
-	if err != nil {
-		return nil, err
-	}
-
-	userCart.Total += price * float64(req.Quantity)
-	if err := uc.repo.SaveCart(ctx, userCart); err != nil {
-		return nil, err
-	}
-
-	return &cartmod.CartResponse{Cart: *userCart}, nil
+	return &cartmod.CartResponse{Cart: *updatedCart}, nil
 }

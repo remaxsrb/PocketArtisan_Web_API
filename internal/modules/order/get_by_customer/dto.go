@@ -12,9 +12,9 @@ const (
 )
 
 type GetAllRequest struct {
-	CustomerID string `form:"user_id" query:"user_id"`
-	Limit    int    `form:"limit" query:"limit"`
-	Skip     int    `form:"skip" query:"skip"`
+	CustomerID uint64
+	Limit      int `form:"limit" query:"limit"`
+	Skip       int `form:"skip" query:"skip"`
 }
 
 type GetAllResponse struct {

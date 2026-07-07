@@ -20,7 +20,12 @@ func NewService(db *gorm.DB, cache *redis.Client) *Service {
 
 func (uc *Service) Execute(ctx context.Context, req RemoveFromCartRequest) (*cartmod.CartResponse, error) {
 
-	rowsAffected, err := uc.repo.DeleteCartItem(ctx, req.CartID, req.ProductID)
+	userCart, err := uc.repo.GetUserCart(ctx, req.UserID)
+	if err != nil {
+		return nil, err
+	}
+
+	rowsAffected, err := uc.repo.DeleteCartItem(ctx, userCart.ID, req.ProductID)
 	if err != nil {
 		return nil, err
 	}
@@ -28,20 +33,14 @@ func (uc *Service) Execute(ctx context.Context, req RemoveFromCartRequest) (*car
 		return nil, errors.New("item not found in cart")
 	}
 
-	price, err := uc.repo.GetProductPrice(ctx, req.ProductID)
+	if err := uc.repo.RefreshCartTotal(ctx, userCart.ID); err != nil {
+		return nil, err
+	}
+
+	updatedCart, err := uc.repo.GetUserCart(ctx, req.UserID)
 	if err != nil {
 		return nil, err
 	}
 
-	userCart, err := uc.repo.GetUserCart(ctx, req.CartID)
-	if err != nil {
-		return nil, err
-	}
-
-	userCart.Total -= price * float64(req.Quantity)
-	if err := uc.repo.SaveCart(ctx, userCart); err != nil {
-		return nil, err
-	}
-
-	return &cartmod.CartResponse{Cart: *userCart}, nil
+	return &cartmod.CartResponse{Cart: *updatedCart}, nil
 }

@@ -21,6 +21,7 @@ type Repository interface {
 	SaveCart(ctx context.Context, cart *entities.Cart) error
 	ClearCartItems(ctx context.Context, cartID uint64) error
 	UpdateCartTotal(ctx context.Context, cartID uint64, total float64) error
+	RefreshCartTotal(ctx context.Context, cartID uint64) error
 }
 
 type GormRepository struct {
@@ -100,4 +101,18 @@ func (r *GormRepository) UpdateCartTotal(ctx context.Context, cartID uint64, tot
 		Model(&entities.Cart{}).
 		Where("id = ?", cartID).
 		Update("total", total).Error
+}
+
+func (r *GormRepository) RefreshCartTotal(ctx context.Context, cartID uint64) error {
+	var total float64
+	err := r.db.WithContext(ctx).
+		Table("cart_items").
+		Joins("JOIN products ON products.id = cart_items.product_id").
+		Where("cart_items.cart_id = ?", cartID).
+		Select("COALESCE(SUM(cart_items.quantity * products.price), 0)").
+		Scan(&total).Error
+	if err != nil {
+		return err
+	}
+	return r.UpdateCartTotal(ctx, cartID, total)
 }

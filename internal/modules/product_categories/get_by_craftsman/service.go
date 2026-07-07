@@ -1,8 +1,8 @@
 package getbycraftsman
 
 import (
-	"PocketArtisan/internal/modules/product"
 	pcmod "PocketArtisan/internal/modules/product_categories"
+	usersmod "PocketArtisan/internal/modules/users"
 	"PocketArtisan/internal/modules/utils"
 	"context"
 	"encoding/json"
@@ -16,19 +16,19 @@ import (
 )
 
 type Service struct {
-	repo           pcmod.Repository
-	cache          *redis.Client
-	productService product.Service
+	repo      pcmod.Repository
+	usersRepo usersmod.Repository
+	cache     *redis.Client
 }
 
 func NewService(db *gorm.DB, cache *redis.Client) *Service {
-	return &Service{repo: pcmod.NewGormRepository(db), cache: cache, productService: product.NewService(db)}
+	return &Service{repo: pcmod.NewGormRepository(db), usersRepo: usersmod.NewGormRepository(db), cache: cache}
 }
 
-func (uc *Service) Execute(ctx context.Context, username string) ([]entities.ProductCategory, error) {
+func (uc *Service) Execute(ctx context.Context, craftsmanID uint64) ([]entities.ProductCategory, error) {
 	const cacheTTL = 5 * time.Minute
 
-	craftsman, err := uc.productService.GetCraftsmanByUsername(ctx, username)
+	craftsman, err := uc.usersRepo.FindCraftsmanByID(ctx, craftsmanID)
 	if err != nil {
 		return nil, err
 	}

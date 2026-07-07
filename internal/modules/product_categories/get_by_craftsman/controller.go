@@ -1,6 +1,7 @@
 package getbycraftsman
 
 import (
+	"PocketArtisan/internal/http/middleware"
 	"PocketArtisan/internal/http/response"
 	"net/http"
 
@@ -11,10 +12,14 @@ import (
 
 func RegisterRoutes(router *gin.RouterGroup, db *gorm.DB, rdb *redis.Client) {
 	uc := NewService(db, rdb)
-	router.GET("/craftsman/:username", func(c *gin.Context) {
-		username := c.Param("username")
+	router.GET("/craftsman/me", func(c *gin.Context) {
+		craftsmanID := c.GetUint64(middleware.ContextCraftsmanID)
+		if craftsmanID == 0 {
+			response.Error(c, http.StatusUnauthorized, "craftsman not resolved")
+			return
+		}
 
-		categories, err := uc.Execute(c.Request.Context(), username)
+		categories, err := uc.Execute(c.Request.Context(), craftsmanID)
 		if err != nil {
 			response.Error(c, http.StatusInternalServerError, err.Error())
 			return
