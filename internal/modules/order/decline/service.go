@@ -41,7 +41,11 @@ func (uc *Service) Execute(ctx context.Context, req DeclineOrderRequest) (entiti
 		}
 	}
 
-	existing.Status = entities.OrderDeclined
+	nextStatus, err := ordermod.NextOrderStatus(existing.Status, ordermod.OrderActionDecline)
+	if err != nil {
+		return "", err
+	}
+	existing.Status = nextStatus
 
 	if err := uc.repo.Save(ctx, existing); err != nil {
 		return "", err
@@ -49,5 +53,5 @@ func (uc *Service) Execute(ctx context.Context, req DeclineOrderRequest) (entiti
 
 	utils.BumpCacheVersion(ctx, uc.cache, "orders")
 
-	return existing.Status, nil
+	return nextStatus, nil
 }

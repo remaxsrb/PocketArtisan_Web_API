@@ -1,7 +1,6 @@
 package approve
 
 import (
-	"PocketArtisan/internal/entities"
 	camod "PocketArtisan/internal/modules/craftsman_application"
 	"context"
 	"errors"
@@ -26,7 +25,11 @@ func (uc *Service) Execute(ctx context.Context, req Request) error {
 		return errors.New("application not found")
 	}
 
-	ca.Status = entities.StatusAccepted
+	nextStatus, err := camod.NextApplicationStatus(ca.Status, camod.ApplicationActionApprove)
+	if err != nil {
+		return err
+	}
+	ca.Status = nextStatus
 
 	return uc.repo.Save(ctx, ca)
 }

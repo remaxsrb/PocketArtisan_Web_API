@@ -45,7 +45,11 @@ func (uc *Service) Execute(ctx context.Context, req ShipOrderRequest) (entities.
 		}
 	}
 
-	existing.Status = entities.OrderShipped
+	nextStatus, err := ordermod.NextOrderStatus(existing.Status, ordermod.OrderActionShip)
+	if err != nil {
+		return "", err
+	}
+	existing.Status = nextStatus
 
 	if err := uc.repo.Save(ctx, existing); err != nil {
 		return "", err
@@ -53,5 +57,5 @@ func (uc *Service) Execute(ctx context.Context, req ShipOrderRequest) (entities.
 
 	utils.BumpCacheVersion(ctx, uc.cache, "orders")
 
-	return existing.Status, nil
+	return nextStatus, nil
 }

@@ -35,13 +35,17 @@ func (uc *Service) Execute(ctx context.Context, req NewOrderRequest) (OrderCreat
 	switch req.PaymentType {
 	case "CC":
 		order.PaymentType = entities.PaymentCreditCard
-		order.Status = entities.OrderPaymentReserved
 	case "COD":
 		order.PaymentType = entities.CashOnDelivery
-		order.Status = entities.OrderPending
 	default:
 		return OrderCreationResult{}, fmt.Errorf("invalid payment type: %s", req.PaymentType)
 	}
+
+	initialStatus, err := ordermod.InitialOrderStatus(order.PaymentType)
+	if err != nil {
+		return OrderCreationResult{}, err
+	}
+	order.Status = initialStatus
 
 	productIDs := make([]uint64, len(req.Items))
 	quantities := make(map[uint64]int)
