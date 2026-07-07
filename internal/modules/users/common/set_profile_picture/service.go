@@ -1,7 +1,7 @@
 package set_profile_picture
 
 import (
-	"PocketArtisan/internal/entities"
+	usersmod "PocketArtisan/internal/modules/users"
 	"PocketArtisan/internal/modules/utils"
 	"context"
 	"errors"
@@ -11,25 +11,24 @@ import (
 )
 
 type Service struct {
-	db    *gorm.DB
+	repo  usersmod.Repository
 	cache *redis.Client
 }
 
 func NewService(db *gorm.DB, cache *redis.Client) *Service {
-	return &Service{db: db, cache: cache}
+	return &Service{repo: usersmod.NewGormRepository(db), cache: cache}
 }
 
 func (uc *Service) Execute(ctx context.Context, req SetProfilePictureRequest) error {
 
-	var existing entities.User
-
-	if err := uc.db.WithContext(ctx).Where("id = ?", req.UserID).First(&existing).Error; err != nil {
+	existing, err := uc.repo.FindUserByID(ctx, req.UserID)
+	if err != nil {
 		return errors.New("user not found")
 	}
 
 	existing.ProfilePicture = req.NewProfilePicture
 
-	if err := uc.db.WithContext(ctx).Save(&existing).Error; err != nil {
+	if err := uc.repo.SaveUser(ctx, existing); err != nil {
 		return err
 	}
 

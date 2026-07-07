@@ -1,8 +1,7 @@
 package getbycategory
 
 import (
-	"PocketArtisan/internal/entities"
-	"PocketArtisan/internal/modules/product"
+	prodmod "PocketArtisan/internal/modules/product"
 	"PocketArtisan/internal/modules/utils"
 	"context"
 	"encoding/json"
@@ -15,12 +14,12 @@ import (
 )
 
 type Service struct {
-	db    *gorm.DB
+	repo  prodmod.Repository
 	cache *redis.Client
 }
 
 func NewService(db *gorm.DB, cache *redis.Client) *Service {
-	return &Service{db: db, cache: cache}
+	return &Service{repo: prodmod.NewGormRepository(db), cache: cache}
 }
 
 func (uc *Service) Execute(ctx context.Context, req GetByCategoryRequest) (GetByCategoryResponse, error) {
@@ -51,33 +50,17 @@ func (uc *Service) Execute(ctx context.Context, req GetByCategoryRequest) (GetBy
 
 	normalizedSearch := utils.NormalizeForSearch(req.Search)
 
-	var totalProducts int64
-	countQuery := uc.db.WithContext(ctx).Model(&entities.Product{})
-	if normalizedSearch != "" {
-		countQuery = countQuery.
-			Joins("JOIN product_categories ON product_categories.id = products.category_id").
-			Where("? = ANY(product_categories.search_keywords)", normalizedSearch)
-	}
-	countQuery.Count(&totalProducts)
-
-	listQuery := uc.db.WithContext(ctx).
-		Preload("Images").
-		Preload("Videos").
-		Preload("Category")
-	if normalizedSearch != "" {
-		listQuery = listQuery.
-			Joins("JOIN product_categories ON product_categories.id = products.category_id").
-			Where("? = ANY(product_categories.search_keywords)", normalizedSearch)
+	totalProducts, err := uc.repo.CountByCategory(ctx, normalizedSearch)
+	if err != nil {
+		return GetByCategoryResponse{}, err
 	}
 
-	raw := make([]*entities.Product, 0, req.Limit)
-	listQuery.
-		Offset(req.Skip).
-		Limit(req.Limit).
-		Order("name asc").
-		Find(&raw)
+	raw, err := uc.repo.ListByCategory(ctx, normalizedSearch, req.Skip, req.Limit)
+	if err != nil {
+		return GetByCategoryResponse{}, err
+	}
 
-	product_list := make([]*product.ProductResponse, 0, len(raw))
+	product_list := make([]*prodmod.ProductResponse, 0, len(raw))
 	for _, p := range raw {
 		images := make([]string, 0, len(p.Images))
 		for _, img := range p.Images {
@@ -91,7 +74,7 @@ func (uc *Service) Execute(ctx context.Context, req GetByCategoryRequest) (GetBy
 		if p.Category != nil {
 			categoryName = p.Category.Name
 		}
-		product_list = append(product_list, &product.ProductResponse{
+		product_list = append(product_list, &prodmod.ProductResponse{
 			ID:              p.ID,
 			CraftsmanID:     p.CraftsmanID,
 			Name:            p.Name,

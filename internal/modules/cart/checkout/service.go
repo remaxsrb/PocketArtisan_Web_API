@@ -2,7 +2,7 @@ package checkout
 
 import (
 	"PocketArtisan/internal/entities"
-	"PocketArtisan/internal/modules/cart"
+	cartmod "PocketArtisan/internal/modules/cart"
 	"PocketArtisan/internal/modules/order/create"
 	"context"
 	"errors"
@@ -14,17 +14,18 @@ import (
 )
 
 type Service struct {
-	db          *gorm.DB
+	repo        cartmod.Repository
 	cache       *redis.Client
-	cartReader  cart.CartReader
+	cartReader  cartmod.CartReader
 	orderCreate *create.Service
 }
 
 func NewService(db *gorm.DB, cache *redis.Client, orderCreate *create.Service) *Service {
+	repo := cartmod.NewGormRepository(db)
 	return &Service{
-		db:          db,
+		repo:        repo,
 		cache:       cache,
-		cartReader:  cart.NewCartReader(db),
+		cartReader:  repo,
 		orderCreate: orderCreate,
 	}
 }
@@ -93,13 +94,8 @@ func toOrderItems(items []entities.CartItem) []create.NewOrderItemRequest {
 }
 
 func (uc *Service) clearCart(ctx context.Context, userCart *entities.Cart) error {
-	if err := uc.db.WithContext(ctx).
-		Where("cart_id = ?", userCart.ID).
-		Delete(&entities.CartItem{}).Error; err != nil {
+	if err := uc.repo.ClearCartItems(ctx, userCart.ID); err != nil {
 		return err
 	}
-	return uc.db.WithContext(ctx).
-		Model(&entities.Cart{}).
-		Where("id = ?", userCart.ID).
-		Update("total", 0).Error
+	return uc.repo.UpdateCartTotal(ctx, userCart.ID, 0)
 }

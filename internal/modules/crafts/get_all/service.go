@@ -2,6 +2,7 @@ package get_all
 
 import (
 	"PocketArtisan/internal/entities"
+	craftsmod "PocketArtisan/internal/modules/crafts"
 	"PocketArtisan/internal/modules/utils"
 	"context"
 	"encoding/json"
@@ -13,12 +14,12 @@ import (
 )
 
 type Service struct {
-	db    *gorm.DB
+	repo  craftsmod.Repository
 	cache *redis.Client
 }
 
 func NewService(db *gorm.DB, cache *redis.Client) *Service {
-	return &Service{db: db, cache: cache}
+	return &Service{repo: craftsmod.NewGormRepository(db), cache: cache}
 }
 
 func (uc *Service) Execute(ctx context.Context) ([]entities.Craft, error) {
@@ -34,8 +35,8 @@ func (uc *Service) Execute(ctx context.Context) ([]entities.Craft, error) {
 		}
 	}
 
-	var craftsList []entities.Craft
-	if err := uc.db.WithContext(ctx).Find(&craftsList).Error; err != nil {
+	craftsList, err := uc.repo.FindAll(ctx)
+	if err != nil {
 		return nil, err
 	}
 

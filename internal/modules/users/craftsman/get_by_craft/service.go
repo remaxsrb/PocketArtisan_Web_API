@@ -1,7 +1,7 @@
 package getbycraft
 
 import (
-	"PocketArtisan/internal/modules/users"
+	usersmod "PocketArtisan/internal/modules/users"
 	"PocketArtisan/internal/modules/utils"
 	"context"
 	"encoding/json"
@@ -16,12 +16,12 @@ import (
 const cacheTTL = 5 * time.Minute
 
 type Service struct {
-	db    *gorm.DB
+	repo  usersmod.Repository
 	cache *redis.Client
 }
 
 func NewService(db *gorm.DB, cache *redis.Client) *Service {
-	return &Service{db: db, cache: cache}
+	return &Service{repo: usersmod.NewGormRepository(db), cache: cache}
 }
 
 func (uc *Service) Execute(ctx context.Context, craft string, req GetByCraftRequest) (GetByCraftResponse, error) {
@@ -48,35 +48,13 @@ func (uc *Service) Execute(ctx context.Context, craft string, req GetByCraftRequ
 		fmt.Printf("Redis error: %v\n", err)
 	}
 
-	baseQuery := uc.db.WithContext(ctx).
-		Table("users").
-		Joins("INNER JOIN craftsmen ON craftsmen.user_id = users.id").
-		Joins("INNER JOIN crafts ON crafts.id = craftsmen.craft_id").
-		Where("users.role = ?", "craftsman").
-		Where("? = ANY(crafts.search_keywords)", normalizedCraft)
-
-	var total int64
-	if err := baseQuery.Session(&gorm.Session{}).Count(&total).Error; err != nil {
+	total, err := uc.repo.CountCraftsmenByCraft(ctx, normalizedCraft)
+	if err != nil {
 		return GetByCraftResponse{}, err
 	}
 
-	craftsmanList := make([]*users.CraftsmanResponse, 0, req.Limit)
-	if err := baseQuery.Session(&gorm.Session{}).
-		Select(`
-        users.firstname, 
-        users.lastname, 
-        users.username,
-        users.email, 
-        users.profile_picture, 
-        craftsmen.id as craftsman_id,
-        crafts.name as craft, 
-        craftsmen.rating, 
-        craftsmen.number_of_ratings
-    `).
-		Offset(req.Skip).
-		Limit(req.Limit).
-		Order("users.created_at desc, users.id asc").
-		Scan(&craftsmanList).Error; err != nil {
+	craftsmanList, err := uc.repo.ListCraftsmenByCraft(ctx, normalizedCraft, req.Skip, req.Limit)
+	if err != nil {
 		return GetByCraftResponse{}, err
 	}
 

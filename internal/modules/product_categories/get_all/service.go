@@ -2,6 +2,7 @@ package get_all
 
 import (
 	"PocketArtisan/internal/entities"
+	pcmod "PocketArtisan/internal/modules/product_categories"
 	"PocketArtisan/internal/modules/utils"
 	"context"
 	"encoding/json"
@@ -13,12 +14,12 @@ import (
 )
 
 type Service struct {
-	db    *gorm.DB
+	repo  pcmod.Repository
 	cache *redis.Client
 }
 
 func NewService(db *gorm.DB, cache *redis.Client) *Service {
-	return &Service{db: db, cache: cache}
+	return &Service{repo: pcmod.NewGormRepository(db), cache: cache}
 }
 
 func (uc *Service) Execute(ctx context.Context) ([]entities.ProductCategory, error) {
@@ -34,8 +35,8 @@ func (uc *Service) Execute(ctx context.Context) ([]entities.ProductCategory, err
 		}
 	}
 
-	var pcs []entities.ProductCategory
-	if err := uc.db.WithContext(ctx).Find(&pcs).Error; err != nil {
+	pcs, err := uc.repo.FindAll(ctx)
+	if err != nil {
 		return nil, err
 	}
 

@@ -1,7 +1,7 @@
 package delete
 
 import (
-	"PocketArtisan/internal/entities"
+	craftsmod "PocketArtisan/internal/modules/crafts"
 	"PocketArtisan/internal/modules/utils"
 	"context"
 	"errors"
@@ -11,22 +11,22 @@ import (
 )
 
 type Service struct {
-	db    *gorm.DB
+	repo  craftsmod.Repository
 	cache *redis.Client
 }
 
 func NewService(db *gorm.DB, cache *redis.Client) *Service {
-	return &Service{db: db, cache: cache}
+	return &Service{repo: craftsmod.NewGormRepository(db), cache: cache}
 }
 
 func (uc *Service) Execute(ctx context.Context, req DeleteCraftRequest) error {
 
-	var c entities.Craft
-	if err := uc.db.WithContext(ctx).Where("name = ?", req.Name).First(&c).Error; err != nil {
+	c, err := uc.repo.FindByName(ctx, req.Name)
+	if err != nil {
 		return errors.New("craft does not exist")
 	}
 
-	if err := uc.db.WithContext(ctx).Delete(&c).Error; err != nil {
+	if err := uc.repo.Delete(ctx, c); err != nil {
 		return err
 	}
 

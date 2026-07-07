@@ -1,7 +1,7 @@
 package toggle_hide
 
 import (
-	"PocketArtisan/internal/entities"
+	prodmod "PocketArtisan/internal/modules/product"
 	"PocketArtisan/internal/modules/utils"
 	"context"
 	"errors"
@@ -11,19 +11,18 @@ import (
 )
 
 type Service struct {
-	db    *gorm.DB
+	repo  prodmod.Repository
 	cache *redis.Client
 }
 
 func NewService(db *gorm.DB, cache *redis.Client) *Service {
-	return &Service{db: db, cache: cache}
+	return &Service{repo: prodmod.NewGormRepository(db), cache: cache}
 }
 
 func (uc *Service) Execute(ctx context.Context, req ToggleHideProduct) error {
 
-	var existing entities.Product
-
-	if err := uc.db.WithContext(ctx).Where("id = ?", req.ProductID).First(&existing).Error; err != nil {
+	existing, err := uc.repo.FindByID(ctx, req.ProductID)
+	if err != nil {
 		return errors.New("product not found")
 	}
 
@@ -33,7 +32,9 @@ func (uc *Service) Execute(ctx context.Context, req ToggleHideProduct) error {
 
 	existing.Hidden = !existing.Hidden
 
-	uc.db.WithContext(ctx).Save(&existing)
+	if err := uc.repo.Save(ctx, existing); err != nil {
+		return err
+	}
 
 	utils.BumpCacheVersion(ctx, uc.cache, "products")
 

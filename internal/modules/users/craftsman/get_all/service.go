@@ -1,8 +1,7 @@
 package getall
 
 import (
-	"PocketArtisan/internal/entities"
-	"PocketArtisan/internal/modules/users"
+	usersmod "PocketArtisan/internal/modules/users"
 	"PocketArtisan/internal/modules/utils"
 	"context"
 	"encoding/json"
@@ -15,19 +14,18 @@ import (
 )
 
 type Service struct {
-	db    *gorm.DB
+	repo  usersmod.Repository
 	cache *redis.Client
 }
 
 func NewService(db *gorm.DB, cache *redis.Client) *Service {
-	return &Service{db: db, cache: cache}
+	return &Service{repo: usersmod.NewGormRepository(db), cache: cache}
 }
 
 func (uc *Service) Execute(ctx context.Context, req GetAllRequest) (GetAllResponse, error) {
 
 	const maxLimit = 100
 	const defaultLimit = 20
-
 	const cacheTTL = 5 * time.Minute
 
 	if req.Limit <= 0 {
@@ -42,7 +40,6 @@ func (uc *Service) Execute(ctx context.Context, req GetAllRequest) (GetAllRespon
 
 	cachedData, err := uc.cache.Get(ctx, cacheKey).Result()
 	if err == nil {
-		// Cache Hit! Unmarshal JSON back into your response struct
 		var cachedResp GetAllResponse
 		if err := json.Unmarshal([]byte(cachedData), &cachedResp); err == nil {
 			return cachedResp, nil
@@ -51,31 +48,15 @@ func (uc *Service) Execute(ctx context.Context, req GetAllRequest) (GetAllRespon
 		fmt.Printf("Redis error: %v\n", err)
 	}
 
-	craftsman_list := make([]*users.CraftsmanResponse, 0, req.Limit)
+	totalCraftsmen, err := uc.repo.CountCraftsmenTotal(ctx)
+	if err != nil {
+		return GetAllResponse{}, err
+	}
 
-	var totalCraftsmen int64
-	uc.db.WithContext(ctx).Model(&entities.Craftsman{}).Count(&totalCraftsmen)
-
-	uc.db.WithContext(ctx).
-		Table("users").
-		Select(`
-        users.firstname, 
-        users.lastname, 
-        users.username,
-        users.email, 
-        users.profile_picture, 
-        craftsmen.id as craftsman_id,
-        crafts.name as craft, 
-        craftsmen.rating, 
-        craftsmen.number_of_ratings
-    `).
-		Joins("INNER JOIN craftsmen ON craftsmen.user_id = users.id").
-		Joins("INNER JOIN crafts ON crafts.id = craftsmen.craft_id").
-		Where("users.role = ?", "craftsman").
-		Offset(req.Skip).
-		Limit(req.Limit).
-		Order("users.created_at desc, users.id asc").
-		Scan(&craftsman_list)
+	craftsman_list, err := uc.repo.ListCraftsmen(ctx, req.Skip, req.Limit)
+	if err != nil {
+		return GetAllResponse{}, err
+	}
 
 	resp := GetAllResponse{
 		Craftsmen: craftsman_list,
@@ -83,8 +64,7 @@ func (uc *Service) Execute(ctx context.Context, req GetAllRequest) (GetAllRespon
 		Page:      (req.Skip / req.Limit) + 1,
 	}
 
-	jsonData, err := json.Marshal(resp)
-	if err == nil {
+	if jsonData, err := json.Marshal(resp); err == nil {
 		_ = uc.cache.Set(ctx, cacheKey, jsonData, cacheTTL).Err()
 	}
 

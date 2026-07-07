@@ -1,7 +1,7 @@
 package set_biography
 
 import (
-	"PocketArtisan/internal/entities"
+	usersmod "PocketArtisan/internal/modules/users"
 	"PocketArtisan/internal/modules/utils"
 	"context"
 	"errors"
@@ -11,26 +11,24 @@ import (
 )
 
 type Service struct {
-	db    *gorm.DB
+	repo  usersmod.Repository
 	cache *redis.Client
 }
 
 func NewService(db *gorm.DB, cache *redis.Client) *Service {
-	return &Service{db: db, cache: cache}
+	return &Service{repo: usersmod.NewGormRepository(db), cache: cache}
 }
 
 func (uc *Service) Execute(ctx context.Context, req SetBiographyRequest) error {
-	var craftsman entities.Craftsman
 
-	if err := uc.db.WithContext(ctx).
-		Where("id = ?", req.CraftsmanID).
-		First(&craftsman).Error; err != nil {
+	craftsman, err := uc.repo.FindCraftsmanByID(ctx, req.CraftsmanID)
+	if err != nil {
 		return errors.New("craftsman not found")
 	}
 
 	craftsman.Biography = req.Biography
 
-	if err := uc.db.WithContext(ctx).Save(&craftsman).Error; err != nil {
+	if err := uc.repo.SaveCraftsman(ctx, craftsman); err != nil {
 		return err
 	}
 

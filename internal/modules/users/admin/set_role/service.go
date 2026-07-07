@@ -1,7 +1,7 @@
 package set_role
 
 import (
-	"PocketArtisan/internal/entities"
+	usersmod "PocketArtisan/internal/modules/users"
 	"PocketArtisan/internal/modules/utils"
 	"context"
 	"errors"
@@ -11,16 +11,15 @@ import (
 )
 
 type Service struct {
-	db    *gorm.DB
+	repo  usersmod.Repository
 	cache *redis.Client
 }
 
 func NewService(db *gorm.DB, cache *redis.Client) *Service {
-	return &Service{db: db, cache: cache}
+	return &Service{repo: usersmod.NewGormRepository(db), cache: cache}
 }
 
 func (uc *Service) Execute(ctx context.Context, req SetRoleRequest) error {
-	var user entities.User
 
 	var isAllowedRole bool = req.Role == "craftsman" || req.Role == "user" || req.Role == "admin"
 
@@ -28,13 +27,14 @@ func (uc *Service) Execute(ctx context.Context, req SetRoleRequest) error {
 		return errors.New("only roles which admin can set are craftsman, user, or admin")
 	}
 
-	if err := uc.db.WithContext(ctx).Where("username = ?", req.Username).First(&user).Error; err != nil {
+	user, err := uc.repo.FindUserByUsername(ctx, req.Username)
+	if err != nil {
 		return errors.New("users not found")
 	}
 
 	user.Role = req.Role
 
-	if err := uc.db.Save(&user).Error; err != nil {
+	if err := uc.repo.SaveUser(ctx, user); err != nil {
 		return err
 	}
 

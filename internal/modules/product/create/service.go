@@ -2,6 +2,7 @@ package create
 
 import (
 	"PocketArtisan/internal/entities"
+	prodmod "PocketArtisan/internal/modules/product"
 	"PocketArtisan/internal/modules/utils"
 	"context"
 	"errors"
@@ -12,42 +13,42 @@ import (
 )
 
 type Service struct {
-	db    *gorm.DB
+	repo  prodmod.Repository
 	cache *redis.Client
 }
 
 func NewService(db *gorm.DB, cache *redis.Client) *Service {
-	return &Service{db: db, cache: cache}
+	return &Service{repo: prodmod.NewGormRepository(db), cache: cache}
 }
 
 func (uc *Service) Execute(ctx context.Context, req NewProductRequest) error {
-	var existing entities.Product
-
-	var craftsman entities.Craftsman
-	if err := uc.db.WithContext(ctx).Where("id = ?", req.CraftsmanID).First(&craftsman).Error; err != nil {
+	craftsman, err := uc.repo.FindCraftsmanByID(ctx, req.CraftsmanID)
+	if err != nil {
 		return errors.New("craftsman not found")
 	}
 
-	var pc entities.ProductCategory
-	if err := uc.db.WithContext(ctx).Where("name = ?", req.Category).First(&pc).Error; err != nil {
+	pc, err := uc.repo.FindCategoryByName(ctx, req.Category)
+	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return errors.New("product category not found")
 		}
 		return err
 	}
 
-	var link entities.CraftProductCategory
-	if err := uc.db.WithContext(ctx).Where("craft_id = ? AND category_id = ?", craftsman.CraftID, pc.ID).First(&link).Error; err != nil {
+	_, err = uc.repo.FindCraftCategoryLink(ctx, craftsman.CraftID, pc.ID)
+	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return errors.New("product category is not related to your craft")
 		}
 		return err
 	}
 
-	if err := uc.db.WithContext(ctx).Where("name = ? AND craftsman_id = ?", req.Name, craftsman.ID).First(&existing).Error; err == nil {
-		return errors.New("product already exists")
-	} else if !errors.Is(err, gorm.ErrRecordNotFound) {
+	exists, err := uc.repo.ExistsByNameAndCraftsman(ctx, req.Name, craftsman.ID)
+	if err != nil {
 		return err
+	}
+	if exists {
+		return errors.New("product already exists")
 	}
 
 	new_product := &entities.Product{
@@ -66,7 +67,7 @@ func (uc *Service) Execute(ctx context.Context, req NewProductRequest) error {
 		new_product.Videos = append(new_product.Videos, entities.ProductVideo{URL: url})
 	}
 
-	if err := uc.db.WithContext(ctx).Create(new_product).Error; err != nil {
+	if err := uc.repo.Create(ctx, new_product); err != nil {
 		if strings.Contains(err.Error(), "idx_craftsman_product") || strings.Contains(err.Error(), "duplicate key") {
 			return errors.New("product already exists")
 		}
@@ -74,16 +75,6 @@ func (uc *Service) Execute(ctx context.Context, req NewProductRequest) error {
 	}
 
 	utils.BumpCacheVersion(ctx, uc.cache, "products")
-
-	var imageUrls []string
-	for _, img := range new_product.Images {
-		imageUrls = append(imageUrls, img.URL)
-	}
-
-	var videoUrls []string
-	for _, vid := range new_product.Videos {
-		videoUrls = append(videoUrls, vid.URL)
-	}
 
 	return nil
 }

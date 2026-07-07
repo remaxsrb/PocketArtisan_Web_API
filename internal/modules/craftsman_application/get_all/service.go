@@ -1,7 +1,7 @@
 package get_all
 
 import (
-	"PocketArtisan/internal/entities"
+	camod "PocketArtisan/internal/modules/craftsman_application"
 	"context"
 
 	"github.com/go-redis/redis/v8"
@@ -9,12 +9,12 @@ import (
 )
 
 type Service struct {
-	db    *gorm.DB
+	repo  camod.Repository
 	cache *redis.Client
 }
 
 func NewService(db *gorm.DB, cache *redis.Client) *Service {
-	return &Service{db: db, cache: cache}
+	return &Service{repo: camod.NewGormRepository(db), cache: cache}
 }
 
 func (uc *Service) Execute(ctx context.Context, req GetAllRequest) (GetAllResponse, error) {
@@ -29,18 +29,15 @@ func (uc *Service) Execute(ctx context.Context, req GetAllRequest) (GetAllRespon
 		req.Limit = maxLimit
 	}
 
-	ca_list := make([]*entities.CraftsmanApplication, 0, req.Limit)
+	totalCAs, err := uc.repo.CountTotal(ctx)
+	if err != nil {
+		return GetAllResponse{}, err
+	}
 
-	var totalCAs int64
-	uc.db.WithContext(ctx).Model(&entities.CraftsmanApplication{}).Count(&totalCAs)
-
-	uc.db.WithContext(ctx).
-		Model(&entities.CraftsmanApplication{}).
-		Where("status = ?", "pending").
-		Offset(req.Skip).
-		Limit(req.Limit).
-		Order("created_at desc, id asc").
-		Find(&ca_list)
+	ca_list, err := uc.repo.ListPending(ctx, req.Skip, req.Limit)
+	if err != nil {
+		return GetAllResponse{}, err
+	}
 
 	resp := GetAllResponse{
 		CraftsmanApplications: ca_list,

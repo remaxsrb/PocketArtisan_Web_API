@@ -1,7 +1,6 @@
 package get_by_customer
 
 import (
-	"PocketArtisan/internal/entities"
 	"PocketArtisan/internal/modules/order"
 	"PocketArtisan/internal/modules/utils"
 	"context"
@@ -16,12 +15,12 @@ import (
 )
 
 type Service struct {
-	db    *gorm.DB
+	repo  order.Repository
 	cache *redis.Client
 }
 
 func NewService(db *gorm.DB, cache *redis.Client) *Service {
-	return &Service{db: db, cache: cache}
+	return &Service{repo: order.NewGormRepository(db), cache: cache}
 }
 
 func (uc *Service) Execute(ctx context.Context, req GetAllRequest) (GetAllResponse, error) {
@@ -54,16 +53,15 @@ func (uc *Service) Execute(ctx context.Context, req GetAllRequest) (GetAllRespon
 		fmt.Printf("Redis error: %v\n", err)
 	}
 
-	var total int64
-	uc.db.WithContext(ctx).Model(&entities.Order{}).Where("customer_id = ?", customerID).Count(&total)
+	total, err := uc.repo.CountByCustomer(ctx, customerID)
+	if err != nil {
+		return GetAllResponse{}, err
+	}
 
-	raw := make([]*entities.Order, 0, req.Limit)
-	uc.db.WithContext(ctx).
-		Where("customer_id = ?", customerID).
-		Offset(req.Skip).
-		Limit(req.Limit).
-		Order("created_at desc").
-		Find(&raw)
+	raw, err := uc.repo.ListByCustomer(ctx, customerID, req.Skip, req.Limit)
+	if err != nil {
+		return GetAllResponse{}, err
+	}
 
 	orderList := make([]*order.OrderResponse, 0, len(raw))
 	for _, o := range raw {

@@ -1,7 +1,7 @@
 package change_password
 
 import (
-	"PocketArtisan/internal/entities"
+	usersmod "PocketArtisan/internal/modules/users"
 	"PocketArtisan/internal/modules/utils"
 	"PocketArtisan/internal/validators"
 	"context"
@@ -12,22 +12,22 @@ import (
 )
 
 type Service struct {
-	db    *gorm.DB
+	repo  usersmod.Repository
 	cache *redis.Client
 }
 
 func NewService(db *gorm.DB, cache *redis.Client) *Service {
-	return &Service{db: db, cache: cache}
+	return &Service{repo: usersmod.NewGormRepository(db), cache: cache}
 }
 
 func (uc *Service) Execute(ctx context.Context, req ChangePasswordRequest) error {
-	var user entities.User
 
 	if err := validators.ValidatePassword(req.NewPassword); err != nil {
 		return errors.New(err.Error())
 	}
 
-	if err := uc.db.WithContext(ctx).Where("id = ?", req.UserID).First(&user).Error; err != nil {
+	user, err := uc.repo.FindUserByID(ctx, req.UserID)
+	if err != nil {
 		return errors.New("user not found")
 	}
 
@@ -35,7 +35,7 @@ func (uc *Service) Execute(ctx context.Context, req ChangePasswordRequest) error
 		return err
 	}
 
-	if err := uc.db.Save(&user).Error; err != nil {
+	if err := uc.repo.SaveUser(ctx, user); err != nil {
 		return err
 	}
 

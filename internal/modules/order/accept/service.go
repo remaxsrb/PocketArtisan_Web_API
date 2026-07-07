@@ -5,25 +5,26 @@ import (
 	"errors"
 
 	"PocketArtisan/internal/entities"
+	ordermod "PocketArtisan/internal/modules/order"
 	"PocketArtisan/internal/modules/utils"
+
 	"github.com/go-redis/redis/v8"
 	"gorm.io/gorm"
 )
 
 type Service struct {
-	db    *gorm.DB
+	repo  ordermod.Repository
 	cache *redis.Client
 }
 
 func NewService(db *gorm.DB, cache *redis.Client) *Service {
-	return &Service{db: db, cache: cache}
+	return &Service{repo: ordermod.NewGormRepository(db), cache: cache}
 }
 
 func (uc *Service) Execute(ctx context.Context, req AcceptOrderRequest) (entities.OrderStatus, error) {
 
-	var existing entities.Order
-
-	if err := uc.db.WithContext(ctx).Where("id = ?", req.OrderID).First(&existing).Error; err != nil {
+	existing, err := uc.repo.FindByID(ctx, req.OrderID)
+	if err != nil {
 		return "", errors.New("order not found")
 	}
 
@@ -33,7 +34,7 @@ func (uc *Service) Execute(ctx context.Context, req AcceptOrderRequest) (entitie
 
 	existing.Status = entities.OrderAccepted
 
-	if err := uc.db.WithContext(ctx).Save(&existing).Error; err != nil {
+	if err := uc.repo.Save(ctx, existing); err != nil {
 		return "", err
 	}
 

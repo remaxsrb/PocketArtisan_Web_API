@@ -1,7 +1,6 @@
 package get_by_craftsman
 
 import (
-	"PocketArtisan/internal/entities"
 	"PocketArtisan/internal/modules/order"
 	"PocketArtisan/internal/modules/utils"
 	"context"
@@ -15,12 +14,12 @@ import (
 )
 
 type Service struct {
-	db    *gorm.DB
+	repo  order.Repository
 	cache *redis.Client
 }
 
 func NewService(db *gorm.DB, cache *redis.Client) *Service {
-	return &Service{db: db, cache: cache}
+	return &Service{repo: order.NewGormRepository(db), cache: cache}
 }
 
 func (uc *Service) Execute(ctx context.Context, req GetAllRequest) (GetAllResponse, error) {
@@ -48,16 +47,15 @@ func (uc *Service) Execute(ctx context.Context, req GetAllRequest) (GetAllRespon
 		fmt.Printf("Redis error: %v\n", err)
 	}
 
-	var total int64
-	uc.db.WithContext(ctx).Model(&entities.Order{}).Where("craftsman_id = ?", req.CraftsmanID).Count(&total)
+	total, err := uc.repo.CountByCraftsman(ctx, req.CraftsmanID)
+	if err != nil {
+		return GetAllResponse{}, err
+	}
 
-	raw := make([]*entities.Order, 0, req.Limit)
-	uc.db.WithContext(ctx).
-		Where("craftsman_id = ?", req.CraftsmanID).
-		Offset(req.Skip).
-		Limit(req.Limit).
-		Order("created_at desc").
-		Find(&raw)
+	raw, err := uc.repo.ListByCraftsman(ctx, req.CraftsmanID, req.Skip, req.Limit)
+	if err != nil {
+		return GetAllResponse{}, err
+	}
 
 	orderList := make([]*order.OrderResponse, 0, len(raw))
 	for _, o := range raw {
@@ -71,17 +69,15 @@ func (uc *Service) Execute(ctx context.Context, req GetAllRequest) (GetAllRespon
 		})
 	}
 
-	categoryCounts := make([]CategoryOrderCount, 0)
-	uc.db.WithContext(ctx).
-		Table("orders").
-		Joins("JOIN order_items ON order_items.order_id = orders.id").
-		Joins("JOIN products ON products.id = order_items.product_id").
-		Joins("JOIN product_categories ON product_categories.id = products.category_id").
-		Select("product_categories.name as category, COUNT(DISTINCT orders.id) as count").
-		Where("orders.craftsman_id = ? AND orders.status = ?", req.CraftsmanID, entities.OrderShipped).
-		Group("product_categories.name").
-		Order("product_categories.name").
-		Scan(&categoryCounts)
+	countRows, err := uc.repo.ShippedCategoryCountsByCraftsman(ctx, req.CraftsmanID)
+	if err != nil {
+		return GetAllResponse{}, err
+	}
+
+	categoryCounts := make([]CategoryOrderCount, 0, len(countRows))
+	for _, row := range countRows {
+		categoryCounts = append(categoryCounts, CategoryOrderCount{Category: row.Category, Count: row.Count})
+	}
 
 	resp := GetAllResponse{
 		Orders:         orderList,

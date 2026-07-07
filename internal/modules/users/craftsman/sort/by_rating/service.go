@@ -2,7 +2,7 @@ package by_rating
 
 import (
 	"PocketArtisan/internal/custom_types"
-	"PocketArtisan/internal/modules/users"
+	usersmod "PocketArtisan/internal/modules/users"
 	"PocketArtisan/internal/modules/utils"
 	"context"
 	"encoding/json"
@@ -17,12 +17,12 @@ import (
 const cacheTTL = 5 * time.Minute
 
 type Service struct {
-	db    *gorm.DB
+	repo  usersmod.Repository
 	cache *redis.Client
 }
 
 func NewService(db *gorm.DB, cache *redis.Client) *Service {
-	return &Service{db: db, cache: cache}
+	return &Service{repo: usersmod.NewGormRepository(db), cache: cache}
 }
 
 func (uc *Service) Execute(ctx context.Context, direction custom_types.SortDirection, req SortDtoRequest) (SortCraftsmenResponse, error) {
@@ -47,34 +47,13 @@ func (uc *Service) Execute(ctx context.Context, direction custom_types.SortDirec
 		fmt.Printf("Redis error: %v\n", err)
 	}
 
-	baseQuery := uc.db.WithContext(ctx).
-		Table("users").
-		Joins("INNER JOIN craftsmen ON craftsmen.user_id = users.id").
-		Joins("INNER JOIN crafts ON crafts.id = craftsmen.craft_id").
-		Where("users.role = ?", "craftsman")
-
-	var total int64
-	if err := baseQuery.Session(&gorm.Session{}).Count(&total).Error; err != nil {
+	total, err := uc.repo.CountCraftsmenTotal(ctx)
+	if err != nil {
 		return SortCraftsmenResponse{}, err
 	}
 
-	craftsmanList := make([]*users.CraftsmanResponse, 0, req.Limit)
-	if err := baseQuery.Session(&gorm.Session{}).
-		Select(`
-        users.firstname, 
-        users.lastname, 
-        users.username,
-        users.email, 
-        users.profile_picture, 
-        craftsmen.id as craftsman_id,
-        crafts.name as craft, 
-        craftsmen.rating, 
-        craftsmen.number_of_ratings
-    `).
-		Offset(req.Skip).
-		Limit(req.Limit).
-		Order("craftsmen.rating " + string(direction)).
-		Scan(&craftsmanList).Error; err != nil {
+	craftsmanList, err := uc.repo.ListCraftsmenByRating(ctx, string(direction), req.Skip, req.Limit)
+	if err != nil {
 		return SortCraftsmenResponse{}, err
 	}
 

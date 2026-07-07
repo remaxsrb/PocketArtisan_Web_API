@@ -6,27 +6,28 @@ import (
 	"fmt"
 
 	"PocketArtisan/internal/entities"
+	ordermod "PocketArtisan/internal/modules/order"
 	"PocketArtisan/internal/modules/payment"
 	"PocketArtisan/internal/modules/utils"
+
 	"github.com/go-redis/redis/v8"
 	"gorm.io/gorm"
 )
 
 type Service struct {
-	db      *gorm.DB
+	repo    ordermod.Repository
 	cache   *redis.Client
 	gateway payment.Gateway
 }
 
 func NewService(db *gorm.DB, cache *redis.Client, gw payment.Gateway) *Service {
-	return &Service{db: db, cache: cache, gateway: gw}
+	return &Service{repo: ordermod.NewGormRepository(db), cache: cache, gateway: gw}
 }
 
 func (uc *Service) Execute(ctx context.Context, req DeclineOrderRequest) (entities.OrderStatus, error) {
 
-	var existing entities.Order
-
-	if err := uc.db.WithContext(ctx).Where("id = ?", req.OrderID).First(&existing).Error; err != nil {
+	existing, err := uc.repo.FindByID(ctx, req.OrderID)
+	if err != nil {
 		return "", errors.New("order not found")
 	}
 
@@ -42,7 +43,7 @@ func (uc *Service) Execute(ctx context.Context, req DeclineOrderRequest) (entiti
 
 	existing.Status = entities.OrderDeclined
 
-	if err := uc.db.WithContext(ctx).Save(&existing).Error; err != nil {
+	if err := uc.repo.Save(ctx, existing); err != nil {
 		return "", err
 	}
 

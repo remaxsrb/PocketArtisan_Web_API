@@ -1,7 +1,7 @@
 package get_registered_users
 
 import (
-	"PocketArtisan/internal/entities"
+	usersmod "PocketArtisan/internal/modules/users"
 	"PocketArtisan/internal/modules/utils"
 	"PocketArtisan/internal/modules/utils/timeutil"
 	"context"
@@ -15,13 +15,13 @@ import (
 )
 
 type Service struct {
-	db          *gorm.DB
+	repo        usersmod.Repository
 	cache       *redis.Client
 	timeService timeutil.Service
 }
 
 func NewService(db *gorm.DB, cache *redis.Client, timeService timeutil.Service) *Service {
-	return &Service{db: db, cache: cache, timeService: timeService}
+	return &Service{repo: usersmod.NewGormRepository(db), cache: cache, timeService: timeService}
 }
 
 func (uc *Service) Execute(ctx context.Context, req Request) (Response, error) {
@@ -44,16 +44,10 @@ func (uc *Service) Execute(ctx context.Context, req Request) (Response, error) {
 		fmt.Printf("Redis error: %v\n", err)
 	}
 
-	query := uc.db.WithContext(ctx).Model(&entities.User{}).Where("role != ?", "admin")
-	if from != nil {
-		query = query.Where("created_at >= ?", *from)
+	total, err := uc.repo.CountNonAdminUsers(ctx, from, to)
+	if err != nil {
+		return Response{}, err
 	}
-	if to != nil {
-		query = query.Where("created_at < ?", *to)
-	}
-
-	var total int64
-	query.Count(&total)
 
 	resp := Response{Total: total}
 

@@ -1,26 +1,28 @@
 package getbycraftsman
 
 import (
-	"PocketArtisan/internal/entities"
 	"PocketArtisan/internal/modules/product"
+	pcmod "PocketArtisan/internal/modules/product_categories"
 	"PocketArtisan/internal/modules/utils"
 	"context"
 	"encoding/json"
 	"fmt"
 	"time"
 
+	"PocketArtisan/internal/entities"
+
 	"github.com/go-redis/redis/v8"
 	"gorm.io/gorm"
 )
 
 type Service struct {
-	db             *gorm.DB
+	repo           pcmod.Repository
 	cache          *redis.Client
 	productService product.Service
 }
 
 func NewService(db *gorm.DB, cache *redis.Client) *Service {
-	return &Service{db: db, cache: cache, productService: product.NewService(db)}
+	return &Service{repo: pcmod.NewGormRepository(db), cache: cache, productService: product.NewService(db)}
 }
 
 func (uc *Service) Execute(ctx context.Context, username string) ([]entities.ProductCategory, error) {
@@ -41,12 +43,8 @@ func (uc *Service) Execute(ctx context.Context, username string) ([]entities.Pro
 		}
 	}
 
-	var pcs []entities.ProductCategory
-	if err := uc.db.WithContext(ctx).
-		Table("product_categories").
-		Joins("INNER JOIN craft_product_categories ON craft_product_categories.category_id = product_categories.id").
-		Where("craft_product_categories.craft_id = ?", craftsman.CraftID).
-		Find(&pcs).Error; err != nil {
+	pcs, err := uc.repo.FindByCraftID(ctx, craftsman.CraftID)
+	if err != nil {
 		return nil, err
 	}
 

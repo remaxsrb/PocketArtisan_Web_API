@@ -1,8 +1,7 @@
 package getbyusername
 
 import (
-	"PocketArtisan/internal/entities"
-	"PocketArtisan/internal/modules/users"
+	usersmod "PocketArtisan/internal/modules/users"
 	"PocketArtisan/internal/modules/utils"
 	"context"
 	"encoding/json"
@@ -17,12 +16,12 @@ import (
 const cacheTTL = 5 * time.Minute
 
 type Service struct {
-	db    *gorm.DB
+	repo  usersmod.Repository
 	cache *redis.Client
 }
 
 func NewService(db *gorm.DB, cache *redis.Client) *Service {
-	return &Service{db: db, cache: cache}
+	return &Service{repo: usersmod.NewGormRepository(db), cache: cache}
 }
 
 type cacheEnvelope struct {
@@ -34,19 +33,17 @@ func (uc *Service) Execute(ctx context.Context, username string) (interface{}, e
 	cacheVersion := utils.GetCacheVersion(ctx, uc.cache, "users")
 	cacheKey := fmt.Sprintf("user:username:v:%d:%s", cacheVersion, username)
 
-	// cache hit
-
 	cached, err := uc.cache.Get(ctx, cacheKey).Result()
 	if err == nil {
 		var env cacheEnvelope
 		if jsonErr := json.Unmarshal([]byte(cached), &env); jsonErr == nil {
 			if env.Role == "craftsman" {
-				var r users.CraftsmanResponse
+				var r usersmod.CraftsmanResponse
 				if jsonErr := json.Unmarshal(env.Data, &r); jsonErr == nil {
 					return &r, nil
 				}
 			} else {
-				var r users.RegularUserResponse
+				var r usersmod.RegularUserResponse
 				if jsonErr := json.Unmarshal(env.Data, &r); jsonErr == nil {
 					return &r, nil
 				}
@@ -56,10 +53,8 @@ func (uc *Service) Execute(ctx context.Context, username string) (interface{}, e
 		fmt.Printf("Redis error on get_by_username: %v\n", err)
 	}
 
-	// cache miss
-
-	var user entities.User
-	if err := uc.db.WithContext(ctx).Where("username = ?", username).First(&user).Error; err != nil {
+	user, err := uc.repo.FindUserByUsername(ctx, username)
+	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, errors.New("user not found")
 		}
@@ -68,27 +63,14 @@ func (uc *Service) Execute(ctx context.Context, username string) (interface{}, e
 
 	var result interface{}
 	if user.Role == "craftsman" {
-		var r users.CraftsmanResponse
-		uc.db.WithContext(ctx).
-			Table("users").
-			Select(`
-                users.username,
-                users.firstname,
-                users.lastname,
-                users.email,
-                users.profile_picture,
-                users.gender,
-                craftsmen.craft,
-                craftsmen.rating,
-                craftsmen.number_of_ratings
-            `).
-			Joins("INNER JOIN craftsmen ON craftsmen.user_id = users.id").
-			Where("users.username = ?", user.Username).
-			Scan(&r)
-		result = &r
+		r, err := uc.repo.FindCraftsmanProfileByUsername(ctx, user.Username)
+		if err != nil {
+			return nil, err
+		}
+		result = r
 	} else {
-		result = &users.RegularUserResponse{
-			UserResponse: users.UserResponse{
+		result = &usersmod.RegularUserResponse{
+			UserResponse: usersmod.UserResponse{
 				Username:       user.Username,
 				Firstname:      user.Firstname,
 				Lastname:       user.Lastname,

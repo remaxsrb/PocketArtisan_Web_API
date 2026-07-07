@@ -2,6 +2,7 @@ package create
 
 import (
 	"PocketArtisan/internal/entities"
+	usersmod "PocketArtisan/internal/modules/users"
 	"PocketArtisan/internal/modules/utils"
 	"context"
 	"errors"
@@ -11,40 +12,38 @@ import (
 )
 
 type Service struct {
-	db    *gorm.DB
+	repo  usersmod.Repository
 	cache *redis.Client
 }
 
 func NewService(db *gorm.DB, cache *redis.Client) *Service {
-	return &Service{db: db, cache: cache}
+	return &Service{repo: usersmod.NewGormRepository(db), cache: cache}
 }
 
 func (uc *Service) Execute(ctx context.Context, req Request) error {
 
-	//find userID based on email
-
-	var user entities.User
-	if err := uc.db.WithContext(ctx).Where("email = ?", req.Email).First(&user).Error; err != nil {
+	user, err := uc.repo.FindUserByEmail(ctx, req.Email)
+	if err != nil {
 		return errors.New("user not found")
 	}
 
-	var craft entities.Craft
-	if err := uc.db.WithContext(ctx).Where("name = ?", req.Craft).First(&craft).Error; err != nil {
+	craft, err := uc.repo.FindCraftByName(ctx, req.Craft)
+	if err != nil {
 		return errors.New("craft not found")
 	}
 
 	user.Role = "craftsman"
 
-	if err := uc.db.Save(&user).Error; err != nil {
+	if err := uc.repo.SaveUser(ctx, user); err != nil {
 		return err
 	}
 
-	craftsman := entities.Craftsman{
+	craftsman := &entities.Craftsman{
 		UserID:  user.ID,
 		CraftID: craft.ID,
 	}
 
-	if err := uc.db.Create(&craftsman).Error; err != nil {
+	if err := uc.repo.CreateCraftsman(ctx, craftsman); err != nil {
 		return err
 	}
 
