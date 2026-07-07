@@ -32,6 +32,7 @@ func NewService(db *gorm.DB, cache *redis.Client, orderCreate *create.Service) *
 
 func (uc *Service) Execute(ctx context.Context, req CheckoutRequest) ([]OrderResult, error) {
 	customerID := ctx.Value("user_id").(uint64)
+	saga := NewCheckoutSaga(uc.orderCreate.CompensateOrder)
 
 	userCart, err := uc.cartReader.GetUserCart(ctx, customerID)
 	if err != nil {
@@ -54,9 +55,11 @@ func (uc *Service) Execute(ctx context.Context, req CheckoutRequest) ([]OrderRes
 
 		result, err := uc.orderCreate.Execute(ctx, orderReq)
 		if err != nil {
-			// TODO: delete already-created orders when gateway compensation is introduced
+			saga.Compensate(ctx)
 			return nil, fmt.Errorf("create order for craftsman %d: %w", craftsmanID, err)
 		}
+
+		saga.Record(result.OrderID, result.PaymentReservationID)
 
 		results = append(results, OrderResult{
 			OrderID:     result.OrderID,

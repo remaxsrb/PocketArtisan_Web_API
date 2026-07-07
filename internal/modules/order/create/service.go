@@ -27,34 +27,12 @@ func NewService(db *gorm.DB, cache *redis.Client, s storage.Storage, f *fonts.Se
 }
 
 func (uc *Service) Execute(ctx context.Context, req NewOrderRequest) (OrderCreationResult, error) {
-
-	var order entities.Order
-	order.CustomerID = ctx.Value("user_id").(uint64)
-	order.CraftsmanID = req.CraftsmanID
-
-	switch req.PaymentType {
-	case "CC":
-		order.PaymentType = entities.PaymentCreditCard
-	case "COD":
-		order.PaymentType = entities.CashOnDelivery
-	default:
-		return OrderCreationResult{}, fmt.Errorf("invalid payment type: %s", req.PaymentType)
-	}
-
-	initialStatus, err := ordermod.InitialOrderStatus(order.PaymentType)
-	if err != nil {
-		return OrderCreationResult{}, err
-	}
-	order.Status = initialStatus
+	customerID := ctx.Value("user_id").(uint64)
 
 	productIDs := make([]uint64, len(req.Items))
-	quantities := make(map[uint64]int)
-	// Map to store product prices in case craftsman changes them during the order creation process
-	prices := make(map[uint64]float64)
 
 	for i, item := range req.Items {
 		productIDs[i] = item.ProductID
-		quantities[item.ProductID] = item.Quantity
 	}
 
 	products, err := uc.repo.FindProductPricesByCraftsman(ctx, productIDs, req.CraftsmanID)
@@ -62,27 +40,16 @@ func (uc *Service) Execute(ctx context.Context, req NewOrderRequest) (OrderCreat
 		return OrderCreationResult{}, fmt.Errorf("failed to fetch product prices: %w", err)
 	}
 
-	if len(products) != len(productIDs) {
-		return OrderCreationResult{}, fmt.Errorf("one or more products do not exist")
-	}
+	builder := NewOrderBuilder().
+		WithCustomer(customerID).
+		WithCraftsman(req.CraftsmanID).
+		WithPaymentType(req.PaymentType).
+		WithItems(req.Items).
+		WithPrices(products)
 
-	total := 0.0
-
-	for _, p := range products {
-		prices[p.ID] = p.Price
-		total += p.Price * float64(quantities[p.ID])
-	}
-
-	order.TotalPrice = total
-
-	orderItems := make([]entities.OrderItem, len(req.Items))
-
-	for i, item := range req.Items {
-		orderItems[i] = entities.OrderItem{
-			ProductID: item.ProductID,
-			Quantity:  item.Quantity,
-			UnitPrice: prices[item.ProductID],
-		}
+	order, orderItems, err := builder.Build()
+	if err != nil {
+		return OrderCreationResult{}, err
 	}
 
 	customer, err := uc.repo.CreateOrderWithItemsAndCustomer(ctx, &order, orderItems)
@@ -100,7 +67,7 @@ func (uc *Service) Execute(ctx context.Context, req NewOrderRequest) (OrderCreat
 			Description: fmt.Sprintf("Order #%d", order.ID),
 		})
 		if err != nil {
-			uc.deleteOrder(ctx, order.ID)
+			uc.compensateOrder(ctx, order.ID, "")
 			return OrderCreationResult{}, fmt.Errorf("payment reservation failed: %w", err)
 		}
 		reservationID = res.ID
@@ -151,9 +118,25 @@ func (uc *Service) Execute(ctx context.Context, req NewOrderRequest) (OrderCreat
 	}, nil
 }
 
-// deleteOrder removes a committed order and its items when a post-transaction step fails.
-func (uc *Service) deleteOrder(ctx context.Context, orderID uint64) {
-	if err := uc.repo.DeleteOrderWithItems(ctx, orderID); err != nil {
-		log.Printf("order %d: compensation delete failed: %v", orderID, err)
+// CompensateOrder executes compensation for an already-created order.
+// It attempts reservation refund first (when reservationID is present), then
+// removes the order and its items.
+func (uc *Service) CompensateOrder(ctx context.Context, orderID uint64, reservationID string) {
+	if err := uc.compensateOrder(ctx, orderID, reservationID); err != nil {
+		log.Printf("order %d: compensation failed: %v", orderID, err)
 	}
+}
+
+func (uc *Service) compensateOrder(ctx context.Context, orderID uint64, reservationID string) error {
+	if reservationID != "" {
+		if err := uc.gateway.Refund(ctx, reservationID); err != nil {
+			return fmt.Errorf("refund reservation %s: %w", reservationID, err)
+		}
+	}
+
+	if err := uc.repo.DeleteOrderWithItems(ctx, orderID); err != nil {
+		return fmt.Errorf("delete order with items: %w", err)
+	}
+
+	return nil
 }
