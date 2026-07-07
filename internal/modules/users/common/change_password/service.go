@@ -22,7 +22,8 @@ func NewService(db *gorm.DB, cache *redis.Client) *Service {
 
 func (uc *Service) Execute(ctx context.Context, req ChangePasswordRequest) error {
 
-	if err := validators.ValidatePassword(req.NewPassword); err != nil {
+	validationChain := validators.NewPasswordPolicyHandler()
+	if err := validationChain.Handle(&validators.ValidationContext{Password: req.NewPassword}); err != nil {
 		return errors.New(err.Error())
 	}
 

@@ -40,11 +40,12 @@ func (uc *Service) Execute(ctx context.Context, req RegisterRequest, remoteIP st
 		}
 	}
 
-	if !validators.IsValidEmail(req.Email) {
-		return nil, errors.New("invalid email")
-	}
-
-	if err := validators.ValidatePassword(req.Password); err != nil {
+	validationChain := validators.NewEmailFormatHandler()
+	validationChain.SetNext(validators.NewPasswordPolicyHandler())
+	if err := validationChain.Handle(&validators.ValidationContext{
+		Email:    req.Email,
+		Password: req.Password,
+	}); err != nil {
 		return nil, errors.New(err.Error())
 	}
 
