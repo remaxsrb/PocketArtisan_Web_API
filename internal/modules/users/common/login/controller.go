@@ -49,6 +49,6 @@ func RegisterRoutes(router *gin.RouterGroup, db *gorm.DB, rdb *redis.Client, jwt
 			return
 		}
 
-		c.JSON(http.StatusOK, gin.H{"access_token": token, "user": result.Response})
+		response.Data(c, http.StatusOK, gin.H{"access_token": token, "user": result.Response})
 	})
 }

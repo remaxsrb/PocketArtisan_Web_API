@@ -1,6 +1,7 @@
 package toggle_hide
 
 import (
+	"PocketArtisan/internal/http/response"
 	"net/http"
 
 	"PocketArtisan/internal/http/middleware"
@@ -15,22 +16,22 @@ func RegisterRoutes(router *gin.RouterGroup, db *gorm.DB, rdb *redis.Client) {
 	router.PUT("/toggle_hide", func(c *gin.Context) {
 		var req ToggleHideProduct
 		if err := c.ShouldBindJSON(&req); err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			response.Error(c, http.StatusBadRequest, err.Error())
 			return
 		}
 
 		craftsmanID := c.GetUint64(middleware.ContextCraftsmanID)
 		if craftsmanID == 0 {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "craftsman not resolved"})
+			response.Error(c, http.StatusUnauthorized, "craftsman not resolved")
 			return
 		}
 		req.CraftsmanID = craftsmanID
 
 		err := r.Execute(c.Request.Context(), req)
 		if err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			response.Error(c, http.StatusBadRequest, err.Error())
 			return
 		}
-		c.JSON(http.StatusOK, nil)
+		response.Empty(c, http.StatusOK)
 	})
 }

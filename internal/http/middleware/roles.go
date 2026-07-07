@@ -1,6 +1,12 @@
 package middleware
 
-import "github.com/gin-gonic/gin"
+import (
+	"net/http"
+
+	"PocketArtisan/internal/http/response"
+
+	"github.com/gin-gonic/gin"
+)
 
 func RequireRoles(allowedRoles ...string) gin.HandlerFunc {
 	return func(c *gin.Context) {
@@ -13,8 +19,7 @@ func RequireRoles(allowedRoles ...string) gin.HandlerFunc {
 			}
 		}
 
-		c.AbortWithStatusJSON(403, gin.H{
-			"error": "forbidden",
-		})
+		response.Error(c, http.StatusForbidden, "forbidden")
+		c.Abort()
 	}
 }

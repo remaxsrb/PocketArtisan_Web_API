@@ -1,6 +1,7 @@
 package rate
 
 import (
+	"PocketArtisan/internal/http/response"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -13,14 +14,14 @@ func RegisterRoutes(router *gin.RouterGroup, db *gorm.DB, rdb *redis.Client) {
 	router.POST("/rate", func(c *gin.Context) {
 		var req Request
 		if err := c.ShouldBindJSON(&req); err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			response.Error(c, http.StatusBadRequest, err.Error())
 			return
 		}
 		resp, err := r.Execute(c.Request.Context(), req)
 		if err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			response.Error(c, http.StatusBadRequest, err.Error())
 			return
 		}
-		c.JSON(http.StatusOK, resp)
+		response.Data(c, http.StatusOK, resp)
 	})
 }

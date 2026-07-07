@@ -1,6 +1,7 @@
 package create
 
 import (
+	"PocketArtisan/internal/http/response"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -13,15 +14,15 @@ func RegisterRoutes(router *gin.RouterGroup, db *gorm.DB, rdb *redis.Client) {
 	router.POST("/create", func(c *gin.Context) {
 		var req NewProductCategoryRequest
 		if err := c.ShouldBindJSON(&req); err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			response.Error(c, http.StatusBadRequest, err.Error())
 			return
 		}
 		err := r.Execute(c.Request.Context(), req)
 		if err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			response.Error(c, http.StatusBadRequest, err.Error())
 			return
 		}
-		c.JSON(http.StatusCreated, gin.H{
+		response.Data(c, http.StatusCreated, gin.H{
 			"message": "product category created successfully",
 		})
 	})

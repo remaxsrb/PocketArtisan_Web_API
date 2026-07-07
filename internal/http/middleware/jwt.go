@@ -6,6 +6,7 @@ import (
 	"strconv"
 	"strings"
 
+	"PocketArtisan/internal/http/response"
 	"PocketArtisan/internal/modules/auth"
 
 	"github.com/gin-gonic/gin"
@@ -21,19 +22,22 @@ func JWT(jwtService auth.JWTService) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		authHeader := c.GetHeader("Authorization")
 		if authHeader == "" {
-			c.AbortWithStatus(http.StatusUnauthorized)
+			response.Error(c, http.StatusUnauthorized, "authorization header missing")
+			c.Abort()
 			return
 		}
 
 		parts := strings.Split(authHeader, " ")
 		if len(parts) != 2 || parts[0] != "Bearer" {
-			c.AbortWithStatus(http.StatusUnauthorized)
+			response.Error(c, http.StatusUnauthorized, "invalid authorization header")
+			c.Abort()
 			return
 		}
 
 		identity, err := jwtService.Validate(parts[1])
 		if err != nil {
-			c.AbortWithStatus(http.StatusUnauthorized)
+			response.Error(c, http.StatusUnauthorized, "invalid or expired token")
+			c.Abort()
 			return
 		}
 
@@ -41,7 +45,8 @@ func JWT(jwtService auth.JWTService) gin.HandlerFunc {
 
 		idInt, err := strconv.Atoi(identity.ID)
 		if err != nil {
-			c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "invalid user ID format"})
+			response.Error(c, http.StatusBadRequest, "invalid user ID format")
+			c.Abort()
 			return
 		}
 

@@ -1,6 +1,7 @@
 package approve
 
 import (
+	"PocketArtisan/internal/http/response"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -13,14 +14,14 @@ func RegisterRoutes(router *gin.RouterGroup, db *gorm.DB, rdb *redis.Client) {
 	router.PATCH("/approve", func(c *gin.Context) {
 		var req Request
 		if err := c.ShouldBindJSON(&req); err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			response.Error(c, http.StatusBadRequest, err.Error())
 			return
 		}
 		err := r.Execute(c.Request.Context(), req)
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			response.Error(c, http.StatusInternalServerError, err.Error())
 			return
 		}
-		c.JSON(http.StatusOK, nil)
+		response.Empty(c, http.StatusOK)
 	})
 }

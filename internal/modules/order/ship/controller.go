@@ -1,6 +1,7 @@
 package ship
 
 import (
+	"PocketArtisan/internal/http/response"
 	ordermod "PocketArtisan/internal/modules/order"
 	"PocketArtisan/internal/modules/payment"
 	"net/http"
@@ -18,13 +19,13 @@ func RegisterRoutes(router *gin.RouterGroup, db *gorm.DB, rdb *redis.Client, gw 
 	router.POST("/ship", func(c *gin.Context) {
 		var req ShipOrderRequest
 		if err := c.ShouldBindJSON(&req); err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			response.Error(c, http.StatusBadRequest, err.Error())
 			return
 		}
 
 		craftsmanID := c.GetUint64(middleware.ContextCraftsmanID)
 		if craftsmanID == 0 {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "craftsman not resolved"})
+			response.Error(c, http.StatusUnauthorized, "craftsman not resolved")
 			return
 		}
 		req.CraftsmanID = craftsmanID
@@ -34,6 +35,6 @@ func RegisterRoutes(router *gin.RouterGroup, db *gorm.DB, rdb *redis.Client, gw 
 			errHandler.HandleOrderOperationError(c, err)
 			return
 		}
-		c.JSON(http.StatusOK, gin.H{"status": status})
+		response.Data(c, http.StatusOK, gin.H{"status": status})
 	})
 }

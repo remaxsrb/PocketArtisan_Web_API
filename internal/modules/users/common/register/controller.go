@@ -22,7 +22,7 @@ func RegisterRoutes(router *gin.RouterGroup, db *gorm.DB, rdb *redis.Client) {
 			response.Error(c, http.StatusBadRequest, err.Error())
 			return
 		}
-		c.JSON(http.StatusCreated, gin.H{
+		response.Data(c, http.StatusCreated, gin.H{
 			"username": user.Username,
 		})
 	})

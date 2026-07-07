@@ -1,6 +1,7 @@
 package create
 
 import (
+	"PocketArtisan/internal/http/response"
 	"PocketArtisan/internal/modules/files/storage"
 	ordermod "PocketArtisan/internal/modules/order"
 	"PocketArtisan/internal/modules/payment"
@@ -18,7 +19,7 @@ func RegisterRoutes(router *gin.RouterGroup, db *gorm.DB, rdb *redis.Client, s s
 	router.POST("/create", func(c *gin.Context) {
 		var req NewOrderRequest
 		if err := c.ShouldBindJSON(&req); err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			response.Error(c, http.StatusBadRequest, err.Error())
 			return
 		}
 		result, err := svc.Execute(c.Request.Context(), req)
@@ -26,6 +27,6 @@ func RegisterRoutes(router *gin.RouterGroup, db *gorm.DB, rdb *redis.Client, s s
 			errHandler.HandleOrderCreationError(c, err)
 			return
 		}
-		c.JSON(http.StatusCreated, gin.H{"message": "order created successfully", "url": result.PDFURL})
+		response.Data(c, http.StatusCreated, gin.H{"message": "order created successfully", "url": result.PDFURL})
 	})
 }

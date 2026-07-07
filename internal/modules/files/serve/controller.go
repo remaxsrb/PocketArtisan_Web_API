@@ -1,6 +1,7 @@
 package serve
 
 import (
+	"PocketArtisan/internal/http/response"
 	"net/http"
 
 	"PocketArtisan/internal/modules/files/storage"
@@ -19,7 +20,7 @@ func RegisterRoutes(router *gin.RouterGroup, s storage.Storage) {
 
 		url, err := uc.Execute(filepath)
 		if err != nil {
-			c.JSON(http.StatusNotFound, gin.H{"error": "file not found"})
+			response.Error(c, http.StatusNotFound, "file not found")
 			return
 		}
 
