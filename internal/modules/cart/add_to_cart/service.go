@@ -2,7 +2,7 @@ package addtocart
 
 import (
 	"PocketArtisan/internal/entities"
-	"PocketArtisan/internal/modules/cart"
+	cartmod "PocketArtisan/internal/modules/cart"
 	"context"
 	"errors"
 
@@ -11,72 +11,47 @@ import (
 )
 
 type Service struct {
-	db    *gorm.DB
+	repo  cartmod.Repository
 	cache *redis.Client
 }
 
 func NewService(db *gorm.DB, cache *redis.Client) *Service {
-	return &Service{db: db, cache: cache}
+	return &Service{repo: cartmod.NewGormRepository(db), cache: cache}
 }
 
-func (uc *Service) Execute(ctx context.Context, req AddToCartRequest) (*cart.CartResponse, error) {
+func (uc *Service) Execute(ctx context.Context, req AddToCartRequest) (*cartmod.CartResponse, error) {
 	if req.Quantity <= 0 {
 		return nil, errors.New("quantity must be greater than zero")
 	}
 
-	var existingItem entities.CartItem
-	err := uc.db.WithContext(ctx).
-		Where("cart_id = ? AND product_id = ?", req.CartID, req.ProductID).
-		First(&existingItem).
-		Error
+	userCart, err := uc.repo.GetUserCart(ctx, req.UserID)
+	if err != nil {
+		return nil, err
+	}
 
+	existingItem, err := uc.repo.FindCartItem(ctx, userCart.ID, req.ProductID)
 	if err == nil {
 		existingItem.Quantity += req.Quantity
-		if err := uc.db.WithContext(ctx).Save(&existingItem).Error; err != nil {
+		if err := uc.repo.SaveCartItem(ctx, existingItem); err != nil {
 			return nil, err
 		}
 	} else if errors.Is(err, gorm.ErrRecordNotFound) {
-		newItem := entities.CartItem{
-			CartID:    req.CartID,
-			ProductID: req.ProductID,
-			Quantity:  req.Quantity,
-		}
-		if err := uc.db.WithContext(ctx).Create(&newItem).Error; err != nil {
+		newItem := &entities.CartItem{CartID: userCart.ID, ProductID: req.ProductID, Quantity: req.Quantity}
+		if err := uc.repo.CreateCartItem(ctx, newItem); err != nil {
 			return nil, err
 		}
 	} else {
 		return nil, err
 	}
 
-	var product_price = 0.0
+	if err := uc.repo.RefreshCartTotal(ctx, userCart.ID); err != nil {
+		return nil, err
+	}
 
-	err = uc.db.WithContext(ctx).
-		Model(entities.Product{}).
-		Select("price").
-		Where("id = ?", req.ProductID).
-		Scan(&product_price).Error
+	updatedCart, err := uc.repo.GetUserCart(ctx, req.UserID)
 	if err != nil {
 		return nil, err
 	}
 
-	var response cart.CartResponse
-	var userCart entities.Cart
-	cartErr := uc.db.WithContext(ctx).
-		Preload("Items").
-		Preload("Items.Product").
-		Preload("Items.Product.Images").
-		Where("user_id = ?", req.CartID).
-		First(&userCart).
-		Error
-
-	if cartErr != nil && !errors.Is(cartErr, gorm.ErrRecordNotFound) {
-		return nil, cartErr
-	}
-
-	userCart.Total += product_price * float64(req.Quantity)
-	uc.db.WithContext(ctx).Save(&userCart)
-
-	response.Cart = userCart
-
-	return &response, nil
+	return &cartmod.CartResponse{Cart: *updatedCart}, nil
 }

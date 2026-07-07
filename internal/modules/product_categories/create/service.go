@@ -2,6 +2,7 @@ package create
 
 import (
 	"PocketArtisan/internal/entities"
+	pcmod "PocketArtisan/internal/modules/product_categories"
 	"PocketArtisan/internal/modules/utils"
 	"context"
 	"errors"
@@ -11,18 +12,21 @@ import (
 )
 
 type Service struct {
-	db    *gorm.DB
+	repo  pcmod.Repository
 	cache *redis.Client
 }
 
 func NewService(db *gorm.DB, cache *redis.Client) *Service {
-	return &Service{db: db, cache: cache}
+	return &Service{repo: pcmod.NewGormRepository(db), cache: cache}
 }
 
 func (uc *Service) Execute(ctx context.Context, req NewProductCategoryRequest) error {
 
-	var pc entities.ProductCategory
-	if err := uc.db.WithContext(ctx).Where("name = ?", req.Name).First(&pc).Error; err == nil {
+	exists, err := uc.repo.ExistsByName(ctx, req.Name)
+	if err != nil {
+		return err
+	}
+	if exists {
 		return errors.New("product category already exists")
 	}
 
@@ -32,13 +36,13 @@ func (uc *Service) Execute(ctx context.Context, req NewProductCategoryRequest) e
 		searchKeywords = append(searchKeywords, utils.NormalizeForSearch(kw))
 	}
 
-	pc = entities.ProductCategory{
+	pc := &entities.ProductCategory{
 		Name:           req.Name,
 		Keywords:       req.Keywords,
 		SearchKeywords: searchKeywords,
 	}
 
-	if err := uc.db.Create(&pc).Error; err != nil {
+	if err := uc.repo.Create(ctx, pc); err != nil {
 		return err
 	}
 

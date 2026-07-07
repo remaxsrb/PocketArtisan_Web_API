@@ -4,8 +4,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"time"
 
 	"PocketArtisan/internal/entities"
+	ordermod "PocketArtisan/internal/modules/order"
 	"PocketArtisan/internal/modules/payment"
 	"PocketArtisan/internal/modules/utils"
 
@@ -14,20 +16,19 @@ import (
 )
 
 type Service struct {
-	db      *gorm.DB
+	repo    ordermod.Repository
 	cache   *redis.Client
 	gateway payment.Gateway
 }
 
 func NewService(db *gorm.DB, cache *redis.Client, gw payment.Gateway) *Service {
-	return &Service{db: db, cache: cache, gateway: gw}
+	return &Service{repo: ordermod.NewGormRepository(db), cache: cache, gateway: gw}
 }
 
 func (uc *Service) Execute(ctx context.Context, req ShipOrderRequest) (entities.OrderStatus, error) {
 
-	var existing entities.Order
-
-	if err := uc.db.WithContext(ctx).Where("id = ?", req.OrderID).First(&existing).Error; err != nil {
+	existing, err := uc.repo.FindByID(ctx, req.OrderID)
+	if err != nil {
 		return "", errors.New("order not found")
 	}
 
@@ -45,13 +46,19 @@ func (uc *Service) Execute(ctx context.Context, req ShipOrderRequest) (entities.
 		}
 	}
 
-	existing.Status = entities.OrderShipped
+	nextStatus, err := ordermod.NextOrderStatus(existing.Status, ordermod.OrderActionShip)
+	if err != nil {
+		return "", err
+	}
+	existing.Status = nextStatus
+	completedAt := time.Now()
+	existing.CompletedAt = &completedAt
 
-	if err := uc.db.WithContext(ctx).Save(&existing).Error; err != nil {
+	if err := uc.repo.Save(ctx, existing); err != nil {
 		return "", err
 	}
 
 	utils.BumpCacheVersion(ctx, uc.cache, "orders")
 
-	return existing.Status, nil
+	return nextStatus, nil
 }

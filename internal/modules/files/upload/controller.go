@@ -1,6 +1,7 @@
 package upload
 
 import (
+	"PocketArtisan/internal/http/response"
 	"net/http"
 
 	"PocketArtisan/internal/modules/files/storage"
@@ -15,16 +16,16 @@ func RegisterRoutes(router *gin.RouterGroup, s storage.Storage) {
 		file, err := c.FormFile("file")
 		purpose := c.PostForm("purpose")
 		if err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "file required"})
+			response.Error(c, http.StatusBadRequest, "file required")
 			return
 		}
 		url, err := uc.Execute(file, purpose)
 		if err != nil {
 
-			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			response.Error(c, http.StatusInternalServerError, err.Error())
 			return
 		}
 
-		c.JSON(http.StatusOK, gin.H{"url": url})
+		response.Data(c, http.StatusOK, gin.H{"url": url})
 	})
 }

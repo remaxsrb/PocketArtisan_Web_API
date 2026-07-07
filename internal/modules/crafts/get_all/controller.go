@@ -1,6 +1,7 @@
 package get_all
 
 import (
+	"PocketArtisan/internal/http/response"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -13,9 +14,9 @@ func RegisterRoutes(router *gin.RouterGroup, db *gorm.DB, rdb *redis.Client) {
 	router.GET("/all", func(c *gin.Context) {
 		categories, err := r.Execute(c.Request.Context())
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			response.Error(c, http.StatusInternalServerError, err.Error())
 			return
 		}
-		c.JSON(http.StatusOK, categories)
+		response.Data(c, http.StatusOK, categories)
 	})
 }

@@ -33,4 +33,5 @@ type CraftsmanResponse struct {
 	Craft           string  `json:"craft"`
 	Rating          float64 `json:"rating"`
 	NumberOfRatings int     `json:"numberOfRatings" gorm:"column:number_of_ratings"`
+	Biography       string  `json:"biography"`
 }

@@ -38,7 +38,11 @@ func main() {
 		log.Fatalf("failed to load fonts: %v", err)
 	}
 
-	var gateway payment.Gateway = payment.NewMockGateway()
+	provider := os.Getenv("PAYMENT_PROVIDER")
+	gateway, err := payment.NewGateway(provider)
+	if err != nil {
+		log.Fatalf("failed to initialize payment gateway: %v", err)
+	}
 	wrappedGateway := payment.NewBreakerGateway(gateway, 5, 30*time.Second)
 
 	timeService := timeutil.NewService()

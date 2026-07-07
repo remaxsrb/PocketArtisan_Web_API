@@ -31,6 +31,6 @@ func RegisterRoutes(router *gin.RouterGroup, db *gorm.DB, rdb *redis.Client) {
 			response.Error(c, http.StatusBadRequest, err.Error())
 			return
 		}
-		c.JSON(http.StatusOK, nil)
+		response.Empty(c, http.StatusOK)
 	})
 }

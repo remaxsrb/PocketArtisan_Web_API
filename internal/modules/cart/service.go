@@ -3,39 +3,18 @@ package cart
 import (
 	"PocketArtisan/internal/entities"
 	"context"
-	"errors"
 
 	"gorm.io/gorm"
 )
 
-// CartReader is the cart module contract used by other modules.
+// CartReader is the narrow cross-module interface for reading a user's cart.
+// Modules that only need this one method should accept CartReader, not Repository.
 type CartReader interface {
 	GetUserCart(ctx context.Context, userID uint64) (*entities.Cart, error)
 }
 
-type gormCartReader struct {
-	db *gorm.DB
-}
-
+// NewCartReader returns a CartReader backed by the full GormRepository.
+// Existing callers (login, checkout) remain unchanged.
 func NewCartReader(db *gorm.DB) CartReader {
-	return &gormCartReader{db: db}
-}
-
-func (r *gormCartReader) GetUserCart(ctx context.Context, userID uint64) (*entities.Cart, error) {
-	var userCart entities.Cart
-	err := r.db.WithContext(ctx).
-		Preload("Items").
-		Preload("Items.Product").
-		Preload("Items.Product.Images").
-		Where("user_id = ?", userID).
-		First(&userCart).
-		Error
-	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return &entities.Cart{}, nil
-		}
-		return nil, err
-	}
-
-	return &userCart, nil
+	return NewGormRepository(db)
 }

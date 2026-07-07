@@ -1,6 +1,8 @@
 package addtocart
 
 import (
+	"PocketArtisan/internal/http/middleware"
+	"PocketArtisan/internal/http/response"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -13,14 +15,22 @@ func RegisterRoutes(router *gin.RouterGroup, db *gorm.DB, rdb *redis.Client) {
 	router.POST("/add", func(c *gin.Context) {
 		var req AddToCartRequest
 		if err := c.ShouldBindJSON(&req); err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			response.Error(c, http.StatusBadRequest, err.Error())
 			return
 		}
-		response, err := r.Execute(c.Request.Context(), req)
+
+		userID, ok := c.Request.Context().Value(middleware.ContextUserID).(uint64)
+		if !ok {
+			response.Error(c, http.StatusUnauthorized, "user not resolved")
+			return
+		}
+		req.UserID = userID
+
+		result, err := r.Execute(c.Request.Context(), req)
 		if err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			response.Error(c, http.StatusBadRequest, err.Error())
 			return
 		}
-		c.JSON(http.StatusCreated, response)
+		response.Data(c, http.StatusCreated, result)
 	})
 }

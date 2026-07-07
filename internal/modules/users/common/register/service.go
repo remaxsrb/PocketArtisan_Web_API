@@ -3,6 +3,7 @@ package register
 import (
 	"PocketArtisan/config"
 	"PocketArtisan/internal/entities"
+	usersmod "PocketArtisan/internal/modules/users"
 	"PocketArtisan/internal/modules/utils"
 	"PocketArtisan/internal/modules/utils/turnstile"
 	"PocketArtisan/internal/validators"
@@ -18,21 +19,20 @@ import (
 )
 
 type Service struct {
-	db        *gorm.DB
+	repo      usersmod.Repository
 	cache     *redis.Client
 	turnstile *turnstile.Verifier
 }
 
 func NewService(db *gorm.DB, cache *redis.Client) *Service {
 	return &Service{
-		db:        db,
+		repo:      usersmod.NewGormRepository(db),
 		cache:     cache,
 		turnstile: turnstile.NewVerifier(config.GetCrypto().TurnstileSecret),
 	}
 }
 
 func (uc *Service) Execute(ctx context.Context, req RegisterRequest, remoteIP string) (*entities.User, error) {
-	var existing entities.User
 
 	if os.Getenv("APP_ENV") == "production" {
 		if _, err := uc.turnstile.Verify(ctx, req.TurnstileToken, remoteIP); err != nil {
@@ -40,15 +40,20 @@ func (uc *Service) Execute(ctx context.Context, req RegisterRequest, remoteIP st
 		}
 	}
 
-	if !validators.IsValidEmail(req.Email) {
-		return nil, errors.New("invalid email")
-	}
-
-	if err := validators.ValidatePassword(req.Password); err != nil {
+	validationChain := validators.NewEmailFormatHandler()
+	validationChain.SetNext(validators.NewPasswordPolicyHandler())
+	if err := validationChain.Handle(&validators.ValidationContext{
+		Email:    req.Email,
+		Password: req.Password,
+	}); err != nil {
 		return nil, errors.New(err.Error())
 	}
 
-	if err := uc.db.WithContext(ctx).Where("email = ?", req.Email).First(&existing).Error; err == nil {
+	existsEmail, err := uc.repo.ExistsUserByEmail(ctx, req.Email)
+	if err != nil {
+		return nil, err
+	}
+	if existsEmail {
 		return nil, errors.New("email already used")
 	}
 
@@ -60,7 +65,11 @@ func (uc *Service) Execute(ctx context.Context, req RegisterRequest, remoteIP st
 		}
 	}
 
-	if err := uc.db.WithContext(ctx).Where("username = ?", req.Username).First(&existing).Error; err == nil {
+	existsUsername, err := uc.repo.ExistsUserByUsername(ctx, req.Username)
+	if err != nil {
+		return nil, err
+	}
+	if existsUsername {
 		return nil, errors.New("username already used")
 	}
 
@@ -91,14 +100,7 @@ func (uc *Service) Execute(ctx context.Context, req RegisterRequest, remoteIP st
 		return nil, err
 	}
 
-	err = uc.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
-		if err := tx.Create(user).Error; err != nil {
-			return err
-		}
-		newCart := &entities.Cart{UserID: user.ID}
-		return tx.Create(newCart).Error
-	})
-	if err != nil {
+	if err := uc.repo.CreateUserWithCart(ctx, user); err != nil {
 		return nil, err
 	}
 

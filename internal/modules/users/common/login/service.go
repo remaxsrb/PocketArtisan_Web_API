@@ -1,8 +1,8 @@
 package login
 
 import (
-	"PocketArtisan/internal/modules/cart"
-	"PocketArtisan/internal/modules/users"
+	cartmod "PocketArtisan/internal/modules/cart"
+	usersmod "PocketArtisan/internal/modules/users"
 	"PocketArtisan/internal/modules/utils"
 	"context"
 	"errors"
@@ -13,22 +13,22 @@ import (
 )
 
 type Service struct {
-	repo       Repository
+	repo       usersmod.Repository
 	cache      *redis.Client
-	cartReader cart.CartReader
+	cartReader cartmod.CartReader
 }
 
 func NewService(db *gorm.DB, cache *redis.Client) *Service {
 	return &Service{
-		repo:       NewRepository(db),
+		repo:       usersmod.NewGormRepository(db),
 		cache:      cache,
-		cartReader: cart.NewCartReader(db),
+		cartReader: cartmod.NewCartReader(db),
 	}
 }
 
 func (uc *Service) Execute(ctx context.Context, req LoginRequest) (LoginResult, error) {
 
-	existing, err := uc.repo.FindByUsername(ctx, req.Username)
+	existing, err := uc.repo.FindUserByUsername(ctx, req.Username)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return LoginResult{}, ErrUsernameNotFound
@@ -41,18 +41,18 @@ func (uc *Service) Execute(ctx context.Context, req LoginRequest) (LoginResult, 
 	}
 
 	existing.LastLoginAt = time.Now()
-	if err := uc.repo.UpdateLastLogin(ctx, existing); err != nil {
+	if err := uc.repo.SaveUser(ctx, existing); err != nil {
 		return LoginResult{}, err
 	}
 	utils.BumpCacheVersion(ctx, uc.cache, "users")
 
 	if existing.Role == "craftsman" {
-		r, err := uc.repo.GetCraftsmanProfileByUsername(ctx, existing.Username)
+		r, err := uc.repo.FindCraftsmanProfileByUsername(ctx, existing.Username)
 		if err != nil {
 			return LoginResult{}, err
 		}
 
-		craftsman, err := uc.repo.GetCraftsmanByUserID(ctx, existing.ID)
+		craftsman, err := uc.repo.FindCraftsmanByUserID(ctx, existing.ID)
 		if err != nil {
 			return LoginResult{}, err
 		}
@@ -60,8 +60,8 @@ func (uc *Service) Execute(ctx context.Context, req LoginRequest) (LoginResult, 
 		return LoginResult{ID: existing.ID, Role: existing.Role, CraftsmanID: craftsman.ID, Response: r}, nil
 	}
 
-	r := &users.RegularUserResponse{
-		UserResponse: users.UserResponse{
+	r := &usersmod.RegularUserResponse{
+		UserResponse: usersmod.UserResponse{
 			Username:       existing.Username,
 			Firstname:      existing.Firstname,
 			Lastname:       existing.Lastname,

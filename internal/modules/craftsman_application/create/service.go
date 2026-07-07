@@ -2,6 +2,7 @@ package create
 
 import (
 	"PocketArtisan/internal/entities"
+	camod "PocketArtisan/internal/modules/craftsman_application"
 	"context"
 	"errors"
 	"fmt"
@@ -63,7 +64,7 @@ func (uc *Service) Execute(ctx context.Context, req CraftsmanApplicationRequest)
 
 		newCA := entities.CraftsmanApplication{
 			Email:     req.Email,
-			Status:    entities.StatusPending,
+			Status:    camod.InitialApplicationStatus(),
 			Craft:     req.Craft,
 			ResumeURL: req.ResumeURL,
 		}

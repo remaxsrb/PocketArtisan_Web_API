@@ -43,25 +43,25 @@ func (eh *ErrorHandler) respondWithPaymentError(c *gin.Context, err error) {
 	var paymentErr *payment.PaymentError
 	if errors.As(err, &paymentErr) {
 		statusCode, userMessage := eh.mapPaymentErrorToHTTP(paymentErr)
-		errResp := response.NewPaymentErrorResponse(
+		errResp := response.NewPaymentError(
 			userMessage,
 			string(paymentErr.Code()),
 			string(paymentErr.Reason()),
 			paymentErr.IsRetryable(),
 		)
-		c.JSON(statusCode, errResp)
+		response.NewBuilder(statusCode).WithError(errResp).Send(c)
 		return
 	}
 
 	// Handle wrapped payment errors (string-based from service layer)
 	statusCode, userMessage, code, reason, retryable := eh.categorizeWrappedPaymentError(err.Error())
-	errResp := response.NewPaymentErrorResponse(userMessage, code, reason, retryable)
-	c.JSON(statusCode, errResp)
+	errResp := response.NewPaymentError(userMessage, code, reason, retryable)
+	response.NewBuilder(statusCode).WithError(errResp).Send(c)
 }
 
 // respondWithGenericError returns a generic error response for non-payment errors.
 func (eh *ErrorHandler) respondWithGenericError(c *gin.Context, err error) {
-	c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+	response.Error(c, http.StatusBadRequest, err.Error())
 }
 
 // mapPaymentErrorToHTTP converts a typed PaymentError to HTTP status and user message.

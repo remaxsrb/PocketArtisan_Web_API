@@ -1,7 +1,7 @@
 package get_monthly_shipped
 
 import (
-	"PocketArtisan/internal/entities"
+	ordermod "PocketArtisan/internal/modules/order"
 	"PocketArtisan/internal/modules/utils"
 	"PocketArtisan/internal/modules/utils/timeutil"
 	"context"
@@ -15,13 +15,13 @@ import (
 )
 
 type Service struct {
-	db          *gorm.DB
+	repo        ordermod.Repository
 	cache       *redis.Client
 	timeService timeutil.Service
 }
 
 func NewService(db *gorm.DB, cache *redis.Client, timeService timeutil.Service) *Service {
-	return &Service{db: db, cache: cache, timeService: timeService}
+	return &Service{repo: ordermod.NewGormRepository(db), cache: cache, timeService: timeService}
 }
 
 func (uc *Service) Execute(ctx context.Context, req MonthlyShippedRequest) ([]MonthlyShippedCount, error) {
@@ -44,21 +44,14 @@ func (uc *Service) Execute(ctx context.Context, req MonthlyShippedRequest) ([]Mo
 		fmt.Printf("Redis error: %v\n", err)
 	}
 
-	query := uc.db.WithContext(ctx).
-		Model(&entities.Order{}).
-		Select("to_char(date_trunc('month', completed_at), 'YYYY-MM') as month, COUNT(*) as count").
-		Where("status = ?", entities.OrderShipped)
-
-	if from != nil {
-		query = query.Where("completed_at >= ?", *from)
-	}
-	if to != nil {
-		query = query.Where("completed_at < ?", *to)
-	}
-
-	results := make([]MonthlyShippedCount, 0)
-	if err := query.Group("month").Order("month").Scan(&results).Error; err != nil {
+	rows, err := uc.repo.MonthlyShippedCounts(ctx, from, to)
+	if err != nil {
 		return nil, err
+	}
+
+	results := make([]MonthlyShippedCount, 0, len(rows))
+	for _, row := range rows {
+		results = append(results, MonthlyShippedCount{Month: row.Month, Count: row.Count})
 	}
 
 	if data, err := json.Marshal(results); err == nil {

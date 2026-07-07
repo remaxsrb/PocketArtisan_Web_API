@@ -1,6 +1,7 @@
 package checkout
 
 import (
+	"PocketArtisan/internal/http/response"
 	"PocketArtisan/internal/modules/files/storage"
 	"PocketArtisan/internal/modules/order/create"
 	"PocketArtisan/internal/modules/payment"
@@ -19,14 +20,14 @@ func RegisterRoutes(router *gin.RouterGroup, db *gorm.DB, rdb *redis.Client, s s
 	router.POST("/checkout", func(c *gin.Context) {
 		var req CheckoutRequest
 		if err := c.ShouldBindJSON(&req); err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			response.Error(c, http.StatusBadRequest, err.Error())
 			return
 		}
 		results, err := svc.Execute(c.Request.Context(), req)
 		if err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			response.Error(c, http.StatusBadRequest, err.Error())
 			return
 		}
-		c.JSON(http.StatusCreated, gin.H{"orders": results})
+		response.Data(c, http.StatusCreated, gin.H{"orders": results})
 	})
 }

@@ -1,32 +1,34 @@
 package getbycraftsman
 
 import (
-	"PocketArtisan/internal/entities"
-	"PocketArtisan/internal/modules/product"
+	pcmod "PocketArtisan/internal/modules/product_categories"
+	usersmod "PocketArtisan/internal/modules/users"
 	"PocketArtisan/internal/modules/utils"
 	"context"
 	"encoding/json"
 	"fmt"
 	"time"
 
+	"PocketArtisan/internal/entities"
+
 	"github.com/go-redis/redis/v8"
 	"gorm.io/gorm"
 )
 
 type Service struct {
-	db             *gorm.DB
-	cache          *redis.Client
-	productService product.Service
+	repo      pcmod.Repository
+	usersRepo usersmod.Repository
+	cache     *redis.Client
 }
 
 func NewService(db *gorm.DB, cache *redis.Client) *Service {
-	return &Service{db: db, cache: cache, productService: product.NewService(db)}
+	return &Service{repo: pcmod.NewGormRepository(db), usersRepo: usersmod.NewGormRepository(db), cache: cache}
 }
 
-func (uc *Service) Execute(ctx context.Context, username string) ([]entities.ProductCategory, error) {
+func (uc *Service) Execute(ctx context.Context, craftsmanID uint64) ([]entities.ProductCategory, error) {
 	const cacheTTL = 5 * time.Minute
 
-	craftsman, err := uc.productService.GetCraftsmanByUsername(ctx, username)
+	craftsman, err := uc.usersRepo.FindCraftsmanByID(ctx, craftsmanID)
 	if err != nil {
 		return nil, err
 	}
@@ -41,12 +43,8 @@ func (uc *Service) Execute(ctx context.Context, username string) ([]entities.Pro
 		}
 	}
 
-	var pcs []entities.ProductCategory
-	if err := uc.db.WithContext(ctx).
-		Table("product_categories").
-		Joins("INNER JOIN craft_product_categories ON craft_product_categories.category_id = product_categories.id").
-		Where("craft_product_categories.craft_id = ?", craftsman.CraftID).
-		Find(&pcs).Error; err != nil {
+	pcs, err := uc.repo.FindByCraftID(ctx, craftsman.CraftID)
+	if err != nil {
 		return nil, err
 	}
 

@@ -1,7 +1,7 @@
 package delete
 
 import (
-	"PocketArtisan/internal/entities"
+	pcmod "PocketArtisan/internal/modules/product_categories"
 	"PocketArtisan/internal/modules/utils"
 	"context"
 	"errors"
@@ -11,22 +11,22 @@ import (
 )
 
 type Service struct {
-	db    *gorm.DB
+	repo  pcmod.Repository
 	cache *redis.Client
 }
 
 func NewService(db *gorm.DB, cache *redis.Client) *Service {
-	return &Service{db: db, cache: cache}
+	return &Service{repo: pcmod.NewGormRepository(db), cache: cache}
 }
 
 func (uc *Service) Execute(ctx context.Context, req DeleteProductCategoryRequest) error {
 
-	var pc entities.ProductCategory
-	if err := uc.db.WithContext(ctx).Where("name = ?", req.Name).First(&pc).Error; err != nil {
+	pc, err := uc.repo.FindByName(ctx, req.Name)
+	if err != nil {
 		return errors.New("product category does not exist")
 	}
 
-	if err := uc.db.WithContext(ctx).Delete(&pc).Error; err != nil {
+	if err := uc.repo.Delete(ctx, pc); err != nil {
 		return err
 	}
 

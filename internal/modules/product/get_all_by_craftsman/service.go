@@ -1,8 +1,7 @@
 package getallbycraftsman
 
 import (
-	"PocketArtisan/internal/entities"
-	"PocketArtisan/internal/modules/product"
+	prodmod "PocketArtisan/internal/modules/product"
 	"PocketArtisan/internal/modules/utils"
 	"context"
 	"encoding/json"
@@ -16,13 +15,12 @@ import (
 )
 
 type Service struct {
-	db             *gorm.DB
-	cache          *redis.Client
-	productService product.Service
+	repo  prodmod.Repository
+	cache *redis.Client
 }
 
 func NewService(db *gorm.DB, cache *redis.Client) *Service {
-	return &Service{db: db, cache: cache, productService: product.NewService(db)}
+	return &Service{repo: prodmod.NewGormRepository(db), cache: cache}
 }
 
 func (uc *Service) Execute(ctx context.Context, req GetAllRequest) (GetAllResponse, error) {
@@ -53,26 +51,22 @@ func (uc *Service) Execute(ctx context.Context, req GetAllRequest) (GetAllRespon
 		fmt.Printf("Redis error: %v\n", err)
 	}
 
-	craftsmanID, err := uc.productService.GetCraftsmanIDByUsername(ctx, req.Username)
+	craftsmanID, err := uc.repo.FindCraftsmanIDByUsername(ctx, req.Username)
 	if err != nil {
 		return GetAllResponse{}, err
 	}
 
-	var totalProducts int64
-	uc.db.WithContext(ctx).Model(&entities.Product{}).Where("craftsman_id = ?", craftsmanID).Count(&totalProducts)
+	totalProducts, err := uc.repo.CountByCraftsman(ctx, craftsmanID)
+	if err != nil {
+		return GetAllResponse{}, err
+	}
 
-	raw := make([]*entities.Product, 0, req.Limit)
-	uc.db.WithContext(ctx).
-		Preload("Images").
-		Preload("Videos").
-		Preload("Category").
-		Where("craftsman_id = ?", craftsmanID).
-		Offset(req.Skip).
-		Limit(req.Limit).
-		Order("name asc").
-		Find(&raw)
+	raw, err := uc.repo.ListByCraftsman(ctx, craftsmanID, req.Skip, req.Limit)
+	if err != nil {
+		return GetAllResponse{}, err
+	}
 
-	product_list := make([]*product.ProductResponse, 0, len(raw))
+	product_list := make([]*prodmod.ProductResponse, 0, len(raw))
 	for _, p := range raw {
 		images := make([]string, 0, len(p.Images))
 		for _, img := range p.Images {
@@ -86,7 +80,7 @@ func (uc *Service) Execute(ctx context.Context, req GetAllRequest) (GetAllRespon
 		if p.Category != nil {
 			categoryName = p.Category.Name
 		}
-		product_list = append(product_list, &product.ProductResponse{
+		product_list = append(product_list, &prodmod.ProductResponse{
 			ID:              p.ID,
 			CraftsmanID:     p.CraftsmanID,
 			Name:            p.Name,

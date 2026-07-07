@@ -1,7 +1,7 @@
 package get_monthly_shipped_by_category
 
 import (
-	"PocketArtisan/internal/entities"
+	ordermod "PocketArtisan/internal/modules/order"
 	"PocketArtisan/internal/modules/utils"
 	"PocketArtisan/internal/modules/utils/timeutil"
 	"context"
@@ -15,13 +15,13 @@ import (
 )
 
 type Service struct {
-	db          *gorm.DB
+	repo        ordermod.Repository
 	cache       *redis.Client
 	timeService timeutil.Service
 }
 
 func NewService(db *gorm.DB, cache *redis.Client, timeService timeutil.Service) *Service {
-	return &Service{db: db, cache: cache, timeService: timeService}
+	return &Service{repo: ordermod.NewGormRepository(db), cache: cache, timeService: timeService}
 }
 
 func (uc *Service) Execute(ctx context.Context, req MonthlyShippedByCategoryRequest) ([]MonthlyCategoryCount, error) {
@@ -44,28 +44,14 @@ func (uc *Service) Execute(ctx context.Context, req MonthlyShippedByCategoryRequ
 		fmt.Printf("Redis error: %v\n", err)
 	}
 
-	query := uc.db.WithContext(ctx).
-		Table("orders").
-		Joins("JOIN order_items ON order_items.order_id = orders.id").
-		Joins("JOIN products ON products.id = order_items.product_id").
-		Joins("JOIN product_categories ON product_categories.id = products.category_id").
-		Select(`
-			to_char(date_trunc('month', orders.completed_at), 'YYYY-MM') as month,
-			product_categories.name as category,
-			COUNT(DISTINCT orders.id) as count
-		`).
-		Where("orders.craftsman_id = ? AND orders.status = ?", req.CraftsmanID, entities.OrderShipped)
-
-	if from != nil {
-		query = query.Where("orders.completed_at >= ?", *from)
-	}
-	if to != nil {
-		query = query.Where("orders.completed_at < ?", *to)
-	}
-
-	results := make([]MonthlyCategoryCount, 0)
-	if err := query.Group("month, product_categories.name").Order("month").Scan(&results).Error; err != nil {
+	rows, err := uc.repo.MonthlyShippedByCategory(ctx, req.CraftsmanID, from, to)
+	if err != nil {
 		return nil, err
+	}
+
+	results := make([]MonthlyCategoryCount, 0, len(rows))
+	for _, row := range rows {
+		results = append(results, MonthlyCategoryCount{Month: row.Month, Category: row.Category, Count: row.Count})
 	}
 
 	if data, err := json.Marshal(results); err == nil {

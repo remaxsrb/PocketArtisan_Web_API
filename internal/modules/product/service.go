@@ -3,48 +3,29 @@ package product
 import (
 	"PocketArtisan/internal/entities"
 	"context"
-	"errors"
 
 	"gorm.io/gorm"
 )
 
+// Service is the cross-module contract used by product_categories and other
+// modules that only need craftsman lookups.
 type Service interface {
 	GetCraftsmanIDByUsername(ctx context.Context, username string) (uint64, error)
 	GetCraftsmanByUsername(ctx context.Context, username string) (*entities.Craftsman, error)
 }
 
-type gormService struct {
-	db *gorm.DB
+type serviceImpl struct {
+	repo Repository
 }
 
 func NewService(db *gorm.DB) Service {
-	return &gormService{db: db}
+	return &serviceImpl{repo: NewGormRepository(db)}
 }
 
-func (s *gormService) GetCraftsmanIDByUsername(ctx context.Context, username string) (uint64, error) {
-	var craftsman entities.Craftsman
-	if err := s.db.WithContext(ctx).
-		Joins("JOIN users ON users.id = craftsmen.user_id").
-		Where("users.username = ?", username).
-		First(&craftsman).Error; err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return 0, errors.New("craftsman not found")
-		}
-		return 0, err
-	}
-	return craftsman.ID, nil
+func (s *serviceImpl) GetCraftsmanIDByUsername(ctx context.Context, username string) (uint64, error) {
+	return s.repo.FindCraftsmanIDByUsername(ctx, username)
 }
 
-func (s *gormService) GetCraftsmanByUsername(ctx context.Context, username string) (*entities.Craftsman, error) {
-	var craftsman entities.Craftsman
-	if err := s.db.WithContext(ctx).
-		Joins("JOIN users ON users.id = craftsmen.user_id").
-		Where("users.username = ?", username).
-		First(&craftsman).Error; err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, errors.New("craftsman not found")
-		}
-		return nil, err
-	}
-	return &craftsman, nil
+func (s *serviceImpl) GetCraftsmanByUsername(ctx context.Context, username string) (*entities.Craftsman, error) {
+	return s.repo.FindCraftsmanByUsername(ctx, username)
 }

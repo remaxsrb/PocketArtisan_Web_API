@@ -1,6 +1,7 @@
 package get_registered_users
 
 import (
+	"PocketArtisan/internal/http/response"
 	"net/http"
 
 	"PocketArtisan/internal/modules/utils/timeutil"
@@ -16,16 +17,16 @@ func RegisterRoutes(router *gin.RouterGroup, db *gorm.DB, rdb *redis.Client, tim
 	router.GET("/registered", func(c *gin.Context) {
 		var req Request
 		if err := c.ShouldBindQuery(&req); err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			response.Error(c, http.StatusBadRequest, err.Error())
 			return
 		}
 
 		resp, err := uc.Execute(c.Request.Context(), req)
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			response.Error(c, http.StatusInternalServerError, err.Error())
 			return
 		}
 
-		c.JSON(http.StatusOK, gin.H{"data": resp})
+		response.Data(c, http.StatusOK, resp)
 	})
 }

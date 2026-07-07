@@ -19,5 +19,8 @@ func RegisterProductCategoryRoutes(router *gin.Engine, appContainer *container.A
 
 	productCategoryPublic := router.Group("/api/product-categories")
 	get_all.RegisterRoutes(productCategoryPublic, appContainer.DB, appContainer.RDB)
-	getbycraftsman.RegisterRoutes(productCategoryPublic, appContainer.DB, appContainer.RDB)
+
+	productCategoryCraftsman := router.Group("/api/product-categories")
+	productCategoryCraftsman.Use(middleware.JWT(appContainer.JWTService), middleware.RequireRoles("craftsman"), middleware.RequireCraftsman(appContainer.DB))
+	getbycraftsman.RegisterRoutes(productCategoryCraftsman, appContainer.DB, appContainer.RDB)
 }

@@ -1,6 +1,8 @@
 package get_by_customer
 
 import (
+	"PocketArtisan/internal/http/middleware"
+	"PocketArtisan/internal/http/response"
 	"net/http"
 	"strconv"
 
@@ -12,21 +14,21 @@ import (
 func RegisterRoutes(router *gin.RouterGroup, db *gorm.DB, rdb *redis.Client) {
 	uc := NewService(db, rdb)
 
-	router.GET("/customers/:user_id", func(c *gin.Context) {
-		userID := c.Param("user_id")
-		if userID == "" {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "user_id is required"})
+	router.GET("/customers/me", func(c *gin.Context) {
+		userID, ok := c.Request.Context().Value(middleware.ContextUserID).(uint64)
+		if !ok {
+			response.Error(c, http.StatusUnauthorized, "user not resolved")
 			return
 		}
 
 		skip, err := strconv.Atoi(c.DefaultQuery("skip", "0"))
 		if err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "invalid skip"})
+			response.Error(c, http.StatusBadRequest, "invalid skip")
 			return
 		}
 		limit, err := strconv.Atoi(c.DefaultQuery("limit", "20"))
 		if err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "invalid limit"})
+			response.Error(c, http.StatusBadRequest, "invalid limit")
 			return
 		}
 
@@ -34,10 +36,10 @@ func RegisterRoutes(router *gin.RouterGroup, db *gorm.DB, rdb *redis.Client) {
 
 		resp, err := uc.Execute(c.Request.Context(), req)
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			response.Error(c, http.StatusInternalServerError, err.Error())
 			return
 		}
 
-		c.JSON(http.StatusOK, gin.H{"data": resp})
+		response.Data(c, http.StatusOK, resp)
 	})
 }
