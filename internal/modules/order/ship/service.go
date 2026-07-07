@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"time"
 
 	"PocketArtisan/internal/entities"
 	ordermod "PocketArtisan/internal/modules/order"
@@ -50,6 +51,8 @@ func (uc *Service) Execute(ctx context.Context, req ShipOrderRequest) (entities.
 		return "", err
 	}
 	existing.Status = nextStatus
+	completedAt := time.Now()
+	existing.CompletedAt = &completedAt
 
 	if err := uc.repo.Save(ctx, existing); err != nil {
 		return "", err

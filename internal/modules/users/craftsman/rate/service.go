@@ -21,7 +21,7 @@ func NewService(db *gorm.DB, cache *redis.Client) *Service {
 func (uc *Service) Execute(ctx context.Context, req Request) (Response, error) {
 	customerID := ctx.Value("user_id").(uint64)
 
-	craftsman, err := uc.repo.RateCraftsman(ctx, uint64(req.UserID), customerID, int(req.Rating))
+	craftsman, err := uc.repo.RateCraftsman(ctx, uint64(req.CraftsmanID), customerID, int(req.Rating))
 	if err != nil {
 		return Response{}, err
 	}

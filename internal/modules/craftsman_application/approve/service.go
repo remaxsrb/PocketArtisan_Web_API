@@ -4,6 +4,7 @@ import (
 	camod "PocketArtisan/internal/modules/craftsman_application"
 	"context"
 	"errors"
+	"time"
 
 	"github.com/go-redis/redis/v8"
 	"gorm.io/gorm"
@@ -30,6 +31,8 @@ func (uc *Service) Execute(ctx context.Context, req Request) error {
 		return err
 	}
 	ca.Status = nextStatus
+	resolvedAt := time.Now()
+	ca.ResolvedAt = &resolvedAt
 
 	return uc.repo.Save(ctx, ca)
 }
