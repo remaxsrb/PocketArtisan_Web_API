@@ -6,6 +6,7 @@ import (
 	"PocketArtisan/internal/modules/files/storage"
 	ordermod "PocketArtisan/internal/modules/order"
 	"PocketArtisan/internal/modules/payment"
+	"PocketArtisan/internal/modules/utils"
 	"PocketArtisan/internal/modules/utils/fonts"
 	"context"
 	"fmt"
@@ -56,6 +57,8 @@ func (uc *Service) Execute(ctx context.Context, req NewOrderRequest) (OrderCreat
 	if err != nil {
 		return OrderCreationResult{}, fmt.Errorf("create order transaction: %w", err)
 	}
+
+	utils.BumpCacheVersion(ctx, uc.cache, "orders")
 
 	// Reserve funds for CC orders. On failure, compensate by deleting the committed order.
 	var reservationID string
