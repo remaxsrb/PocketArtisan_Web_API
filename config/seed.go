@@ -10,7 +10,6 @@ import (
 
 	"github.com/lib/pq"
 	"gorm.io/gorm"
-	"gorm.io/gorm/clause"
 )
 
 type seedItem struct {
@@ -78,7 +77,7 @@ var productCategorySeed = []seedItem{
 	{"Прстење", []string{"juvelir", "јувелир", "zlatar", "prstenje", "прстење", "jeweler", "izrađivač nakita", "израђивач накита", "rings"}},
 	{"Минђуше", []string{"juvelir", "јувелир", "zlatar", "minđuše", "минђуше", "jeweler", "izrađivač nakita", "израђивач накита", "earrings"}},
 	{"Огрлице", []string{"juvelir", "јувелир", "zlatar", "ogrlice", "огрлице", "jeweler", "izrađivač nakita", "израђивач накита", "necklaces"}},
-	{"Наруквице", []string{"juvelir", "јувелир", "zlatar", "naruvkice", "наруквице", "jeweler", "bracelets"}},
+	{"Наруквице", []string{"juvelir", "јувелир", "zlatar", "narukvice", "наруквице", "jeweler", "bracelets"}},
 
 	{"Ручни сатови", []string{"ručni satovi", "ручни сатови", "wristwatches"}},
 	{"Зидни сатови", []string{"zidni satovi", "зидни сатови", "wall clocks"}},
@@ -143,11 +142,12 @@ var craftCategoryLinks = map[string][]string{
 }
 
 func runSeeds() {
+	// Schema and reference data (crafts, product categories, links) are now
+	// applied by versioned migrations (see ./migrations and cmd/seedgen). Only
+	// the admin user is seeded here because it depends on runtime env vars and
+	// a bcrypt-hashed password, which don't belong in a static SQL migration.
 	log.Println("Seeding baseline data...")
 	seedAdminUser()
-	seedCrafts()
-	seedProductCategories()
-	seedCraftProductCategories()
 }
 
 func buildSearchKeywords(name string, keywords []string) pq.StringArray {
@@ -198,62 +198,6 @@ func seedAdminUser() {
 		log.Fatalf("Failed to seed admin user: %v", err)
 	}
 	log.Printf("Seeded admin user %q", username)
-}
-
-func seedCrafts() {
-	for _, item := range craftSeed {
-		craft := entities.Craft{
-			Name:           item.Name,
-			Keywords:       pq.StringArray(item.Keywords),
-			SearchKeywords: buildSearchKeywords(item.Name, item.Keywords),
-		}
-		if err := DB.Clauses(clause.OnConflict{
-			Columns:   []clause.Column{{Name: "name"}},
-			DoNothing: true,
-		}).Create(&craft).Error; err != nil {
-			log.Fatalf("Failed to seed craft %q: %v", item.Name, err)
-		}
-	}
-	log.Printf("Seeded %d crafts", len(craftSeed))
-}
-
-func seedProductCategories() {
-	for _, item := range productCategorySeed {
-		category := entities.ProductCategory{
-			Name:           item.Name,
-			Keywords:       pq.StringArray(item.Keywords),
-			SearchKeywords: buildSearchKeywords(item.Name, item.Keywords),
-		}
-		if err := DB.Clauses(clause.OnConflict{
-			Columns:   []clause.Column{{Name: "name"}},
-			DoNothing: true,
-		}).Create(&category).Error; err != nil {
-			log.Fatalf("Failed to seed product category %q: %v", item.Name, err)
-		}
-	}
-	log.Printf("Seeded %d product categories", len(productCategorySeed))
-}
-
-func seedCraftProductCategories() {
-	var links []entities.CraftProductCategory
-	for craftName, categoryNames := range craftCategoryLinks {
-		var craft entities.Craft
-		if err := DB.Where("name = ?", craftName).First(&craft).Error; err != nil {
-			log.Fatalf("Failed to look up craft %q for category linking: %v", craftName, err)
-		}
-		for _, categoryName := range categoryNames {
-			var category entities.ProductCategory
-			if err := DB.Where("name = ?", categoryName).First(&category).Error; err != nil {
-				log.Fatalf("Failed to look up product category %q for craft %q: %v", categoryName, craftName, err)
-			}
-			links = append(links, entities.CraftProductCategory{CraftID: craft.ID, CategoryID: category.ID})
-		}
-	}
-
-	if err := DB.Clauses(clause.OnConflict{DoNothing: true}).Create(&links).Error; err != nil {
-		log.Fatalf("Failed to seed craft-product category links: %v", err)
-	}
-	log.Printf("Seeded %d craft-product category links", len(links))
 }
 
 func adminAvatarURL() string {

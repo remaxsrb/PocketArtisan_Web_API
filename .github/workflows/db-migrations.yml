@@ -1,0 +1,110 @@
+# Validates database migrations on every PR that touches schema, models, or seeds.
+#
+# What this replaces (and why Neon):
+#   * "Test migrations against a copy of prod" -> a Neon branch is a
+#     copy-on-write clone of the production branch, created in seconds. We apply
+#     the pending migrations there instead of building/seeding a throwaway DB.
+#   * "CI drift check" -> we regenerate the migration diff from the GORM models
+#     and fail if it is non-empty, i.e. someone changed a model without adding a
+#     migration.
+#
+# Required GitHub configuration:
+#   secrets.NEON_API_KEY        - Neon API key
+#   vars.NEON_PROJECT_ID        - Neon project id
+#   vars.NEON_PARENT_BRANCH     - branch to clone for PR testing (e.g. "production"
+#                                 for the strongest "copy of prod" guarantee)
+name: DB Migrations (PR)
+
+on:
+  pull_request:
+    paths:
+      - "migrations/**"
+      - "internal/entities/**"
+      - "cmd/atlasloader/**"
+      - "config/seed.go"
+      - "config/seedsql.go"
+      - "atlas.hcl"
+      - ".github/workflows/db-migrations.yml"
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    env:
+      # 'atlas migrate lint' is Pro-only since v0.38 and needs an Atlas Cloud
+      # login. Provide secrets.ATLAS_TOKEN to enable it; the lint step is skipped
+      # cleanly when the token is absent (the free validate/apply/drift checks
+      # below still run).
+      HAS_ATLAS_TOKEN: ${{ secrets.ATLAS_TOKEN != '' && 'true' || 'false' }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # atlas migrate lint compares against the PR base branch, so it needs history.
+          fetch-depth: 0
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+
+      # Installs the official (non-community) atlas, which supports the GORM
+      # external_schema loader used by atlas.hcl. cloud-token authenticates the
+      # CLI for Pro-only commands (migrate lint) when the secret is set.
+      - uses: ariga/setup-atlas@v0
+        with:
+          cloud-token: ${{ secrets.ATLAS_TOKEN }}
+
+      # 1. Create an ephemeral Neon branch = isolated copy of production.
+      - name: Create Neon branch
+        id: neon
+        uses: neondatabase/create-branch-action@v5
+        with:
+          project_id: ${{ vars.NEON_PROJECT_ID }}
+          parent: ${{ vars.NEON_PARENT_BRANCH }}
+          branch_name: ci-pr-${{ github.event.pull_request.number }}
+          api_key: ${{ secrets.NEON_API_KEY }}
+
+      # 2a. Integrity check (free, no Docker/login): verifies the migration files
+      #     match atlas.sum so a hand-edited or corrupted migration fails fast.
+      - name: Validate migration integrity
+        run: atlas migrate validate --dir file://migrations
+
+      # 2b. Lint pending migrations for destructive/irreversible changes. Pro-only
+      #     since Atlas v0.38, so it runs only when secrets.ATLAS_TOKEN is set.
+      #     Uses a throwaway Postgres via Docker (available on GitHub runners).
+      - name: Lint migrations
+        if: env.HAS_ATLAS_TOKEN == 'true'
+        run: atlas migrate lint --env local --git-base "origin/${{ github.base_ref }}"
+
+      # 3. Apply the migrations to the Neon branch — the "test against a copy of
+      #    prod" step. Uses the direct (non-pooled) connection for DDL safety.
+      - name: Apply migrations to Neon branch
+        env:
+          DATABASE_URL: ${{ steps.neon.outputs.db_url }}
+        run: atlas migrate apply --env deploy
+
+      # 4. Drift check: regenerate the diff from the models. If atlas writes a new
+      #    migration, the models changed without a committed migration -> fail.
+      - name: Drift check (models vs migrations)
+        run: |
+          atlas migrate diff ci_drift_check --env local
+          if ! git diff --quiet -- migrations/; then
+            echo "::error::GORM models changed but no migration was committed."
+            echo "Run 'make migrate-diff name=<change>' locally and commit the result."
+            git --no-pager diff -- migrations/
+            exit 1
+          fi
+
+  cleanup:
+    runs-on: ubuntu-latest
+    if: always()
+    needs: verify
+    steps:
+      - name: Delete Neon branch
+        uses: neondatabase/delete-branch-action@v3
+        with:
+          project_id: ${{ vars.NEON_PROJECT_ID }}
+          branch: ci-pr-${{ github.event.pull_request.number }}
+          api_key: ${{ secrets.NEON_API_KEY }}

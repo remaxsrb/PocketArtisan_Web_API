@@ -74,6 +74,9 @@ Icon?
 # Any other config files that contain credentials
 .env
 .env.*
+# ...but keep the committed example templates for Atlas migration env files:
+!.env.atlas.dev.example
+!.env.atlas.prod.example
 config.yaml
 config.yml
 secrets/
@@ -111,5 +114,24 @@ temp/
 docker-compose.override.yml
 .kube/
 .kubeconfig
+
+# ----------------------------------------------------------------------
+# Database migrations (Atlas)
+# ----------------------------------------------------------------------
+# The versioned migrations and their checksum ARE the source of truth — keep
+# them tracked:
+#   !migrations/            (SQL files applied to every environment)
+#   !migrations/atlas.sum   (integrity checksum; CI fails if it drifts)
+#   !atlas.hcl              (Atlas project config)
+#
+# Ignore only local, machine-specific Atlas artifacts:
+# optional local env overrides
+atlas.hcl.local
+# local Atlas CLI state/cache
+.atlas/
+# atlas binary if downloaded into the repo root
+/atlas
+# compiled cmd/atlasloader binary (build artifact)
+/atlasloader
 
 # End of .gitignore
