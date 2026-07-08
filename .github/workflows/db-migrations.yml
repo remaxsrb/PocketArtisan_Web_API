@@ -33,6 +33,12 @@ permissions:
 jobs:
   verify:
     runs-on: ubuntu-latest
+    env:
+      # 'atlas migrate lint' is Pro-only since v0.38 and needs an Atlas Cloud
+      # login. Provide secrets.ATLAS_TOKEN to enable it; the lint step is skipped
+      # cleanly when the token is absent (the free validate/apply/drift checks
+      # below still run).
+      HAS_ATLAS_TOKEN: ${{ secrets.ATLAS_TOKEN != '' && 'true' || 'false' }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -44,8 +50,11 @@ jobs:
           go-version-file: go.mod
 
       # Installs the official (non-community) atlas, which supports the GORM
-      # external_schema loader used by atlas.hcl.
+      # external_schema loader used by atlas.hcl. cloud-token authenticates the
+      # CLI for Pro-only commands (migrate lint) when the secret is set.
       - uses: ariga/setup-atlas@v0
+        with:
+          cloud-token: ${{ secrets.ATLAS_TOKEN }}
 
       # 1. Create an ephemeral Neon branch = isolated copy of production.
       - name: Create Neon branch
@@ -57,9 +66,16 @@ jobs:
           branch_name: ci-pr-${{ github.event.pull_request.number }}
           api_key: ${{ secrets.NEON_API_KEY }}
 
-      # 2. Lint pending migrations for destructive/irreversible changes. Uses a
-      #    throwaway Postgres via Docker (available on GitHub runners) as the dev DB.
+      # 2a. Integrity check (free, no Docker/login): verifies the migration files
+      #     match atlas.sum so a hand-edited or corrupted migration fails fast.
+      - name: Validate migration integrity
+        run: atlas migrate validate --dir file://migrations
+
+      # 2b. Lint pending migrations for destructive/irreversible changes. Pro-only
+      #     since Atlas v0.38, so it runs only when secrets.ATLAS_TOKEN is set.
+      #     Uses a throwaway Postgres via Docker (available on GitHub runners).
       - name: Lint migrations
+        if: env.HAS_ATLAS_TOKEN == 'true'
         run: atlas migrate lint --env local --git-base "origin/${{ github.base_ref }}"
 
       # 3. Apply the migrations to the Neon branch — the "test against a copy of
