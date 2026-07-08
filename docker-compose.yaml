@@ -55,6 +55,15 @@ services:
     volumes:
       - redis_data:/data
 
+
+  smtp4dev:
+    image: rnwood/smtp4dev:v3
+    container_name: smtp4dev
+    restart: unless-stopped
+    ports:
+      - "2525:25"   # SMTP
+      - "5000:80"   # web UI to inspect sent mail
+
   mongodb:
     image: mongo:7
     container_name: mongo_db

@@ -5,14 +5,20 @@ import (
 	"PocketArtisan/internal/container"
 	"PocketArtisan/internal/http"
 	"PocketArtisan/internal/modules/auth"
+	"PocketArtisan/internal/modules/mail"
+	"PocketArtisan/internal/modules/order"
+	"PocketArtisan/internal/modules/order/reviewreminder"
 	"PocketArtisan/internal/modules/payment"
+	"PocketArtisan/internal/modules/users"
 	"PocketArtisan/internal/modules/utils/fonts"
 	"PocketArtisan/internal/modules/utils/timeutil"
+	"context"
 	"log"
 	"os"
 	"time"
 
 	"github.com/joho/godotenv"
+	"github.com/robfig/cron/v3"
 )
 
 func main() {
@@ -23,6 +29,7 @@ func main() {
 	config.InitPostgresDB()
 	config.InitRedis()
 	config.InitCrypto()
+	//config.InitMongoDB()
 
 	jwtService := auth.InitJWTService(24 * time.Hour)
 
@@ -45,6 +52,12 @@ func main() {
 	}
 	wrappedGateway := payment.NewBreakerGateway(gateway, 5, 30*time.Second)
 
+	mailProvider := os.Getenv("MAIL_PROVIDER")
+	mailer, err := mail.NewService(mailProvider)
+	if err != nil {
+		log.Fatalf("failed to initialize mail service: %v", err)
+	}
+
 	timeService := timeutil.NewService()
 
 	appContainer := container.NewAppContainer(
@@ -55,7 +68,26 @@ func main() {
 		fontService,
 		wrappedGateway,
 		timeService,
+		mailer,
 	)
+
+	reviewReminderSvc := reviewreminder.NewService(
+		order.NewGormRepository(config.DB),
+		users.NewGormRepository(config.DB),
+		mailer,
+		5*time.Minute,
+	)
+
+	c := cron.New()
+	_, err = c.AddFunc(os.Getenv("REVIEW_REMINDER_CRON_SCHEDULE"), func() {
+		if err := reviewReminderSvc.Execute(context.Background()); err != nil {
+			log.Printf("review reminder run failed: %v", err)
+		}
+	})
+	if err != nil {
+		log.Fatalf("failed to schedule review reminder cron: %v", err)
+	}
+	c.Start()
 
 	r := http.SetupRouter(appContainer)
 
