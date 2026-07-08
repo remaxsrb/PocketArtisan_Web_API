@@ -51,8 +51,9 @@ func (uc *Service) Execute(ctx context.Context, req ShipOrderRequest) (entities.
 		return "", err
 	}
 	existing.Status = nextStatus
-	completedAt := time.Now()
-	existing.CompletedAt = &completedAt
+	now := time.Now()
+	existing.ShippedAt = &now
+	existing.CompletedAt = &now
 
 	if err := uc.repo.Save(ctx, existing); err != nil {
 		return "", err
