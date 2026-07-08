@@ -1,0 +1,40 @@
+-- Baseline schema derived from the GORM models via cmd/atlasloader.
+-- Replaces the former AutoMigrate + runIndexes logic in config/postgress.go.
+
+CREATE TABLE "carts" ("id" bigserial,"user_id" bigint NOT NULL,"total" decimal NOT NULL DEFAULT 0,PRIMARY KEY ("id"));
+CREATE UNIQUE INDEX IF NOT EXISTS "idx_carts_user_id" ON "carts" ("user_id");
+CREATE TABLE "product_categories" ("id" bigserial,"name" text NOT NULL,"keywords" text[],"search_keywords" text[],PRIMARY KEY ("id"),CONSTRAINT "uni_product_categories_name" UNIQUE ("name"));
+CREATE INDEX IF NOT EXISTS "idx_product_categories_search_keywords" ON "product_categories" USING gin("search_keywords");
+CREATE TABLE "products" ("id" bigserial,"craftsman_id" bigint NOT NULL,"name" text NOT NULL,"hidden" boolean NOT NULL,"price" decimal NOT NULL,"description" text NOT NULL,"rating" decimal NOT NULL DEFAULT 0,"number_of_ratings" bigint NOT NULL DEFAULT 0,"available" boolean NOT NULL DEFAULT true,"category_id" bigint NOT NULL,PRIMARY KEY ("id"));
+CREATE UNIQUE INDEX IF NOT EXISTS "idx_craftsman_product" ON "products" ("craftsman_id","name");
+CREATE TABLE "cart_items" ("id" bigserial,"cart_id" bigint NOT NULL,"product_id" bigint NOT NULL,"quantity" bigint NOT NULL DEFAULT 1,PRIMARY KEY ("id"));
+CREATE UNIQUE INDEX IF NOT EXISTS "idx_cart_product" ON "cart_items" ("cart_id","product_id");
+CREATE TABLE "users" ("id" bigserial,"username" text NOT NULL,"email" text NOT NULL,"firstname" text,"lastname" text,"date_of_birth" date,"password_hash" text NOT NULL,"profile_picture" text,"gender" text NOT NULL,"role" text NOT NULL DEFAULT 'user',"created_at" timestamptz,"last_login_at" timestamptz,PRIMARY KEY ("id"),CONSTRAINT "uni_users_username" UNIQUE ("username"),CONSTRAINT "uni_users_email" UNIQUE ("email"));
+CREATE INDEX IF NOT EXISTS "idx_users_created_at_id" ON "users" ("created_at" desc,"id" desc);
+CREATE TABLE "crafts" ("id" bigserial,"name" text NOT NULL,"keywords" text[],"search_keywords" text[],PRIMARY KEY ("id"),CONSTRAINT "uni_crafts_name" UNIQUE ("name"));
+CREATE INDEX IF NOT EXISTS "idx_crafts_search_keywords" ON "crafts" USING gin("search_keywords");
+CREATE TABLE "craftsmen" ("id" bigserial,"user_id" bigint NOT NULL,"craft_id" bigint NOT NULL,"biography" varchar(200),"rating" decimal NOT NULL DEFAULT 0,"number_of_ratings" bigint NOT NULL DEFAULT 0,"approved_at" timestamptz,PRIMARY KEY ("id"),CONSTRAINT "uni_craftsmen_user_id" UNIQUE ("user_id"));
+CREATE INDEX IF NOT EXISTS "idx_craftsmen_approved_at" ON "craftsmen" ("approved_at");
+CREATE TABLE "craftsman_applications" ("id" bigserial,"email" text NOT NULL,"status" text NOT NULL,"created_at" timestamptz,"resolved_at" timestamptz,"craft" text NOT NULL,"resume_url" text NOT NULL,PRIMARY KEY ("id"));
+CREATE INDEX IF NOT EXISTS "idx_craftsman_applications_email" ON "craftsman_applications" ("email");
+CREATE TABLE "craft_product_categories" ("craft_id" bigint,"category_id" bigint,PRIMARY KEY ("craft_id","category_id"));
+CREATE TABLE "product_images" ("id" bigserial,"product_id" bigint NOT NULL,"url" text NOT NULL,PRIMARY KEY ("id"));
+CREATE INDEX IF NOT EXISTS "idx_product_images_product_id" ON "product_images" ("product_id");
+CREATE TABLE "product_videos" ("id" bigserial,"product_id" bigint NOT NULL,"url" text NOT NULL,PRIMARY KEY ("id"));
+CREATE INDEX IF NOT EXISTS "idx_product_videos_product_id" ON "product_videos" ("product_id");
+CREATE TABLE "orders" ("id" bigserial,"customer_id" bigint,"customer_address" text,"craftsman_id" bigint,"total_price" decimal,"created_at" timestamptz,"completed_at" timestamptz,"status" text DEFAULT 'PENDING_CRAFTSMAN_REVIEW',"payment_type" text,"url" text,"payment_reservation_id" text DEFAULT '',PRIMARY KEY ("id"));
+CREATE INDEX IF NOT EXISTS "idx_orders_completed_at" ON "orders" ("completed_at");
+CREATE TABLE "order_items" ("id" bigserial,"order_id" bigint,"product_id" bigint,"quantity" bigint,"unit_price" decimal NOT NULL,PRIMARY KEY ("id"));
+CREATE TABLE "craftsman_rating_records" ("customer_id" bigint NOT NULL,"craftsman_id" bigint NOT NULL,PRIMARY KEY ("customer_id","craftsman_id"));
+ALTER TABLE "carts" ADD CONSTRAINT "fk_users_cart" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE CASCADE;
+ALTER TABLE "products" ADD CONSTRAINT "fk_products_category" FOREIGN KEY ("category_id") REFERENCES "product_categories"("id") ON DELETE RESTRICT;
+ALTER TABLE "cart_items" ADD CONSTRAINT "fk_cart_items_product" FOREIGN KEY ("product_id") REFERENCES "products"("id");
+ALTER TABLE "cart_items" ADD CONSTRAINT "fk_carts_items" FOREIGN KEY ("cart_id") REFERENCES "carts"("id") ON DELETE CASCADE;
+ALTER TABLE "craftsmen" ADD CONSTRAINT "fk_craftsmen_craft" FOREIGN KEY ("craft_id") REFERENCES "crafts"("id") ON DELETE RESTRICT;
+ALTER TABLE "craftsmen" ADD CONSTRAINT "fk_users_craftsman" FOREIGN KEY ("user_id") REFERENCES "users"("id");
+ALTER TABLE "craft_product_categories" ADD CONSTRAINT "fk_craft_product_categories_category" FOREIGN KEY ("category_id") REFERENCES "product_categories"("id") ON DELETE CASCADE;
+ALTER TABLE "craft_product_categories" ADD CONSTRAINT "fk_craft_product_categories_craft" FOREIGN KEY ("craft_id") REFERENCES "crafts"("id") ON DELETE CASCADE;
+ALTER TABLE "product_images" ADD CONSTRAINT "fk_products_images" FOREIGN KEY ("product_id") REFERENCES "products"("id") ON DELETE CASCADE;
+ALTER TABLE "product_videos" ADD CONSTRAINT "fk_products_videos" FOREIGN KEY ("product_id") REFERENCES "products"("id") ON DELETE CASCADE;
+ALTER TABLE "order_items" ADD CONSTRAINT "fk_order_items_product" FOREIGN KEY ("product_id") REFERENCES "products"("id");
+ALTER TABLE "order_items" ADD CONSTRAINT "fk_orders_items" FOREIGN KEY ("order_id") REFERENCES "orders"("id");

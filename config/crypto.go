@@ -25,7 +25,7 @@ func InitCrypto() {
 		}
 
 		turnstile := os.Getenv("TURNSTILE_SECRET")
-		if turnstile == "" {
+		if turnstile == "" && os.Getenv("APP_ENV") == "production" {
 			log.Fatal("TURNSTILE_SECRET must be set")
 		}
 

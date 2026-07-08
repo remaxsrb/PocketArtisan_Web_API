@@ -1,0 +1,30 @@
+# Applies migrations to the production database when they land on the master branch.
+#
+# Required GitHub configuration:
+#   secrets.PROD_DATABASE_URL - direct (non-pooled) connection string to the Neon
+#                               production branch, e.g.
+#                               postgres://user:pass@ep-xxx.eu-central-1.aws.neon.tech/db?sslmode=require
+name: DB Migrations (Deploy)
+
+on:
+  push:
+    branches: [master]
+    paths:
+      - "migrations/**"
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: ariga/setup-atlas@v0
+
+      # No dev database is needed to apply; atlas just runs the pending files.
+      - name: Apply migrations to production
+        env:
+          DATABASE_URL: ${{ secrets.PROD_DATABASE_URL }}
+        run: atlas migrate apply --env deploy

@@ -6,9 +6,16 @@ services:
       dockerfile: Dockerfile
     env_file:
       - .env
+    # The database is Neon (managed Postgres). The app connects directly via the
+    # POSTGRES_* vars in .env. On development, the `migrate` one-shot below
+    # applies pending migrations to the dev Neon branch first (so minor changes
+    # ship without a PR); on production, migrations are applied by CI/CD
+    # (.github/workflows/db-deploy.yml on push to master).
     depends_on:
-      - postgres
-      - redis
+      redis:
+        condition: service_started
+      migrate:
+        condition: service_completed_successfully
     ports:
       - "${APP_PORT}:${APP_PORT}"
     volumes:
@@ -17,21 +24,26 @@ services:
       - ./internal/modules/files/generate_pdf/fonts:/app/fonts:Z
     restart: unless-stopped
 
-  postgres:
-    image: postgres:15
-    container_name: postgres_db
-    restart: always
-    env_file:
-      - .env
-    environment:
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      POSTGRES_DB: ${POSTGRES_DB}
-    ports:
-      - "${POSTGRES_PORT}:${POSTGRES_PORT}"
+  # Applies pending Atlas migrations to the dev Neon branch, then exits. This
+  # lets development iterate without opening a PR. It is idempotent — a no-op
+  # when the branch is already at the latest version.
+  #
+  # DATABASE_URL must be the DIRECT (non-pooled, no `-pooler` in host) dev Neon
+  # connection string in .env, e.g.
+  #   DATABASE_URL=postgres://USER:PASS@ep-xxxx.REGION.aws.neon.tech/DB?sslmode=require
+  # We append search_path=public so Atlas keeps its atlas_schema_revisions
+  # bookkeeping in the public schema (Neon otherwise fails with 42P01). This
+  # mirrors the `deploy` env in atlas.hcl.
+  migrate:
+    image: arigaio/atlas:latest
+    container_name: pocket_artisan_migrate
+    command: >-
+      migrate apply
+      --dir file:///migrations
+      --url "${DATABASE_URL}&search_path=public"
     volumes:
-      - postgres_data:/var/lib/postgresql/data
-
+      - ./migrations:/migrations:ro
+    restart: "no"
 
   redis:
     image: redis:7
@@ -53,6 +65,5 @@ services:
       - mongo_data:/data/db
 
 volumes:
-  postgres_data:
   redis_data:
   mongo_data:

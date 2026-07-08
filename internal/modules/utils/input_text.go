@@ -36,7 +36,12 @@ func NormalizeForSearch(s string) string {
 	// 1. Handle Cyrillic first
 	s = SerbianCyrillicToLatin(s)
 
-	// 2. Remove diacritics (e.g., ć -> c)
+	// 2. Fold the Latin letter đ/Đ (U+0111/U+0110). Unlike ć/č/š/ž it is a base
+	//    letter with a stroke, not a base + combining mark, so NFD below cannot
+	//    decompose it and the diacritic-removal step would leave it intact.
+	s = strings.NewReplacer("đ", "dj", "Đ", "Dj").Replace(s)
+
+	// 3. Remove diacritics (e.g., ć -> c)
 	t := transform.Chain(norm.NFD, runes.Remove(runes.In(unicode.Mn)), norm.NFC)
 	result, _, _ := transform.String(t, s)
 

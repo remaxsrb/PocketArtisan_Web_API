@@ -1,0 +1,31 @@
+# Applies migrations to the Neon development branch when they land on the
+# development branch. This is the dev counterpart to db-deploy.yml (production).
+#
+# Required GitHub configuration:
+#   secrets.DEV_DATABASE_URL - direct (non-pooled) connection string to the Neon
+#                              development branch, e.g.
+#                              postgres://user:pass@ep-xxx.eu-central-1.aws.neon.tech/db?sslmode=require
+name: DB Migrations (Deploy Dev)
+
+on:
+  push:
+    branches: [development]
+    paths:
+      - "migrations/**"
+
+permissions:
+  contents: read
+
+jobs:
+  deploy-dev:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: ariga/setup-atlas@v0
+
+      # No dev database is needed to apply; atlas just runs the pending files.
+      - name: Apply migrations to Neon development branch
+        env:
+          DATABASE_URL: ${{ secrets.DEV_DATABASE_URL }}
+        run: atlas migrate apply --env deploy

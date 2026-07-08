@@ -78,7 +78,7 @@ var productCategorySeed = []seedItem{
 	{"Прстење", []string{"juvelir", "јувелир", "zlatar", "prstenje", "прстење", "jeweler", "izrađivač nakita", "израђивач накита", "rings"}},
 	{"Минђуше", []string{"juvelir", "јувелир", "zlatar", "minđuše", "минђуше", "jeweler", "izrađivač nakita", "израђивач накита", "earrings"}},
 	{"Огрлице", []string{"juvelir", "јувелир", "zlatar", "ogrlice", "огрлице", "jeweler", "izrađivač nakita", "израђивач накита", "necklaces"}},
-	{"Наруквице", []string{"juvelir", "јувелир", "zlatar", "naruvkice", "наруквице", "jeweler", "bracelets"}},
+	{"Наруквице", []string{"juvelir", "јувелир", "zlatar", "narukvice", "наруквице", "jeweler", "bracelets"}},
 
 	{"Ручни сатови", []string{"ručni satovi", "ручни сатови", "wristwatches"}},
 	{"Зидни сатови", []string{"zidni satovi", "зидни сатови", "wall clocks"}},
@@ -143,11 +143,12 @@ var craftCategoryLinks = map[string][]string{
 }
 
 func runSeeds() {
+	// Schema and reference data (crafts, product categories, links) are now
+	// applied by versioned migrations (see ./migrations and cmd/seedgen). Only
+	// the admin user is seeded here because it depends on runtime env vars and
+	// a bcrypt-hashed password, which don't belong in a static SQL migration.
 	log.Println("Seeding baseline data...")
 	seedAdminUser()
-	seedCrafts()
-	seedProductCategories()
-	seedCraftProductCategories()
 }
 
 func buildSearchKeywords(name string, keywords []string) pq.StringArray {
@@ -207,9 +208,11 @@ func seedCrafts() {
 			Keywords:       pq.StringArray(item.Keywords),
 			SearchKeywords: buildSearchKeywords(item.Name, item.Keywords),
 		}
+		// Upsert on name so keyword changes in code are refreshed on every
+		// deploy while the row's primary key (and any craftsmen FK) is preserved.
 		if err := DB.Clauses(clause.OnConflict{
 			Columns:   []clause.Column{{Name: "name"}},
-			DoNothing: true,
+			DoUpdates: clause.AssignmentColumns([]string{"keywords", "search_keywords"}),
 		}).Create(&craft).Error; err != nil {
 			log.Fatalf("Failed to seed craft %q: %v", item.Name, err)
 		}
@@ -224,9 +227,11 @@ func seedProductCategories() {
 			Keywords:       pq.StringArray(item.Keywords),
 			SearchKeywords: buildSearchKeywords(item.Name, item.Keywords),
 		}
+		// Upsert on name so keyword changes in code are refreshed on every
+		// deploy while the row's primary key (and any product FK) is preserved.
 		if err := DB.Clauses(clause.OnConflict{
 			Columns:   []clause.Column{{Name: "name"}},
-			DoNothing: true,
+			DoUpdates: clause.AssignmentColumns([]string{"keywords", "search_keywords"}),
 		}).Create(&category).Error; err != nil {
 			log.Fatalf("Failed to seed product category %q: %v", item.Name, err)
 		}
@@ -250,7 +255,20 @@ func seedCraftProductCategories() {
 		}
 	}
 
-	if err := DB.Clauses(clause.OnConflict{DoNothing: true}).Create(&links).Error; err != nil {
+	// Fully rebuild the join table on every deploy so the mapping in code is the
+	// single source of truth: this erases stale/removed links (which otherwise
+	// leave a craft with no categories) and re-inserts the current set atomically.
+	err := DB.Transaction(func(tx *gorm.DB) error {
+		if err := tx.Session(&gorm.Session{AllowGlobalUpdate: true}).
+			Delete(&entities.CraftProductCategory{}).Error; err != nil {
+			return err
+		}
+		if len(links) == 0 {
+			return nil
+		}
+		return tx.Create(&links).Error
+	})
+	if err != nil {
 		log.Fatalf("Failed to seed craft-product category links: %v", err)
 	}
 	log.Printf("Seeded %d craft-product category links", len(links))
