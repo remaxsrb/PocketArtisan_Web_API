@@ -7,7 +7,7 @@ import (
 )
 
 type User struct {
-	ID             uint64    `json:"id" gorm:"primaryKey"`
+	ID             uint64    `json:"id" gorm:"primaryKey;index:idx_users_created_at_id,priority:2,sort:desc"`
 	Username       string    `json:"username" gorm:"unique;not null"`
 	Email          string    `json:"email" gorm:"unique;not null"`
 	Firstname      string    `json:"firstname"`
@@ -17,7 +17,7 @@ type User struct {
 	ProfilePicture string    `json:"profile_picture"`
 	Gender         string    `json:"gender" gorm:"not null"`
 	Role           string    `json:"role" gorm:"not null;default:'user'"`
-	CreatedAt      time.Time `json:"created_at" gorm:"autoCreateTime"`
+	CreatedAt      time.Time `json:"created_at" gorm:"autoCreateTime;index:idx_users_created_at_id,priority:1,sort:desc"`
 	LastLoginAt    time.Time `json:"last_login_at" gorm:"autoUpdateTime"`
 	Cart           *Cart     `json:"cart,omitempty" gorm:"foreignKey:UserID;constraint:OnDelete:CASCADE"`
 
@@ -31,7 +31,7 @@ type Craftsman struct {
 	Biography       string    `json:"biography" gorm:"size:200"`
 	Rating          float64   `json:"rating" gorm:"not null;default:0.0"`
 	NumberOfRatings int       `json:"number_of_ratings" gorm:"not null;default:0"`
-	ApprovedAt      time.Time `json:"approved_at" gorm:"autoCreateTime"`
+	ApprovedAt      time.Time `json:"approved_at" gorm:"autoCreateTime;index:idx_craftsmen_approved_at"`
 	User            *User     `json:"user,omitempty" gorm:"foreignKey:UserID;constraint:OnDelete:CASCADE;"`
 	Craft           *Craft    `json:"craft,omitempty" gorm:"foreignKey:CraftID;constraint:OnDelete:RESTRICT;"`
 }

@@ -7,8 +7,12 @@ services:
     env_file:
       - .env
     depends_on:
-      - postgres
-      - redis
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
+      migrate:
+        condition: service_completed_successfully
     ports:
       - "${APP_PORT}:${APP_PORT}"
     volumes:
@@ -16,6 +20,25 @@ services:
       - ./assets:/app/assets:Z
       - ./internal/modules/files/generate_pdf/fonts:/app/fonts:Z
     restart: unless-stopped
+
+  # Applies versioned Atlas migrations before the app starts. Runs once and
+  # exits; the app waits for it via `service_completed_successfully`. Safe with
+  # multiple app replicas because only this one-shot job touches the schema.
+  migrate:
+    image: arigaio/atlas:latest
+    container_name: pocket_artisan_migrate
+    depends_on:
+      postgres:
+        condition: service_healthy
+    env_file:
+      - .env
+    command: >-
+      migrate apply
+      --dir file:///migrations
+      --url "postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}?sslmode=disable"
+    volumes:
+      - ./migrations:/migrations:ro
+    restart: "no"
 
   postgres:
     image: postgres:15
@@ -31,6 +54,11 @@ services:
       - "${POSTGRES_PORT}:${POSTGRES_PORT}"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
 
 
   redis:

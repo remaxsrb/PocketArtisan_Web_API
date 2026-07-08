@@ -27,7 +27,7 @@ type Order struct {
 	TotalPrice           float64     `json:"total_price"`
 	Items                []OrderItem `json:"items" gorm:"foreignKey:OrderID"`
 	CreatedAt            time.Time   `json:"created_at" gorm:"autoCreateTime"`
-	CompletedAt          *time.Time  `json:"completed_at,omitempty"`
+	CompletedAt          *time.Time  `json:"completed_at,omitempty" gorm:"index:idx_orders_completed_at"`
 	Status               OrderStatus `json:"status" gorm:"type:text;default:'PENDING_CRAFTSMAN_REVIEW'"`
 	PaymentType          PaymentType `json:"payment_type" gorm:"type:text;'"`
 	URL                  string      `json:"url" gorm:"type:text;" default:""`
