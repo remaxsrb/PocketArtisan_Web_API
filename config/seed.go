@@ -10,6 +10,7 @@ import (
 
 	"github.com/lib/pq"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 type seedItem struct {
@@ -198,6 +199,79 @@ func seedAdminUser() {
 		log.Fatalf("Failed to seed admin user: %v", err)
 	}
 	log.Printf("Seeded admin user %q", username)
+}
+
+func seedCrafts() {
+	for _, item := range craftSeed {
+		craft := entities.Craft{
+			Name:           item.Name,
+			Keywords:       pq.StringArray(item.Keywords),
+			SearchKeywords: buildSearchKeywords(item.Name, item.Keywords),
+		}
+		// Upsert on name so keyword changes in code are refreshed on every
+		// deploy while the row's primary key (and any craftsmen FK) is preserved.
+		if err := DB.Clauses(clause.OnConflict{
+			Columns:   []clause.Column{{Name: "name"}},
+			DoUpdates: clause.AssignmentColumns([]string{"keywords", "search_keywords"}),
+		}).Create(&craft).Error; err != nil {
+			log.Fatalf("Failed to seed craft %q: %v", item.Name, err)
+		}
+	}
+	log.Printf("Seeded %d crafts", len(craftSeed))
+}
+
+func seedProductCategories() {
+	for _, item := range productCategorySeed {
+		category := entities.ProductCategory{
+			Name:           item.Name,
+			Keywords:       pq.StringArray(item.Keywords),
+			SearchKeywords: buildSearchKeywords(item.Name, item.Keywords),
+		}
+		// Upsert on name so keyword changes in code are refreshed on every
+		// deploy while the row's primary key (and any product FK) is preserved.
+		if err := DB.Clauses(clause.OnConflict{
+			Columns:   []clause.Column{{Name: "name"}},
+			DoUpdates: clause.AssignmentColumns([]string{"keywords", "search_keywords"}),
+		}).Create(&category).Error; err != nil {
+			log.Fatalf("Failed to seed product category %q: %v", item.Name, err)
+		}
+	}
+	log.Printf("Seeded %d product categories", len(productCategorySeed))
+}
+
+func seedCraftProductCategories() {
+	var links []entities.CraftProductCategory
+	for craftName, categoryNames := range craftCategoryLinks {
+		var craft entities.Craft
+		if err := DB.Where("name = ?", craftName).First(&craft).Error; err != nil {
+			log.Fatalf("Failed to look up craft %q for category linking: %v", craftName, err)
+		}
+		for _, categoryName := range categoryNames {
+			var category entities.ProductCategory
+			if err := DB.Where("name = ?", categoryName).First(&category).Error; err != nil {
+				log.Fatalf("Failed to look up product category %q for craft %q: %v", categoryName, craftName, err)
+			}
+			links = append(links, entities.CraftProductCategory{CraftID: craft.ID, CategoryID: category.ID})
+		}
+	}
+
+	// Fully rebuild the join table on every deploy so the mapping in code is the
+	// single source of truth: this erases stale/removed links (which otherwise
+	// leave a craft with no categories) and re-inserts the current set atomically.
+	err := DB.Transaction(func(tx *gorm.DB) error {
+		if err := tx.Session(&gorm.Session{AllowGlobalUpdate: true}).
+			Delete(&entities.CraftProductCategory{}).Error; err != nil {
+			return err
+		}
+		if len(links) == 0 {
+			return nil
+		}
+		return tx.Create(&links).Error
+	})
+	if err != nil {
+		log.Fatalf("Failed to seed craft-product category links: %v", err)
+	}
+	log.Printf("Seeded %d craft-product category links", len(links))
 }
 
 func adminAvatarURL() string {
