@@ -2,6 +2,7 @@ package approve
 
 import (
 	camod "PocketArtisan/internal/modules/craftsman_application"
+	"PocketArtisan/internal/modules/mail"
 	"context"
 	"errors"
 	"time"
@@ -11,12 +12,14 @@ import (
 )
 
 type Service struct {
-	repo  camod.Repository
-	cache *redis.Client
+	repo   camod.Repository
+	cache  *redis.Client
+	mailer mail.Service
+	logo   []byte
 }
 
-func NewService(db *gorm.DB, cache *redis.Client) *Service {
-	return &Service{repo: camod.NewGormRepository(db), cache: cache}
+func NewService(db *gorm.DB, cache *redis.Client, mailer mail.Service) *Service {
+	return &Service{repo: camod.NewGormRepository(db), cache: cache, mailer: mailer, logo: camod.LoadLogo()}
 }
 
 func (uc *Service) Execute(ctx context.Context, req Request) error {
@@ -34,5 +37,10 @@ func (uc *Service) Execute(ctx context.Context, req Request) error {
 	resolvedAt := time.Now()
 	ca.ResolvedAt = &resolvedAt
 
-	return uc.repo.Save(ctx, ca)
+	if err := uc.repo.Save(ctx, ca); err != nil {
+		return err
+	}
+
+	camod.SendDecisionEmail(ctx, uc.mailer, uc.logo, ca.Email, true, req.Message)
+	return nil
 }

@@ -18,7 +18,7 @@ func RegisterCraftsmanApplicationRoutes(router *gin.Engine, appContainer *contai
 
 	admin := router.Group("/api/admin/craftsman-applications")
 	admin.Use(middleware.JWT(appContainer.JWTService), middleware.RequireRoles("admin"))
-	approve.RegisterRoutes(admin, appContainer.DB, appContainer.RDB)
-	reject.RegisterRoutes(admin, appContainer.DB, appContainer.RDB)
+	approve.RegisterRoutes(admin, appContainer.DB, appContainer.RDB, appContainer.MailService)
+	reject.RegisterRoutes(admin, appContainer.DB, appContainer.RDB, appContainer.MailService)
 	get_all.RegisterRoutes(admin, appContainer.DB, appContainer.RDB)
 }

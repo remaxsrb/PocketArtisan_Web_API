@@ -48,11 +48,6 @@ func (s *SMTPService) Send(ctx context.Context, msg Message) error {
 	return nil
 }
 
-// buildMessage assembles an RFC 5322 message. With no attachments it sends a
-// plain text/html body; with attachments it builds a multipart/related message
-// so inline images (referenced via cid:) render in both smtp4dev and real
-// clients. All bodies are base64-encoded to stay within SMTP line limits and
-// carry UTF-8 (e.g. Cyrillic) content safely.
 func (s *SMTPService) buildMessage(msg Message) []byte {
 	var out bytes.Buffer
 
