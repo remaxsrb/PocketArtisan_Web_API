@@ -49,6 +49,9 @@ type Repository interface {
 
 	MonthlyShippedCounts(ctx context.Context, from, to *time.Time) ([]MonthlyCountRow, error)
 	MonthlyShippedByCategory(ctx context.Context, craftsmanID uint64, from, to *time.Time) ([]MonthlyCategoryCountRow, error)
+
+	ListPendingReviewReminders(ctx context.Context, shippedBefore time.Time) ([]*entities.Order, error)
+	MarkReviewReminderSent(ctx context.Context, orderID uint64, sentAt time.Time) error
 }
 
 type GormRepository struct {
@@ -228,4 +231,26 @@ func (r *GormRepository) MonthlyShippedByCategory(ctx context.Context, craftsman
 		return nil, err
 	}
 	return results, nil
+}
+
+func (r *GormRepository) ListPendingReviewReminders(ctx context.Context, shippedBefore time.Time) ([]*entities.Order, error) {
+	var orders []*entities.Order
+	err := r.db.WithContext(ctx).
+		Where("status = ?", entities.OrderShipped).
+		Where("shipped_at IS NOT NULL AND shipped_at <= ?", shippedBefore).
+		Where("review_reminder_sent_at IS NULL").
+		Where("NOT EXISTS (?)", r.db.
+			Model(&entities.CraftsmanRatingRecord{}).
+			Select("1").
+			Where("craftsman_rating_records.customer_id = orders.customer_id AND craftsman_rating_records.craftsman_id = orders.craftsman_id"),
+		).
+		Find(&orders).Error
+	return orders, err
+}
+
+func (r *GormRepository) MarkReviewReminderSent(ctx context.Context, orderID uint64, sentAt time.Time) error {
+	return r.db.WithContext(ctx).
+		Model(&entities.Order{}).
+		Where("id = ?", orderID).
+		Update("review_reminder_sent_at", sentAt).Error
 }

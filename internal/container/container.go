@@ -3,6 +3,7 @@ package container
 import (
 	"PocketArtisan/internal/modules/auth"
 	"PocketArtisan/internal/modules/files/storage"
+	"PocketArtisan/internal/modules/mail"
 	"PocketArtisan/internal/modules/payment"
 	"PocketArtisan/internal/modules/utils/fonts"
 	"PocketArtisan/internal/modules/utils/timeutil"
@@ -20,9 +21,10 @@ type AppContainer struct {
 	Fonts          *fonts.Service
 	BreakerGateway *payment.BreakerGateway
 	TimeService    timeutil.Service
-}
+	MailService    mail.Service
+} 
 
-func NewAppContainer(db *gorm.DB, rdb *redis.Client, jwtService auth.JWTService, s storage.Storage, f *fonts.Service, bg *payment.BreakerGateway, ts timeutil.Service) *AppContainer {
+func NewAppContainer(db *gorm.DB, rdb *redis.Client, jwtService auth.JWTService, s storage.Storage, f *fonts.Service, bg *payment.BreakerGateway, ts timeutil.Service, m mail.Service) *AppContainer {
 	return &AppContainer{
 		DB:             db,
 		RDB:            rdb,
