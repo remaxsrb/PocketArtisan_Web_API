@@ -5,6 +5,7 @@ import (
 	"PocketArtisan/internal/container"
 	"PocketArtisan/internal/http/middleware"
 	"PocketArtisan/internal/modules/users/admin/get_registered_users"
+	"PocketArtisan/internal/modules/users/admin/get_registered_users_by_month"
 	"PocketArtisan/internal/modules/users/admin/set_role"
 	"PocketArtisan/internal/modules/users/common/change_password"
 	"PocketArtisan/internal/modules/users/common/delete_account"
@@ -36,4 +37,5 @@ func RegisterUserRoutes(router *gin.Engine, appContainer *container.AppContainer
 	get_all.RegisterRoutes(admin, appContainer.DB, appContainer.RDB)
 	set_role.RegisterRoutes(admin, appContainer.DB, appContainer.RDB)
 	get_registered_users.RegisterRoutes(admin, appContainer.DB, appContainer.RDB, appContainer.TimeService)
+	get_registered_users_by_month.RegisterRoutes(admin, appContainer.DB, appContainer.RDB, appContainer.TimeService)
 }

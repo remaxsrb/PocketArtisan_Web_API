@@ -33,5 +33,6 @@ func NewAppContainer(db *gorm.DB, rdb *redis.Client, jwtService auth.JWTService,
 		Fonts:          f,
 		BreakerGateway: bg,
 		TimeService:    ts,
+		MailService:    m,
 	}
 }

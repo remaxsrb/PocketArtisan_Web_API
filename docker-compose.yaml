@@ -42,7 +42,7 @@ services:
       --dir file:///migrations
       --url "${DATABASE_URL}&search_path=public"
     volumes:
-      - ./migrations:/migrations:ro
+      - ./migrations:/migrations:ro,Z
     restart: "no"
 
   redis:

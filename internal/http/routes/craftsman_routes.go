@@ -4,6 +4,7 @@ import (
 	"PocketArtisan/internal/container"
 	"PocketArtisan/internal/http/middleware"
 	"PocketArtisan/internal/modules/users/admin/get_approved_craftsmen"
+	"PocketArtisan/internal/modules/users/admin/get_approved_craftsmen_by_month"
 	craftsman_create "PocketArtisan/internal/modules/users/craftsman/create"
 	craftsman_get_all "PocketArtisan/internal/modules/users/craftsman/get_all"
 	get_by_craft "PocketArtisan/internal/modules/users/craftsman/get_by_craft"
@@ -27,4 +28,5 @@ func RegisterCraftsmanRoutes(router *gin.Engine, appContainer *container.AppCont
 	admin.Use(middleware.JWT(appContainer.JWTService), middleware.RequireRoles("admin"))
 	craftsman_create.RegisterRoutes(admin, appContainer.DB, appContainer.RDB)
 	get_approved_craftsmen.RegisterRoutes(admin, appContainer.DB, appContainer.RDB, appContainer.TimeService)
+	get_approved_craftsmen_by_month.RegisterRoutes(admin, appContainer.DB, appContainer.RDB, appContainer.TimeService)
 }

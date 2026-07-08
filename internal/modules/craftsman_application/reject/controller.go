@@ -2,6 +2,7 @@ package reject
 
 import (
 	"PocketArtisan/internal/http/response"
+	"PocketArtisan/internal/modules/mail"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -9,8 +10,8 @@ import (
 	"gorm.io/gorm"
 )
 
-func RegisterRoutes(router *gin.RouterGroup, db *gorm.DB, rdb *redis.Client) {
-	r := NewService(db, rdb)
+func RegisterRoutes(router *gin.RouterGroup, db *gorm.DB, rdb *redis.Client, mailer mail.Service) {
+	r := NewService(db, rdb, mailer)
 	router.PATCH("/reject", func(c *gin.Context) {
 		var req Request
 		if err := c.ShouldBindJSON(&req); err != nil {
