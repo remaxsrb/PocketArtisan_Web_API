@@ -23,6 +23,7 @@ type Repository interface {
 	DeleteUser(ctx context.Context, user *entities.User) error
 	CreateUserWithCart(ctx context.Context, user *entities.User) error
 	CountNonAdminUsers(ctx context.Context, from, to *time.Time) (int64, error)
+	CountNonAdminUsersByMonth(ctx context.Context, from, to *time.Time) ([]MonthlyCount, error)
 	ListAllUsers(ctx context.Context, skip, limit int) ([]*entities.User, error)
 
 	// ── Craftsman ───────────────────────────────────────────────────────────
@@ -34,6 +35,7 @@ type Repository interface {
 	SaveCraftsman(ctx context.Context, craftsman *entities.Craftsman) error
 	CreateCraftsman(ctx context.Context, craftsman *entities.Craftsman) error
 	CountCraftsmen(ctx context.Context, from, to *time.Time) (int64, error)
+	CountCraftsmenByMonth(ctx context.Context, from, to *time.Time) ([]MonthlyCount, error)
 	ListCraftsmen(ctx context.Context, skip, limit int) ([]*CraftsmanResponse, error)
 	CountCraftsmenByCraft(ctx context.Context, normalizedCraft string) (int64, error)
 	ListCraftsmenByCraft(ctx context.Context, normalizedCraft string, skip, limit int) ([]*CraftsmanResponse, error)
@@ -44,6 +46,12 @@ type Repository interface {
 
 	FindRatingRecord(ctx context.Context, customerID, craftsmanID uint64) (*entities.CraftsmanRatingRecord, error)
 	RateCraftsman(ctx context.Context, craftsmanUserID uint64, customerID uint64, rating int) (*entities.Craftsman, error)
+}
+
+// MonthlyCount is one bucket of a COUNT(*) ... GROUP BY month result.
+type MonthlyCount struct {
+	Month time.Time `gorm:"column:month"`
+	Total int64     `gorm:"column:total"`
 }
 
 type GormRepository struct {
@@ -133,6 +141,24 @@ func (r *GormRepository) CountNonAdminUsers(ctx context.Context, from, to *time.
 	return total, q.Count(&total).Error
 }
 
+// CountNonAdminUsersByMonth returns one row per calendar month in [from, to)
+// with the count of non-admin users created in that month, computed in a
+// single grouped query instead of one COUNT(*) round-trip per month.
+func (r *GormRepository) CountNonAdminUsersByMonth(ctx context.Context, from, to *time.Time) ([]MonthlyCount, error) {
+	var rows []MonthlyCount
+	q := r.db.WithContext(ctx).Model(&entities.User{}).
+		Select("date_trunc('month', created_at) AS month, count(*) AS total").
+		Where("role != ?", "admin")
+	if from != nil {
+		q = q.Where("created_at >= ?", *from)
+	}
+	if to != nil {
+		q = q.Where("created_at < ?", *to)
+	}
+	err := q.Group("date_trunc('month', created_at)").Order("month").Scan(&rows).Error
+	return rows, err
+}
+
 func (r *GormRepository) ListAllUsers(ctx context.Context, skip, limit int) ([]*entities.User, error) {
 	list := make([]*entities.User, 0, limit)
 	err := r.db.WithContext(ctx).
@@ -213,6 +239,23 @@ func (r *GormRepository) CountCraftsmen(ctx context.Context, from, to *time.Time
 		q = q.Where("approved_at < ?", *to)
 	}
 	return total, q.Count(&total).Error
+}
+
+// CountCraftsmenByMonth returns one row per calendar month in [from, to)
+// with the count of craftsmen approved in that month, computed in a single
+// grouped query instead of one COUNT(*) round-trip per month.
+func (r *GormRepository) CountCraftsmenByMonth(ctx context.Context, from, to *time.Time) ([]MonthlyCount, error) {
+	var rows []MonthlyCount
+	q := r.db.WithContext(ctx).Model(&entities.Craftsman{}).
+		Select("date_trunc('month', approved_at) AS month, count(*) AS total")
+	if from != nil {
+		q = q.Where("approved_at >= ?", *from)
+	}
+	if to != nil {
+		q = q.Where("approved_at < ?", *to)
+	}
+	err := q.Group("date_trunc('month', approved_at)").Order("month").Scan(&rows).Error
+	return rows, err
 }
 
 func (r *GormRepository) ListCraftsmen(ctx context.Context, skip, limit int) ([]*CraftsmanResponse, error) {
