@@ -32,6 +32,7 @@ func main() {
 		&entities.Order{},
 		&entities.OrderItem{},
 		&entities.CraftsmanRatingRecord{},
+		&entities.ProductRatingRecord{},
 	)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "failed to load gorm schema: %v\n", err)

@@ -32,6 +32,10 @@ type Repository interface {
 	ListByCraftsman(ctx context.Context, craftsmanID uint64, skip, limit int) ([]*entities.Product, error)
 	CountByCategory(ctx context.Context, normalizedSearch string) (int64, error)
 	ListByCategory(ctx context.Context, normalizedSearch string, skip, limit int) ([]*entities.Product, error)
+
+	// ── Rating ──────────────────────────────────────────────────────────────
+	FindRatingRecord(ctx context.Context, customerID, productID uint64) (*entities.ProductRatingRecord, error)
+	RateProduct(ctx context.Context, productID uint64, customerID uint64, rating int) (*entities.Product, error)
 }
 
 type GormRepository struct {
@@ -170,4 +174,83 @@ func (r *GormRepository) ListByCategory(ctx context.Context, normalizedSearch st
 	}
 	err := q.Offset(skip).Limit(limit).Order("name asc").Find(&raw).Error
 	return raw, err
+}
+
+// ── Rating ───────────────────────────────────────────────────────────────────
+
+func (r *GormRepository) FindRatingRecord(ctx context.Context, customerID, productID uint64) (*entities.ProductRatingRecord, error) {
+	var rec entities.ProductRatingRecord
+	if err := r.db.WithContext(ctx).Where("customer_id = ? AND product_id = ?", customerID, productID).First(&rec).Error; err != nil {
+		return nil, err
+	}
+	return &rec, nil
+}
+
+// RateProduct records a customer's rating for a product, but only if the
+// customer has an order for it that has actually been fulfilled (shipped or
+// completed) - a pending/declined order does not entitle the buyer to rate.
+func (r *GormRepository) RateProduct(ctx context.Context, productID uint64, customerID uint64, rating int) (*entities.Product, error) {
+	var product entities.Product
+	err := r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		if err := tx.Where("id = ?", productID).First(&product).Error; err != nil {
+			return err
+		}
+
+		var purchases int64
+		if err := tx.Table("order_items").
+			Joins("JOIN orders ON orders.id = order_items.order_id").
+			Where("orders.customer_id = ? AND order_items.product_id = ? AND orders.status IN ?",
+				customerID, productID, []entities.OrderStatus{entities.OrderShipped, entities.OrderCompleted}).
+			Count(&purchases).Error; err != nil {
+			return err
+		}
+		if purchases == 0 {
+			return errNotPurchased
+		}
+
+		var existing entities.ProductRatingRecord
+		err := tx.Where("customer_id = ? AND product_id = ?", customerID, productID).First(&existing).Error
+		if err == nil {
+			return errAlreadyRated
+		}
+		if !errors.Is(err, gorm.ErrRecordNotFound) {
+			return err
+		}
+
+		record := entities.ProductRatingRecord{CustomerID: customerID, ProductID: productID}
+		if err := tx.Create(&record).Error; err != nil {
+			return err
+		}
+
+		product.Rating = ((product.Rating * float64(product.NumberOfRatings)) + float64(rating)) / float64(product.NumberOfRatings+1)
+		product.NumberOfRatings++
+		return tx.Save(&product).Error
+	})
+	if err != nil {
+		return nil, err
+	}
+	return &product, nil
+}
+
+// ── helpers ──────────────────────────────────────────────────────────────────
+
+var errAlreadyRated = errAlreadyRatedType{}
+var errNotPurchased = errNotPurchasedType{}
+
+type errAlreadyRatedType struct{}
+type errNotPurchasedType struct{}
+
+func (errAlreadyRatedType) Error() string { return "you have already rated this product" }
+func (errNotPurchasedType) Error() string {
+	return "you can only rate products from a completed purchase"
+}
+
+func IsAlreadyRatedError(err error) bool {
+	_, ok := err.(errAlreadyRatedType)
+	return ok
+}
+
+func IsNotPurchasedError(err error) bool {
+	_, ok := err.(errNotPurchasedType)
+	return ok
 }

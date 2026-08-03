@@ -28,3 +28,10 @@ type ProductVideo struct {
 	ProductID uint64 `json:"product_id" gorm:"not null;index"`
 	URL       string `json:"url" gorm:"not null"`
 }
+
+// ProductRatingRecord ensures one customer can rate one product at most once.
+// The composite primary key enforces the uniqueness at the DB level.
+type ProductRatingRecord struct {
+	CustomerID uint64 `gorm:"primaryKey;not null"`
+	ProductID  uint64 `gorm:"primaryKey;not null"`
+}
