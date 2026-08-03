@@ -47,8 +47,10 @@ func resolveUpload(file *multipart.FileHeader, purpose string) (fileName, subDir
 	isProductPicture := isImage && purpose == "product_image"
 	isProductVideo := isVideo && purpose == "product_video"
 	isResume := isPDF && purpose == "resume"
+	isProductCommentPhoto := isImage && purpose == "product_comment_photo"
+	isProductCommentVideo := isVideo && purpose == "product_comment_video"
 
-	if !isAvatar && !isResume && !isProductPicture && !isProductVideo {
+	if !isAvatar && !isResume && !isProductPicture && !isProductVideo && !isProductCommentPhoto && !isProductCommentVideo {
 		return "", "", nil, errors.ErrUnsupported
 	}
 
@@ -71,6 +73,10 @@ func resolveUpload(file *multipart.FileHeader, purpose string) (fileName, subDir
 		subDir = "product_videos"
 	case isResume:
 		subDir = "resumes"
+	case isProductCommentPhoto:
+		subDir = "product_comment_photo"
+	case isProductCommentVideo:
+		subDir = "product_comment_video"
 	}
 
 	return fileName, subDir, content, nil
