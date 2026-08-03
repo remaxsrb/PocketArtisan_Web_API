@@ -9,6 +9,7 @@ import (
 	"PocketArtisan/internal/modules/order"
 	"PocketArtisan/internal/modules/order/reviewreminder"
 	"PocketArtisan/internal/modules/payment"
+	"PocketArtisan/internal/modules/product/comment"
 	"PocketArtisan/internal/modules/users"
 	"PocketArtisan/internal/modules/utils/fonts"
 	"PocketArtisan/internal/modules/utils/timeutil"
@@ -29,7 +30,11 @@ func main() {
 	config.InitPostgresDB()
 	config.InitRedis()
 	config.InitCrypto()
-	//config.InitMongoDB()
+	config.InitMongoDB()
+
+	if err := comment.EnsureIndexes(context.Background(), config.MongoDB); err != nil {
+		log.Fatalf("failed to ensure product comment indexes: %v", err)
+	}
 
 	jwtService := auth.InitJWTService(24 * time.Hour)
 
@@ -69,6 +74,7 @@ func main() {
 		wrappedGateway,
 		timeService,
 		mailer,
+		config.MongoDB,
 	)
 
 	reviewReminderSvc := reviewreminder.NewService(

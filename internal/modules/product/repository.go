@@ -36,6 +36,11 @@ type Repository interface {
 	// ── Rating ──────────────────────────────────────────────────────────────
 	FindRatingRecord(ctx context.Context, customerID, productID uint64) (*entities.ProductRatingRecord, error)
 	RateProduct(ctx context.Context, productID uint64, customerID uint64, rating int) (*entities.Product, error)
+
+	// HasPurchased reports whether the customer has a fulfilled (shipped or
+	// completed) order containing this product - the prerequisite for both
+	// rating and commenting on it.
+	HasPurchased(ctx context.Context, customerID, productID uint64) (bool, error)
 }
 
 type GormRepository struct {
@@ -196,20 +201,16 @@ func (r *GormRepository) RateProduct(ctx context.Context, productID uint64, cust
 			return err
 		}
 
-		var purchases int64
-		if err := tx.Table("order_items").
-			Joins("JOIN orders ON orders.id = order_items.order_id").
-			Where("orders.customer_id = ? AND order_items.product_id = ? AND orders.status IN ?",
-				customerID, productID, []entities.OrderStatus{entities.OrderShipped, entities.OrderCompleted}).
-			Count(&purchases).Error; err != nil {
+		purchased, err := hasPurchased(tx, customerID, productID)
+		if err != nil {
 			return err
 		}
-		if purchases == 0 {
+		if !purchased {
 			return errNotPurchased
 		}
 
 		var existing entities.ProductRatingRecord
-		err := tx.Where("customer_id = ? AND product_id = ?", customerID, productID).First(&existing).Error
+		err = tx.Where("customer_id = ? AND product_id = ?", customerID, productID).First(&existing).Error
 		if err == nil {
 			return errAlreadyRated
 		}
@@ -230,6 +231,20 @@ func (r *GormRepository) RateProduct(ctx context.Context, productID uint64, cust
 		return nil, err
 	}
 	return &product, nil
+}
+
+func (r *GormRepository) HasPurchased(ctx context.Context, customerID, productID uint64) (bool, error) {
+	return hasPurchased(r.db.WithContext(ctx), customerID, productID)
+}
+
+func hasPurchased(db *gorm.DB, customerID, productID uint64) (bool, error) {
+	var count int64
+	err := db.Table("order_items").
+		Joins("JOIN orders ON orders.id = order_items.order_id").
+		Where("orders.customer_id = ? AND order_items.product_id = ? AND orders.status IN ?",
+			customerID, productID, []entities.OrderStatus{entities.OrderShipped, entities.OrderCompleted}).
+		Count(&count).Error
+	return count > 0, err
 }
 
 // ── helpers ──────────────────────────────────────────────────────────────────

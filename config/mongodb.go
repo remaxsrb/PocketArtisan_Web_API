@@ -3,7 +3,6 @@ package config
 import (
 	"context"
 	"log"
-	"net/url"
 	"os"
 	"strings"
 	"time"
@@ -16,8 +15,15 @@ var MongoDB *mongo.Database
 
 func InitMongoDB() {
 	uri := os.Getenv("MONGO_URI")
+	if password := os.Getenv("MONGO_PASSWORD"); password != "" {
+		uri = strings.Replace(uri, "<db_password>", password, 1)
+	}
+	dbName := os.Getenv("MONGO_DB_NAME")
 
-	client, err := mongo.Connect(options.Client().ApplyURI(uri))
+	serverAPI := options.ServerAPI(options.ServerAPIVersion1)
+	opts := options.Client().ApplyURI(uri).SetServerAPIOptions(serverAPI)
+
+	client, err := mongo.Connect(opts)
 	if err != nil {
 		log.Fatal("Failed to connect to MongoDB:", err)
 	}
@@ -29,14 +35,6 @@ func InitMongoDB() {
 		log.Fatal("Failed to ping MongoDB:", err)
 	}
 
-	MongoDB = client.Database(dbNameFromURI(uri))
+	MongoDB = client.Database(dbName)
 	log.Println("MongoDB initialized successfully")
-}
-
-func dbNameFromURI(uri string) string {
-	u, err := url.Parse(uri)
-	if err != nil {
-		log.Fatal("Invalid MONGO_URI:", err)
-	}
-	return strings.TrimPrefix(u.Path, "/")
 }

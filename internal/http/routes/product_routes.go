@@ -3,6 +3,8 @@ package routes
 import (
 	"PocketArtisan/internal/container"
 	"PocketArtisan/internal/http/middleware"
+	comment_create "PocketArtisan/internal/modules/product/comment/create"
+	comment_list "PocketArtisan/internal/modules/product/comment/list"
 	"PocketArtisan/internal/modules/product/create"
 	"PocketArtisan/internal/modules/product/delete"
 	get_all "PocketArtisan/internal/modules/product/get_all_by_craftsman"
@@ -15,6 +17,7 @@ import (
 func RegisterProductRoutes(router *gin.Engine, appContainer *container.AppContainer) {
 	public := router.Group("/api/products")
 	get_all.RegisterRoutes(public, appContainer.DB, appContainer.RDB)
+	comment_list.RegisterRoutes(public, appContainer.Mongo)
 
 	craftsman := router.Group("/api/products")
 	craftsman.Use(middleware.JWT(appContainer.JWTService), middleware.RequireRoles("craftsman"), middleware.RequireCraftsman(appContainer.DB))
@@ -25,4 +28,5 @@ func RegisterProductRoutes(router *gin.Engine, appContainer *container.AppContai
 	customer := router.Group("/api/products")
 	customer.Use(middleware.JWT(appContainer.JWTService), middleware.RequireRoles("user"))
 	rate.RegisterRoutes(customer, appContainer.DB, appContainer.RDB)
+	comment_create.RegisterRoutes(customer, appContainer.DB, appContainer.Mongo)
 }
