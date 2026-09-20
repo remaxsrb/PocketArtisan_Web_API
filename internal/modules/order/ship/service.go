@@ -4,11 +4,14 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log"
 	"time"
 
 	"PocketArtisan/internal/entities"
+	"PocketArtisan/internal/modules/mail"
 	ordermod "PocketArtisan/internal/modules/order"
 	"PocketArtisan/internal/modules/payment"
+	usersmod "PocketArtisan/internal/modules/users"
 	"PocketArtisan/internal/modules/utils"
 
 	"github.com/go-redis/redis/v8"
@@ -17,12 +20,22 @@ import (
 
 type Service struct {
 	repo    ordermod.Repository
+	users   usersmod.Repository
 	cache   *redis.Client
 	gateway payment.Gateway
+	mailer  mail.Service
+	logo    []byte
 }
 
-func NewService(db *gorm.DB, cache *redis.Client, gw payment.Gateway) *Service {
-	return &Service{repo: ordermod.NewGormRepository(db), cache: cache, gateway: gw}
+func NewService(db *gorm.DB, cache *redis.Client, gw payment.Gateway, mailer mail.Service) *Service {
+	return &Service{
+		repo:    ordermod.NewGormRepository(db),
+		users:   usersmod.NewGormRepository(db),
+		cache:   cache,
+		gateway: gw,
+		mailer:  mailer,
+		logo:    loadLogo(),
+	}
 }
 
 func (uc *Service) Execute(ctx context.Context, req ShipOrderRequest) (entities.OrderStatus, error) {
@@ -60,6 +73,12 @@ func (uc *Service) Execute(ctx context.Context, req ShipOrderRequest) (entities.
 	}
 
 	utils.BumpCacheVersion(ctx, uc.cache, "orders")
+
+	if customer, err := uc.users.FindUserByID(ctx, existing.CustomerID); err != nil {
+		log.Printf("order ship: customer %d not found for order %d: %v", existing.CustomerID, existing.ID, err)
+	} else {
+		sendShippedEmail(ctx, uc.mailer, uc.logo, customer.Email, existing)
+	}
 
 	return nextStatus, nil
 }

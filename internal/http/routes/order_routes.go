@@ -30,5 +30,5 @@ func RegisterOrdertRoutes(router *gin.Engine, appContainer *container.AppContain
 	get_monthly_shipped_by_category.RegisterRoutes(craftsmanOrderRoutes, appContainer.DB, appContainer.RDB, appContainer.TimeService)
 	accept.RegisterRoutes(craftsmanOrderRoutes, appContainer.DB, appContainer.RDB)
 	decline.RegisterRoutes(craftsmanOrderRoutes, appContainer.DB, appContainer.RDB, appContainer.BreakerGateway)
-	ship.RegisterRoutes(craftsmanOrderRoutes, appContainer.DB, appContainer.RDB, appContainer.BreakerGateway)
+	ship.RegisterRoutes(craftsmanOrderRoutes, appContainer.DB, appContainer.RDB, appContainer.BreakerGateway, appContainer.MailService)
 }
