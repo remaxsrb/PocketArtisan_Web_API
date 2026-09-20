@@ -2,6 +2,7 @@ package ship
 
 import (
 	"PocketArtisan/internal/http/response"
+	"PocketArtisan/internal/modules/mail"
 	ordermod "PocketArtisan/internal/modules/order"
 	"PocketArtisan/internal/modules/payment"
 	"net/http"
@@ -13,8 +14,8 @@ import (
 	"gorm.io/gorm"
 )
 
-func RegisterRoutes(router *gin.RouterGroup, db *gorm.DB, rdb *redis.Client, gw payment.Gateway) {
-	svc := NewService(db, rdb, gw)
+func RegisterRoutes(router *gin.RouterGroup, db *gorm.DB, rdb *redis.Client, gw payment.Gateway, mailer mail.Service) {
+	svc := NewService(db, rdb, gw, mailer)
 	errHandler := ordermod.NewErrorHandler()
 	router.POST("/ship", func(c *gin.Context) {
 		var req ShipOrderRequest
