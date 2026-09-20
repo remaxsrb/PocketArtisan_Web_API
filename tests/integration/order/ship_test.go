@@ -35,7 +35,7 @@ func seedOrder(t *testing.T, tx *gorm.DB, customerID, craftsmanID uint64, pt ent
 }
 
 func shipSvc(tx *gorm.DB, gw payment.Gateway) *ship.Service {
-	return ship.NewService(tx, nil, gw)
+	return ship.NewService(tx, nil, gw, nil)
 }
 
 // ── COD ───────────────────────────────────────────────────────────────────────
